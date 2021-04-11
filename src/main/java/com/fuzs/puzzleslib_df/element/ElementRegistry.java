@@ -160,26 +160,28 @@ public class ElementRegistry {
      */
     public static void setup(String modId, boolean config, String... path) {
 
-        assert !MOD_ELEMENTS.isEmpty() : "Unable to setup elements for " + modId + ": " + "No elements registered";
+        if (!MOD_ELEMENTS.isEmpty()) {
 
-        // add to main elements storage
-        for (Map.Entry<String, AbstractElement> entry : MOD_ELEMENTS.entrySet()) {
+            // add to main elements storage
+            for (Map.Entry<String, AbstractElement> entry : MOD_ELEMENTS.entrySet()) {
 
-            ResourceLocation elementName = new ResourceLocation(modId, entry.getKey());
-            ELEMENTS.put(elementName, entry.getValue().setRegistryName(elementName));
+                ResourceLocation elementName = new ResourceLocation(modId, entry.getKey());
+                ELEMENTS.put(elementName, entry.getValue().setRegistryName(elementName));
+            }
+
+            if (config) {
+
+                // create dummy element for general config section
+                AbstractElement generalElement = AbstractElement.createEmpty(new ResourceLocation(modId, "general"));
+                ConfigManager.load(generalElement, ImmutableSet.copyOf(MOD_ELEMENTS.values()), type -> ConfigManager.getFileName(modId, type, path));
+                // add general option to storage so it can be reloaded during load phase
+                ELEMENTS.put(generalElement.getRegistryName(), generalElement);
+            }
+
+            MOD_ELEMENTS.values().forEach(AbstractElement::setup);
+            MOD_ELEMENTS.clear();
         }
 
-        if (config) {
-
-            // create dummy element for general config section
-            AbstractElement generalElement = AbstractElement.createEmpty(new ResourceLocation(modId, "general"));
-            ConfigManager.load(generalElement, ImmutableSet.copyOf(MOD_ELEMENTS.values()), type -> ConfigManager.getFileName(modId, type, path));
-            // add general option to storage so it can be reloaded during load phase
-            ELEMENTS.put(generalElement.getRegistryName(), generalElement);
-        }
-
-        MOD_ELEMENTS.values().forEach(AbstractElement::setup);
-        MOD_ELEMENTS.clear();
     }
 
     /**
