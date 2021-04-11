@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.fuzs.diagonalfences.mixin",
+  "refmap": "diagonalfences.refmap.json",
+  "mixins": [
+    "accessor.IVoxelShapeAccessor",
+    "FenceBlockMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
