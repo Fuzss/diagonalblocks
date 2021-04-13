@@ -1,4 +1,4 @@
-package com.fuzs.puzzleslib_df.config.serialization;
+package com.fuzs.puzzleslib_df.json.adapter;
 
 import com.google.gson.*;
 import net.minecraft.util.JSONUtils;
@@ -9,11 +9,11 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
 import java.lang.reflect.Type;
 import java.util.Optional;
 
-public class RegistryEntrySerializer<T extends IForgeRegistryEntry<T>> implements JsonDeserializer<T>, JsonSerializer<T> {
+public class RegistryEntryAdapter<T extends IForgeRegistryEntry<T>> implements JsonDeserializer<T>, JsonSerializer<T> {
 
     private final IForgeRegistry<T> registry;
 
-    public RegistryEntrySerializer(IForgeRegistry<T> registry) {
+    public RegistryEntryAdapter(IForgeRegistry<T> registry) {
 
         this.registry = registry;
     }

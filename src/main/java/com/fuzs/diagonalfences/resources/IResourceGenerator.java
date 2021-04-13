@@ -1,6 +1,6 @@
 package com.fuzs.diagonalfences.resources;
 
-import com.fuzs.puzzleslib_df.config.json.JsonConfigFileUtil;
+import com.fuzs.puzzleslib_df.json.JsonConfigFileUtil;
 import com.google.gson.JsonElement;
 import net.minecraft.util.ResourceLocation;
 

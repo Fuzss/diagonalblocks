@@ -1,4 +1,4 @@
-package com.fuzs.puzzleslib_df.config.json;
+package com.fuzs.puzzleslib_df.json;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

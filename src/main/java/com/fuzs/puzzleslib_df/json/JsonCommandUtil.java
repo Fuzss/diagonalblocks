@@ -1,4 +1,4 @@
-package com.fuzs.puzzleslib_df.config.json;
+package com.fuzs.puzzleslib_df.json;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;

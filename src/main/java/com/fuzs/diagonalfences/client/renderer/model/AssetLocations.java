@@ -16,7 +16,6 @@ public class AssetLocations {
 
     public static ResourceLocation getBlockModelPath(ResourceLocation location) {
 
-        location = getBlockModelName(location);
         return new ResourceLocation(location.getNamespace(), "models/" + location.getPath() + ".json");
     }
 

@@ -5,12 +5,16 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.resources.IResourceManager;
+import net.minecraft.state.Property;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -25,19 +29,19 @@ public class BlockAssetGenerator implements IResourceGenerator {
         this.resourceManager = resourceManager;
     }
 
-    public IResourceGenerator addUnits(Collection<Block> blocks, BlockStateModelUnit.ModelData data) {
+    public IResourceGenerator addUnits(Collection<Block> blocks, Map<Property<?>, Property<?>> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
 
         for (Block block : blocks) {
 
-            this.addUnit(block, data);
+            this.addUnit(block, propertyConverter, elementsConverter);
         }
 
         return this;
     }
 
-    public IResourceGenerator addUnit(Block block, BlockStateModelUnit.ModelData data) {
+    public IResourceGenerator addUnit(Block block, Map<Property<?>, Property<?>> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
 
-        BlockStateModelUnit unit = new BlockStateModelUnit(this.resourceManager, block, data);
+        BlockStateModelUnit unit = new BlockStateModelUnit(this.resourceManager, block, propertyConverter, elementsConverter);
         this.resources.put(AssetLocations.getBlockStatesPath(unit.blockLocation), unit::load);
 
         return this;

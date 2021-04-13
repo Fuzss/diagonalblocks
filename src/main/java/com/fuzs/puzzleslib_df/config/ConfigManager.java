@@ -1,7 +1,7 @@
 package com.fuzs.puzzleslib_df.config;
 
 import com.fuzs.puzzleslib_df.PuzzlesLib;
-import com.fuzs.puzzleslib_df.config.json.JsonConfigFileUtil;
+import com.fuzs.puzzleslib_df.json.JsonConfigFileUtil;
 import com.fuzs.puzzleslib_df.config.option.ConfigOption;
 import com.fuzs.puzzleslib_df.config.option.OptionsBuilder;
 import com.fuzs.puzzleslib_df.config.serialization.EntryCollectionBuilder;

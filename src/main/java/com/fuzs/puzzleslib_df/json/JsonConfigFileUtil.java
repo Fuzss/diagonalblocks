@@ -1,4 +1,4 @@
-package com.fuzs.puzzleslib_df.config.json;
+package com.fuzs.puzzleslib_df.json;
 
 import com.fuzs.puzzleslib_df.PuzzlesLib;
 import com.google.common.collect.Lists;
