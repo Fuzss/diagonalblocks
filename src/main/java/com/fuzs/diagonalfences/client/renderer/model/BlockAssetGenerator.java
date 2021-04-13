@@ -1,6 +1,7 @@
 package com.fuzs.diagonalfences.client.renderer.model;
 
 import com.fuzs.diagonalfences.resources.IResourceGenerator;
+import com.fuzs.puzzleslib_df.client.util.AssetLocations;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;

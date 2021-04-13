@@ -1,6 +1,6 @@
 package com.fuzs.diagonalfences.util.shape;
 
-import com.fuzs.diagonalfences.mixin.accessor.IVoxelShapeAccessor;
+import com.fuzs.puzzleslib_df.util.math.shapes.ExtensibleVoxelShape;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.util.Direction;
@@ -47,7 +47,7 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
     @Override
     protected DoubleList getValues(Direction.Axis axis) {
 
-        return ((IVoxelShapeAccessor) this.collisionShape).callGetValues(axis);
+        return this.callGetValues(this.collisionShape, axis);
     }
 
     @Override

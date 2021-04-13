@@ -1,5 +1,7 @@
 package com.fuzs.diagonalfences.util.shape;
 
+import net.minecraft.block.Block;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.vector.Vector3d;
 
 import java.util.stream.Stream;
@@ -18,22 +20,30 @@ public class VoxelUtils {
 
     public static Vector3d[] flipX(Vector3d[] edges) {
 
-        return Stream.of(edges).map(edge -> new Vector3d(1.0 - edge.x, edge.y, edge.z)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> new Vector3d(16.0 - edge.x, edge.y, edge.z)).toArray(Vector3d[]::new);
     }
 
     public static Vector3d[] flipZ(Vector3d[] edges) {
 
-        return Stream.of(edges).map(edge -> new Vector3d(edge.x, edge.y, 1.0 - edge.z)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> new Vector3d(edge.x, edge.y, 16.0 - edge.z)).toArray(Vector3d[]::new);
     }
 
-    public static Vector3d[] flip(Vector3d[] edges) {
+    public static Vector3d[] mirror(Vector3d[] edges) {
 
         return flipZ(flipX(edges));
     }
 
-    public static Vector3d[] rotate(Vector3d[] edges) {
+    public static Vector3d[] ortho(Vector3d[] edges) {
 
         return Stream.of(edges).map(edge -> new Vector3d(edge.z, edge.y, edge.x)).toArray(Vector3d[]::new);
+    }
+
+    public static VoxelShape makeCuboidShape(Vector3d[] outline) {
+
+        Vector3d start = outline[0];
+        Vector3d end = outline[1];
+
+        return Block.makeCuboidShape(start.x, start.y, start.z, end.x, end.y, end.z);
     }
 
     public static Vector3d[] createVectorArray(Float... values) {

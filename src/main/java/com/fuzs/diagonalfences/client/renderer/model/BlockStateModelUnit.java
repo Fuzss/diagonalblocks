@@ -2,6 +2,7 @@ package com.fuzs.diagonalfences.client.renderer.model;
 
 import com.fuzs.diagonalfences.DiagonalFences;
 import com.fuzs.puzzleslib_df.client.json.adapter.BlockPartAdapter;
+import com.fuzs.puzzleslib_df.client.util.AssetLocations;
 import com.fuzs.puzzleslib_df.json.JsonConfigFileUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -26,6 +27,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,98 +56,55 @@ public class BlockStateModelUnit {
     public Map<ResourceLocation, JsonElement> load() {
 
         this.resources.clear();
+        JsonElement blockStatesElement = this.loadResource(AssetLocations.getBlockStatesPath(this.blockLocation), reader -> JsonConfigFileUtil.GSON.fromJson(reader, JsonElement.class));
+        if (blockStatesElement instanceof JsonObject && blockStatesElement.getAsJsonObject().has("multipart")) {
 
-        JsonElement blockStates = this.loadResource(AssetLocations.getBlockStatesPath(this.blockLocation), reader -> JsonConfigFileUtil.GSON.fromJson(reader, JsonElement.class));
-        if (blockStates instanceof JsonObject && blockStates.getAsJsonObject().has("multipart")) {
-
-            JsonArray selectorArray = blockStates.getAsJsonObject().getAsJsonArray("multipart");
             // will be added after iterating
-            List<JsonElement> additionalSelectors = Lists.newArrayList();
-            for (JsonElement jsonElement : selectorArray) {
+            List<JsonElement> newSelectors = Lists.newArrayList();
+            JsonArray selectorArray = blockStatesElement.getAsJsonObject().getAsJsonArray("multipart");
+            for (JsonElement selectorElement : selectorArray) {
 
-                JsonObject multipartObject = jsonElement.getAsJsonObject();
-                if (multipartObject.has("when")) {
+                JsonObject selectorObject = selectorElement.getAsJsonObject();
+                if (selectorObject.has("when")) {
 
-                    JsonObject whenObject = multipartObject.getAsJsonObject("when");
-                    boolean isConvertible = whenObject.entrySet().stream()
-                            .map(Map.Entry::getKey)
-                            .anyMatch(this.propertyConverter::containsKey);
-
-                    if (isConvertible) {
-
-                        JsonObject convertedConditionObject = this.getConvertedCondition(whenObject);
-                        // apply must be present if we've come this far
-                        JsonElement applyElement = multipartObject.get("apply");
-                        JsonElement convertedVariantElement;
-                        if (applyElement.isJsonArray()) {
-
-                            JsonArray variantList = new JsonArray();
-                            for (JsonElement variantElement : applyElement.getAsJsonArray()) {
-
-                                variantList.add(this.getConvertedVariant(variantElement));
-                            }
-
-                            convertedVariantElement = variantList;
-                        } else {
-
-                            convertedVariantElement = this.getConvertedVariant(applyElement);
-                        }
-
-                        JsonObject selectorObject = new JsonObject();
-                        selectorObject.add("when", convertedConditionObject);
-                        selectorObject.add("apply", convertedVariantElement);
-                        additionalSelectors.add(selectorObject);
-                    }
+                    JsonObject conditionObject = selectorObject.getAsJsonObject("when");
+                    // must always be present
+                    JsonElement variantListElement = selectorObject.get("apply");
+                    this.makeNewSelector(conditionObject, variantListElement).ifPresent(newSelectors::add);
                 }
             }
 
-            additionalSelectors.forEach(selectorArray::add);
-            this.resources.put(AssetLocations.getBlockStatesPath(this.blockLocation), blockStates);
+            newSelectors.forEach(selectorArray::add);
+            this.resources.put(AssetLocations.getBlockStatesPath(this.blockLocation), blockStatesElement);
         }
 
         return ImmutableMap.copyOf(this.resources);
     }
 
-    private JsonElement getConvertedVariant(JsonElement variantElement) {
+    private Optional<JsonElement> makeNewSelector(JsonObject conditionObject, JsonElement variantListElement) {
 
-        JsonObject convertedVariantObject = new JsonObject();
-        for (Map.Entry<String, JsonElement> entry : variantElement.getAsJsonObject().entrySet()) {
+        // only convert when there is at least one key which would change
+        boolean isConvertible = conditionObject.entrySet().stream()
+                .map(Map.Entry::getKey)
+                .anyMatch(this.propertyConverter::containsKey);
 
-            String key = entry.getKey();
-            JsonElement value = entry.getValue();
-            if (key.equals("model")) {
+        if (isConvertible) {
 
-                ResourceLocation modelLocation = new ResourceLocation(value.getAsString());
-                ResourceLocation convertedModelLocation = new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath() + "_" + Integer.toHexString(this.hashCode()));
-                value = new JsonPrimitive(convertedModelLocation.toString());
-                if (!this.resources.containsKey(AssetLocations.getBlockModelPath(convertedModelLocation))) {
+            JsonObject newSelectorObject = new JsonObject();
+            JsonObject newConditionObject = this.getConvertedCondition(conditionObject);
+            newSelectorObject.add("when", newConditionObject);
+            JsonElement newVariantListElement = this.getConvertedVariantList(variantListElement);
+            newSelectorObject.add("apply", newVariantListElement);
 
-                    JsonElement modelElement = this.loadResource(AssetLocations.getBlockModelPath(modelLocation),
-                            reader -> JsonConfigFileUtil.GSON.fromJson(reader, JsonElement.class));
-                    if (modelElement instanceof JsonObject) {
-
-                        BlockModel blockModel = this.loadModel(modelLocation);
-                        // load all parent models which is important when getting elements
-                        blockModel.getTextures(this::loadModel, Sets.newHashSet());
-                        List<BlockPart> elements = blockModel.getElements();
-                        // modify elements list using provided converter
-                        DiagonalFences.LOGGER.info(modelLocation);
-                        this.elementsConverter.accept(elements);
-                        // read model from json once more, but this time we keep it as a json element
-                        modelElement.getAsJsonObject().add("elements", BlockPartAdapter.GSON.toJsonTree(elements));
-                        this.resources.put(AssetLocations.getBlockModelPath(convertedModelLocation), modelElement);
-                    }
-                }
-            }
-
-            convertedVariantObject.add(key, value);
+            return Optional.of(newSelectorObject);
         }
 
-        return convertedVariantObject;
+        return Optional.empty();
     }
 
     private JsonObject getConvertedCondition(JsonObject whenObject) {
 
+        // convert every property which is convertible and leave the rest as is
         JsonObject convertedWhenObject = new JsonObject();
         for (Map.Entry<String, JsonElement> entry : whenObject.entrySet()) {
 
@@ -155,6 +114,73 @@ public class BlockStateModelUnit {
         }
 
         return convertedWhenObject;
+    }
+
+    private JsonElement getConvertedVariantList(JsonElement variantElement) {
+
+        if (variantElement.isJsonArray()) {
+
+            JsonArray variantListArray = new JsonArray();
+            for (JsonElement variantListElement : variantElement.getAsJsonArray()) {
+
+                variantListArray.add(this.getConvertedVariant(variantListElement));
+            }
+
+            return variantListArray;
+        }
+
+        return this.getConvertedVariant(variantElement);
+    }
+
+    private JsonElement getConvertedVariant(JsonElement variantElement) {
+
+        JsonObject newVariantObject = new JsonObject();
+        for (Map.Entry<String, JsonElement> variantEntry : variantElement.getAsJsonObject().entrySet()) {
+
+            String key = variantEntry.getKey();
+            JsonElement value = variantEntry.getValue();
+            if (key.equals("model")) {
+
+                ResourceLocation modelLocation = new ResourceLocation(value.getAsString());
+                ResourceLocation convertedModelLocation = new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath() + "_" + Integer.toHexString(this.hashCode()));
+                value = new JsonPrimitive(convertedModelLocation.toString());
+                this.makeModel(modelLocation, convertedModelLocation);
+            }
+
+            newVariantObject.add(key, value);
+        }
+
+        return newVariantObject;
+    }
+
+    private void makeModel(ResourceLocation modelLocation, ResourceLocation convertedModelLocation) {
+
+        // model might have been made before in case it's being used multiple times
+        if (!this.resources.containsKey(AssetLocations.getBlockModelPath(convertedModelLocation))) {
+
+            JsonElement modelElement = this.loadResource(AssetLocations.getBlockModelPath(modelLocation),
+                    reader -> JsonConfigFileUtil.GSON.fromJson(reader, JsonElement.class));
+            if (modelElement instanceof JsonObject) {
+
+                List<BlockPart> elements = this.getConvertedModelElements(modelLocation);
+                // read model from json once more, but this time we keep it as a json element
+                modelElement.getAsJsonObject().add("elements", BlockPartAdapter.GSON.toJsonTree(elements));
+                this.resources.put(AssetLocations.getBlockModelPath(convertedModelLocation), modelElement);
+            }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private List<BlockPart> getConvertedModelElements(ResourceLocation modelLocation) {
+
+        BlockModel blockModel = this.loadModel(modelLocation);
+        // load all parent models which is important when getting elements
+        blockModel.getTextures(this::loadModel, Sets.newHashSet());
+        List<BlockPart> elements = blockModel.getElements();
+        // modify elements list using provided converter
+        this.elementsConverter.accept(elements);
+
+        return elements;
     }
 
     private BlockModel loadModel(ResourceLocation location) {

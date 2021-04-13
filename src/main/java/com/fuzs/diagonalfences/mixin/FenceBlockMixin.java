@@ -1,10 +1,13 @@
 package com.fuzs.diagonalfences.mixin;
 
+import com.fuzs.diagonalfences.DiagonalFences;
 import com.fuzs.diagonalfences.util.EightWayDirection;
 import com.fuzs.diagonalfences.block.IEightWayBlock;
 import com.fuzs.diagonalfences.util.shape.NoneVoxelShape;
 import com.fuzs.diagonalfences.util.shape.VoxelCollection;
 import com.fuzs.diagonalfences.util.shape.VoxelUtils;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
@@ -27,11 +30,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Mixin(FenceBlock.class)
 public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayBlock {
 
+    private static final Map<List<Float>, VoxelShape[]> DIMENSIONS_TO_SHAPE_MAP = Maps.newHashMap();
     private Object2IntMap<BlockState> statePaletteMap = new Object2IntOpenHashMap<>();
 
     public FenceBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
@@ -60,7 +68,7 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
             this.statePaletteMap = new Object2IntOpenHashMap<>();
         }
 
-        return statePaletteMap.computeIntIfAbsent(state, this::getEightWayStateIndex);
+        return this.statePaletteMap.computeIntIfAbsent(state, this::getEightWayStateIndex);
     }
 
     @Shadow
@@ -118,22 +126,29 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     @SuppressWarnings("NullableProblems")
     @Override
     protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-        
+
+        ArrayList<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        return DIMENSIONS_TO_SHAPE_MAP.computeIfAbsent(dimensions, dimension -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
+    }
+
+    private VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
+
         float nodeStart = 8.0F - nodeWidth;
         float nodeEnd = 8.0F + nodeWidth;
         float extensionStart = 8.0F - extensionWidth;
         float extensionEnd = 8.0F + extensionWidth;
-        VoxelShape nodeShape = Block.makeCuboidShape(nodeStart, 0.0, nodeStart, nodeEnd, nodeHeight, nodeEnd);
-        VoxelShape southShape = Block.makeCuboidShape(extensionStart, extensionBottom, 0.0, extensionEnd, extensionHeight, extensionStart);
-        VoxelShape westShape = Block.makeCuboidShape(16.0 - extensionEnd, extensionBottom, extensionStart, 16.0, extensionHeight, extensionEnd);
-        VoxelShape northShape = Block.makeCuboidShape(extensionStart, extensionBottom, 16.0 - extensionEnd, extensionEnd, extensionHeight, 16.0);
-        VoxelShape eastShape = Block.makeCuboidShape(0.0, extensionBottom, extensionStart, extensionStart, extensionHeight, extensionEnd);
-        VoxelShape southWestShape = this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, EightWayDirection.SOUTH_WEST);
-        VoxelShape northWestShape = this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, EightWayDirection.NORTH_WEST);
-        VoxelShape northEastShape = this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, EightWayDirection.NORTH_EAST);
-        VoxelShape southEastShape = this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, EightWayDirection.SOUTH_EAST);
 
-        VoxelShape[] directionalShapes = new VoxelShape[]{northShape, eastShape, southShape, westShape, northEastShape, southEastShape, southWestShape, northWestShape};
+        VoxelShape nodeShape = Block.makeCuboidShape(nodeStart, 0.0, nodeStart, nodeEnd, nodeHeight, nodeEnd);
+        Vector3d[] sideShape = new Vector3d[]{new Vector3d(extensionStart, extensionBottom, 0.0), new Vector3d(extensionEnd, extensionHeight, extensionStart)};
+        VoxelShape[] verticalShapes = Stream.of(EightWayDirection.values()).limit(4).map(direction -> direction.transform(sideShape)).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
+        VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.values()).skip(4).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction)).toArray(VoxelShape[]::new);
+        VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
+
+        return this.constructStateShapes(nodeShape, sideShapes);
+    }
+
+    private VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes) {
+
         VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
         for (int i = 0; i < stateShapes.length; i++) {
 
@@ -152,12 +167,12 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
 
     private VoxelShape getDiagonalShape(float extensionWidth, float extensionBottom, float extensionHeight, EightWayDirection direction) {
 
-        VoxelShape diagonalShape = this.getDiagonalCollisionShape(extensionWidth, extensionBottom, extensionHeight, direction);
+        VoxelShape collisionShape = this.getDiagonalCollisionShape(extensionWidth, extensionBottom, extensionHeight, direction);
+        // adept width for diagonal rotation
         extensionWidth = (float) Math.sqrt(extensionWidth * extensionWidth * 2);
         final float diagonalSide = 0.7071067812F * extensionWidth;
-        Vector3d[] corners = VoxelUtils.scaleDown(VoxelUtils.createVectorArray(-diagonalSide, extensionHeight, diagonalSide, -diagonalSide + 8.0F, extensionHeight, diagonalSide + 8.0F, -diagonalSide, extensionBottom, diagonalSide, -diagonalSide + 8.0F, extensionBottom, diagonalSide + 8.0F, diagonalSide, extensionHeight, -diagonalSide, diagonalSide + 8.0F, extensionHeight, -diagonalSide + 8.0F, diagonalSide, extensionBottom, -diagonalSide, diagonalSide + 8.0F, extensionBottom, -diagonalSide + 8.0F));
+        Vector3d[] corners = VoxelUtils.createVectorArray(-diagonalSide, extensionHeight, diagonalSide, -diagonalSide + 8.0F, extensionHeight, diagonalSide + 8.0F, -diagonalSide, extensionBottom, diagonalSide, -diagonalSide + 8.0F, extensionBottom, diagonalSide + 8.0F, diagonalSide, extensionHeight, -diagonalSide, diagonalSide + 8.0F, extensionHeight, -diagonalSide + 8.0F, diagonalSide, extensionBottom, -diagonalSide, diagonalSide + 8.0F, extensionBottom, -diagonalSide + 8.0F);
         Vector3d[] edges = VoxelUtils.create12Edges(corners);
-
         if (direction.getDirectionVec().getX() != 1) {
 
             edges = VoxelUtils.flipX(edges);
@@ -168,7 +183,7 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
             edges = VoxelUtils.flipZ(edges);
         }
 
-        return new NoneVoxelShape(diagonalShape, edges);
+        return new NoneVoxelShape(collisionShape, VoxelUtils.scaleDown(edges));
     }
 
     private VoxelShape getDiagonalCollisionShape(float extensionWidth, float extensionBottom, float extensionHeight, EightWayDirection direction) {
@@ -179,8 +194,8 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
             Vector3i directionVec = direction.getDirectionVec();
             int posX = directionVec.getX() > 0 ? i : 16 - i;
             int posZ = directionVec.getZ() > 0 ? i : 16 - i;
-            VoxelShape cubeShape = Block.makeCuboidShape(posX - extensionWidth, extensionBottom, posZ - extensionWidth, posX + extensionWidth, extensionHeight, posZ + extensionWidth);
-            collisionShape = VoxelShapes.or(collisionShape, cubeShape);
+            VoxelShape cuboidShape = Block.makeCuboidShape(posX - extensionWidth, extensionBottom, posZ - extensionWidth, posX + extensionWidth, extensionHeight, posZ + extensionWidth);
+            collisionShape = VoxelShapes.or(collisionShape, cuboidShape);
         }
 
         return collisionShape;

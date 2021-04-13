@@ -5,7 +5,6 @@
   "package": "com.fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
-    "accessor.IVoxelShapeAccessor",
     "FenceBlockMixin"
   ],
   "client": [

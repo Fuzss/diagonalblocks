@@ -1,6 +1,8 @@
 package com.fuzs.diagonalfences.util;
 
+import com.fuzs.diagonalfences.util.shape.VoxelUtils;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3i;
 
 import java.util.Arrays;
@@ -32,6 +34,21 @@ public enum EightWayDirection {
     public int getHorizontalIndex() {
 
         return this.horizontalIndex;
+    }
+
+    public Vector3d[] transform(Vector3d[] vectors) {
+
+        if (this.directionVec.getX() != 0) {
+
+            vectors = VoxelUtils.ortho(vectors);
+        }
+
+        if (this.directionVec.getX() == -1 || this.directionVec.getZ() == -1) {
+
+            vectors = VoxelUtils.mirror(vectors);
+        }
+
+        return vectors;
     }
 
     public EightWayDirection opposite() {

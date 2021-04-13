@@ -1,7 +1,8 @@
-package com.fuzs.diagonalfences.client.renderer.model;
+package com.fuzs.puzzleslib_df.client.util;
 
 import net.minecraft.util.ResourceLocation;
 
+@SuppressWarnings("unused")
 public class AssetLocations {
 
     public static ResourceLocation getBlockStatesPath(ResourceLocation location) {
