@@ -1,6 +1,5 @@
-package com.fuzs.diagonalfences.util.shape;
+package com.fuzs.puzzleslib_df.util.math.shapes;
 
-import com.fuzs.puzzleslib_df.util.math.shapes.ExtensibleVoxelShape;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.util.Direction;
@@ -58,7 +57,6 @@ public class VoxelCollection extends ExtensibleVoxelShape {
         this.setCollisionShape(VoxelShapes.or(this.collisionShape, voxelShape));
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
     public void forEachEdge(VoxelShapes.ILineConsumer boxConsumer) {
 

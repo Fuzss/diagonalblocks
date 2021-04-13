@@ -1,4 +1,4 @@
-package com.fuzs.diagonalfences.util.shape;
+package com.fuzs.puzzleslib_df.util.math.shapes;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.math.shapes.VoxelShape;

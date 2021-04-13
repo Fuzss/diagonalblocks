@@ -44,6 +44,7 @@ public class DiagonalFencesElement extends AbstractElement implements IClientEle
 
         // we just need an event which is called before ResourceManager is loaded for the first time
         // (which is during construction of Minecraft.class), but after registries have been populated
+        // also resource pack needs to be added earlier, so no way doing everything at once
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onParticleFactoryRegister);
 
         Minecraft mc = Minecraft.getInstance();

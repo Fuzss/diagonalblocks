@@ -1,6 +1,6 @@
 package com.fuzs.diagonalfences.util;
 
-import com.fuzs.diagonalfences.util.shape.VoxelUtils;
+import com.fuzs.puzzleslib_df.util.math.shapes.VoxelUtils;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3i;

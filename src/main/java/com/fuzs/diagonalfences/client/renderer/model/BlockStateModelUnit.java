@@ -50,6 +50,8 @@ public class BlockStateModelUnit {
         this.blockLocation = block.getRegistryName();
         this.propertyConverter = propertyConverter.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().getName()));
+        // this should really convert the whole model and not just its elements,
+        // but that would require serializing the whole model also which there is no need to currently
         this.elementsConverter = elementsConverter;
     }
 
