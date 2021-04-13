@@ -15,6 +15,12 @@ import java.util.function.Supplier;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class PuzzlesLibUtil {
 
+    public static <T> T make(T object, Consumer<T> consumer) {
+
+        consumer.accept(object);
+        return object;
+    }
+
     /**
      * run an action, if an exception occurs run a different action
      * @param object object for actions

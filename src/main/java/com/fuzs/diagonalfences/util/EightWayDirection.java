@@ -5,35 +5,41 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3i;
 
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 public enum EightWayDirection {
 
-    SOUTH(0, 1),
-    WEST(-1, 0),
-    NORTH(0, -1),
-    EAST(1, 0),
-    SOUTH_WEST(-1, 1),
-    NORTH_WEST(-1, -1),
-    NORTH_EAST(1, -1),
-    SOUTH_EAST(1, 1);
+    SOUTH(0, 0, 1),
+    WEST(1, -1, 0),
+    NORTH(2, 0, -1),
+    EAST(3, 1, 0),
+    SOUTH_WEST(0, -1, 1),
+    NORTH_WEST(1, -1, -1),
+    NORTH_EAST(2, 1, -1),
+    SOUTH_EAST(3, 1, 1);
 
-    private final Vector3i directionVec;
-    private final int horizontalIndex = 1 << this.ordinal();
+    public final int index;
+    public final Vector3i directionVec;
 
-    EightWayDirection(int directionX, int directionZ) {
+    EightWayDirection(int index, int directionX, int directionZ) {
 
+        this.index = index;
         this.directionVec = new Vector3i(directionX, 0, directionZ);
     }
 
-    public Vector3i getDirectionVec() {
+    public boolean isCardinal() {
 
-        return this.directionVec;
+        return !this.isIntercardinal();
+    }
+
+    public boolean isIntercardinal() {
+
+        return Math.abs(this.directionVec.getX()) + Math.abs(this.directionVec.getZ()) == 2;
     }
 
     public int getHorizontalIndex() {
 
-        return this.horizontalIndex;
+        return 1 << (this.isIntercardinal() ? 4 + this.index : this.index);
     }
 
     public Vector3d[] transform(Vector3d[] vectors) {
@@ -51,44 +57,57 @@ public enum EightWayDirection {
         return vectors;
     }
 
-    public EightWayDirection opposite() {
+    public EightWayDirection getOpposite() {
 
-        if (this.ordinal() >= 4) {
-
-            return EightWayDirection.values()[(this.ordinal() + 2) % 4 + 4];
-        }
-
-        return EightWayDirection.values()[(this.ordinal() + 2) % 4];
+        return EightWayDirection.byIndex((this.index + 2), this.isIntercardinal());
     }
 
-    public Direction convert() {
+    public EightWayDirection[] getCardinalNeighbors() {
 
-        return Direction.byHorizontalIndex(this.ordinal());
+        assert this.isIntercardinal() : "Direction already is cardinal";
+        return new EightWayDirection[]{EightWayDirection.byIndex(this.index, false), EightWayDirection.byIndex(this.index + 1, false)};
+    }
+
+    public EightWayDirection[] getIntercardinalNeighbors() {
+
+        assert this.isCardinal() : "Direction already is intercardinal";
+        return new EightWayDirection[]{EightWayDirection.byIndex(this.index + 3, true), EightWayDirection.byIndex(this.index, true)};
+    }
+
+    public Direction convertTo() {
+
+        assert this.isCardinal() : "Cannot convert intercardinal direction to vanilla direction";
+        return Direction.byHorizontalIndex(this.index);
+    }
+
+    public static EightWayDirection convertTo(Direction direction) {
+
+        return EightWayDirection.getAllCardinals()[direction.getHorizontalIndex()];
     }
 
     public static EightWayDirection[] getAllCardinals() {
 
-        return Arrays.copyOf(EightWayDirection.values(), 4);
+        return Stream.of(EightWayDirection.values())
+                .filter(EightWayDirection::isCardinal)
+                .toArray(EightWayDirection[]::new);
     }
 
     public static EightWayDirection[] getAllIntercardinals() {
 
-        return Arrays.copyOfRange(EightWayDirection.values(), 4, 8);
+        return Stream.of(EightWayDirection.values())
+                .filter(EightWayDirection::isIntercardinal)
+                .toArray(EightWayDirection[]::new);
     }
 
-    public EightWayDirection[] getCardinals() {
+    public static EightWayDirection byIndex(int index, boolean intercardinal) {
 
-        return new EightWayDirection[]{EightWayDirection.values()[this.ordinal() % 4], EightWayDirection.values()[(this.ordinal() + 1) % 4]};
+        index %= 4;
+        return intercardinal ? getAllIntercardinals()[index] : getAllCardinals()[index];
     }
 
-    public EightWayDirection[] getIntercardinals() {
+    public static EightWayDirection byHorizontalIndex(int index) {
 
-        return new EightWayDirection[]{EightWayDirection.values()[(this.ordinal() + 3) % 4 + 4], EightWayDirection.values()[this.ordinal() + 4]};
-    }
-
-    public static EightWayDirection convert(Direction direction) {
-
-        return EightWayDirection.values()[direction.getHorizontalIndex()];
+        return byIndex(index, index >= 4);
     }
 
 }
