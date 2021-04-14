@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.StateContainer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -33,6 +34,12 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     public void init(AbstractBlock.Properties properties, CallbackInfo callbackInfo) {
 
         this.setDefaultState(this.getDefaultStates(this.getDefaultState()));
+    }
+
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
+
+        this.fillStateContainer2(builder);
     }
 
     @Override
