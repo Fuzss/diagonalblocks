@@ -50,7 +50,11 @@ public interface IEightWayBlock {
         directions.put(EightWayDirection.NORTH_WEST, NORTH_WEST);
     });
 
+    boolean hasProperties();
+
     boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction);
+
+    boolean canConnectDiagonally();
 
     boolean canConnectDiagonally(BlockState blockstate);
 
@@ -139,7 +143,7 @@ public interface IEightWayBlock {
             Vector3i directionVec = direction.directionVec;
             diagonalPos.setAndOffset(pos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
             BlockState diagonalState = world.getBlockState(diagonalPos);
-            if (diagonalState.getBlock() instanceof IEightWayBlock) {
+            if (diagonalState.getBlock() instanceof IEightWayBlock && ((IEightWayBlock) diagonalState.getBlock()).canConnectDiagonally()) {
 
                 // checks if there are vertical connections where a diagonal connection should be formed
                 boolean isBlocked = false;

@@ -4,7 +4,6 @@ import com.fuzs.diagonalfences.element.DiagonalFencesElement;
 import com.fuzs.puzzleslib_df.PuzzlesLib;
 import com.fuzs.puzzleslib_df.element.AbstractElement;
 import com.fuzs.puzzleslib_df.element.ElementRegistry;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +16,7 @@ public class DiagonalFences extends PuzzlesLib {
     public static final String NAME = "Diagonal Fences";
     public static final Logger LOGGER = LogManager.getLogger(DiagonalFences.NAME);
 
-    public static final AbstractElement DIAGONAL_FENCES = register("diagonal_fences", DiagonalFencesElement::new, Dist.CLIENT);
+    public static final AbstractElement DIAGONAL_FENCES = register("diagonal_fences", DiagonalFencesElement::new);
 
     public DiagonalFences() {
 

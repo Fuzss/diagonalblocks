@@ -1,6 +1,7 @@
 package com.fuzs.diagonalfences.mixin;
 
 import com.fuzs.diagonalfences.block.IEightWayBlock;
+import com.fuzs.diagonalfences.element.DiagonalFencesElement;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(FenceBlock.class)
 public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayBlock {
 
+    private boolean hasProperties;
     private Object2IntMap<BlockState> statePaletteMap;
 
     public FenceBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
@@ -30,28 +32,32 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
         super(nodeWidth, extensionWidth, nodeHeight, extensionHeight, collisionY, properties);
     }
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    public void init(AbstractBlock.Properties properties, CallbackInfo callbackInfo) {
+    @Override
+    protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
 
-        this.setDefaultState(this.getDefaultStates(this.getDefaultState()));
-    }
+        if (this.hasProperties()) {
 
-    @Inject(method = "fillStateContainer", at = @At("TAIL"))
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
+            return this.getShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        }
 
-        this.fillStateContainer2(builder);
+        return super.makeShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
     }
 
     @Override
     protected int getIndex(BlockState state) {
 
-        // can't do this in constructor injection as an injection is only possible at tail, but this method is called prior to that
-        if (this.statePaletteMap == null) {
+        if (this.hasProperties()) {
 
-            this.statePaletteMap = new Object2IntOpenHashMap<>();
+            // can't do this in constructor injection as an injection is only possible at tail, but this method is called prior to that
+            if (this.statePaletteMap == null) {
+
+                this.statePaletteMap = new Object2IntOpenHashMap<>();
+            }
+
+            return this.statePaletteMap.computeIntIfAbsent(state, this::makeIndex);
         }
 
-        return this.statePaletteMap.computeIntIfAbsent(state, this::makeIndex);
+        return super.getIndex(state);
     }
 
     @Shadow
@@ -64,44 +70,74 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     }
 
     @Override
+    public boolean hasProperties() {
+
+        return this.hasProperties;
+    }
+
+    @Override
     public boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction) {
 
         return this.canConnect(state, state.isSolidSide(iblockreader, position, direction), direction);
     }
 
     @Override
+    public boolean canConnectDiagonally() {
+
+        // use this with care as the tag might not have been fetched yet
+        return this.hasProperties() && !this.isIn(DiagonalFencesElement.NON_DIAGONAL_FENCES_TAG);
+    }
+
+    @Override
     public boolean canConnectDiagonally(BlockState blockstate) {
 
         Block block = blockstate.getBlock();
-        return !cannotAttach(block) && this.isWoodenFence(block);
+        return block instanceof IEightWayBlock && ((IEightWayBlock) block).canConnectDiagonally() && !cannotAttach(block) && this.isWoodenFence(block);
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    public void init(AbstractBlock.Properties properties, CallbackInfo callbackInfo) {
+
+        if (this.hasProperties()) {
+
+            this.setDefaultState(this.getDefaultStates(this.getDefaultState()));
+        }
+    }
+
+    @Inject(method = "fillStateContainer", at = @At("TAIL"))
+    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
+
+        // do nothing later on when this wasn't called
+        this.hasProperties = true;
+        this.fillStateContainer2(builder);
     }
 
     @SuppressWarnings("ConstantConditions")
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
     public void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
 
-        IBlockReader iblockreader = context.getWorld();
-        BlockPos basePos = context.getPos();
-        FluidState fluidState = context.getWorld().getFluidState(context.getPos());
+        if (this.canConnectDiagonally()) {
 
-        BlockState placementState = super.getStateForPlacement(context);
-        placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
-        callbackInfo.setReturnValue(placementState);
-    }
+            IBlockReader iblockreader = context.getWorld();
+            BlockPos basePos = context.getPos();
+            FluidState fluidState = context.getWorld().getFluidState(context.getPos());
 
-    @Override
-    protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-
-        return this.getShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+            BlockState placementState = super.getStateForPlacement(context);
+            placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
+            callbackInfo.setReturnValue(placementState);
+        }
     }
 
     @Inject(method = "updatePostPlacement", at = @At("TAIL"), cancellable = true)
     public void updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callbackInfo) {
 
-        BlockState returnState = this.updatePostPlacement2(stateIn, facing, facingState, worldIn, currentPos, facingPos, callbackInfo.getReturnValue());
-        if (returnState != null) {
+        if (this.canConnectDiagonally()) {
 
-            callbackInfo.setReturnValue(returnState);
+            BlockState returnState = this.updatePostPlacement2(stateIn, facing, facingState, worldIn, currentPos, facingPos, callbackInfo.getReturnValue());
+            if (returnState != null) {
+
+                callbackInfo.setReturnValue(returnState);
+            }
         }
     }
 
@@ -109,7 +145,10 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     @Override
     public void updateDiagonalNeighbors(BlockState state, IWorld world, BlockPos pos, int flags, int recursionLeft) {
 
-        this.updateDiagonalNeighbors2(state, world, pos, flags, recursionLeft);
+        if (this.canConnectDiagonally()) {
+
+            this.updateDiagonalNeighbors2(state, world, pos, flags, recursionLeft);
+        }
     }
 
 }
