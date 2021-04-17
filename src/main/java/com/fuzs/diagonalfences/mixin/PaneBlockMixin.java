@@ -1,7 +1,7 @@
 package com.fuzs.diagonalfences.mixin;
 
 import com.fuzs.diagonalfences.block.IEightWayBlock;
-import com.fuzs.diagonalfences.element.DiagonalFencesElement;
+import com.fuzs.diagonalfences.element.DiagonalWindowsElement;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
@@ -21,13 +21,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @SuppressWarnings("unused")
-@Mixin(FenceBlock.class)
-public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayBlock {
+@Mixin(PaneBlock.class)
+public abstract class PaneBlockMixin extends FourWayBlock implements IEightWayBlock {
 
     private boolean hasProperties;
     private Object2IntMap<BlockState> statePaletteMap;
 
-    public FenceBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
+    public PaneBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
 
         super(nodeWidth, extensionWidth, nodeHeight, extensionHeight, collisionY, properties);
     }
@@ -71,10 +71,7 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     }
 
     @Shadow
-    public abstract boolean canConnect(BlockState state, boolean isSideSolid, Direction direction);
-
-    @Shadow
-    private boolean isWoodenFence(Block block) {
+    public final boolean canAttachTo(BlockState state, boolean solidSide) {
 
         throw new IllegalStateException();
     }
@@ -88,21 +85,21 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     @Override
     public boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction) {
 
-        return this.canConnect(state, state.isSolidSide(iblockreader, position, direction), direction);
+        return this.canAttachTo(state, state.isSolidSide(iblockreader, position, direction));
     }
 
     @Override
     public boolean canConnectDiagonally() {
 
         // use this with care as the tag might not have been fetched yet
-        return this.hasProperties() && !this.isIn(DiagonalFencesElement.NON_DIAGONAL_FENCES_TAG);
+        return this.hasProperties() && !this.isIn(DiagonalWindowsElement.NON_DIAGONAL_PANES_TAG);
     }
 
     @Override
     public boolean canConnectDiagonally(BlockState blockstate) {
 
         Block block = blockstate.getBlock();
-        return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isWoodenFence(block);
+        return block instanceof PaneBlock && ((IEightWayBlock) block).canConnectDiagonally();
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))

@@ -1,6 +1,7 @@
 package com.fuzs.diagonalfences;
 
 import com.fuzs.diagonalfences.element.DiagonalFencesElement;
+import com.fuzs.diagonalfences.element.DiagonalWindowsElement;
 import com.fuzs.puzzleslib_df.PuzzlesLib;
 import com.fuzs.puzzleslib_df.element.AbstractElement;
 import com.fuzs.puzzleslib_df.element.ElementRegistry;
@@ -17,6 +18,7 @@ public class DiagonalFences extends PuzzlesLib {
     public static final Logger LOGGER = LogManager.getLogger(DiagonalFences.NAME);
 
     public static final AbstractElement DIAGONAL_FENCES = register("diagonal_fences", DiagonalFencesElement::new);
+    public static final AbstractElement DIAGONAL_WINDOWS = register("diagonal_windows", DiagonalWindowsElement::new);
 
     public DiagonalFences() {
 

@@ -1,16 +1,15 @@
 package com.fuzs.diagonalfences.client.element;
 
-import com.fuzs.diagonalfences.DiagonalFences;
 import com.fuzs.diagonalfences.block.IEightWayBlock;
 import com.fuzs.diagonalfences.client.renderer.model.BlockAssetGenerator;
-import com.fuzs.diagonalfences.element.DiagonalFencesElement;
+import com.fuzs.diagonalfences.element.DiagonalWindowsElement;
 import com.fuzs.diagonalfences.resources.IResourceInfoFactory;
 import com.fuzs.diagonalfences.resources.RuntimeResourcePack;
 import com.fuzs.puzzleslib_df.element.extension.ElementExtension;
 import com.fuzs.puzzleslib_df.element.side.IClientElement;
 import com.google.common.collect.Lists;
 import net.minecraft.block.Block;
-import net.minecraft.block.FenceBlock;
+import net.minecraft.block.PaneBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.client.renderer.model.BlockPartRotation;
@@ -30,11 +29,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElement> implements IClientElement {
+public class DiagonalWindowsExtension extends ElementExtension<DiagonalWindowsElement> implements IClientElement {
 
     private BlockAssetGenerator generator;
 
-    public DiagonalFencesExtension(DiagonalFencesElement parent) {
+    public DiagonalWindowsExtension(DiagonalWindowsElement parent) {
 
         super(parent);
     }
@@ -50,7 +49,7 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
         Minecraft mc = Minecraft.getInstance();
         ResourcePackList packList = mc.getResourcePackList();
         this.generator = new BlockAssetGenerator(mc.getResourceManager());
-        RuntimeResourcePack resourcePack = new RuntimeResourcePack(this.generator, DiagonalFences.NAME, this.parent.getDescription()[0]);
+        RuntimeResourcePack resourcePack = new RuntimeResourcePack(this.generator, "Diagonal Windows", this.parent.getDescription()[0]);
         this.addPackFinder(packList, resourcePack);
     }
 
@@ -63,7 +62,7 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
 
         packList.addPackFinder((infoConsumer, infoFactory) -> {
 
-            ResourcePackInfo resourcepackinfo = resourcePack.createResourcePack(DiagonalFences.MODID, true, ResourcePackInfo.Priority.TOP, true, true);
+            ResourcePackInfo resourcepackinfo = resourcePack.createResourcePack("diagonalwindows", true, ResourcePackInfo.Priority.TOP, true, true);
             infoConsumer.accept(resourcepackinfo);
         });
     }
@@ -71,7 +70,7 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
     private void addUnits() {
 
         Set<Block> allFences = ForgeRegistries.BLOCKS.getValues().stream()
-                .filter(block -> block instanceof FenceBlock && ((IEightWayBlock) block).hasProperties())
+                .filter(block -> block instanceof PaneBlock && ((IEightWayBlock) block).hasProperties())
                 .collect(Collectors.toSet());
         List<Property<?>> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
         Map<Property<?>, Property<?>> propertyConverter = IntStream.range(0, properties.size() / 2)

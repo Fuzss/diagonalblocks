@@ -12,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
@@ -37,31 +39,41 @@ public class RuntimeResourcePack implements IResourcePack, IResourceInfoFactory 
     }
 
     @Override
-    public InputStream getRootResourceStream(String fileName) {
+    public InputStream getRootResourceStream(String fileName) throws IOException {
 
-        // only used by pack.png really and this pack is hidden anyways
-        throw new UnsupportedOperationException();
+        throw new FileNotFoundException();
     }
 
     @Override
-    public InputStream getResourceStream(ResourcePackType type, ResourceLocation location) {
+    public InputStream getResourceStream(ResourcePackType type, ResourceLocation location) throws IOException {
 
         return new ByteArrayInputStream(this.getData(location));
     }
 
-    private byte[] getData(ResourceLocation location) {
+    private byte[] getData(ResourceLocation location) throws IOException {
 
         byte[] data = this.resources.get(location);
         if (data == null) {
 
-            this.locked = true;
-            Map<ResourceLocation, byte[]> unitResources = this.generator.getResource(location);
-            data = unitResources.get(location);
+            Map<ResourceLocation, byte[]> unitResources = this.getGeneratorData(location);
             unitResources.forEach(this.resources::put);
-            this.locked = false;
+            data = unitResources.get(location);
         }
 
         return data;
+    }
+
+    private Map<ResourceLocation, byte[]> getGeneratorData(ResourceLocation location) throws IOException {
+
+        this.locked = true;
+        Map<ResourceLocation, byte[]> unitResources = this.generator.getResource(location);
+        this.locked = false;
+        if (unitResources.isEmpty()) {
+
+            throw new FileNotFoundException();
+        }
+
+        return unitResources;
     }
 
     @Override

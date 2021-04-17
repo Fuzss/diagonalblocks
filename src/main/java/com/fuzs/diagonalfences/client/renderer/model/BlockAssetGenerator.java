@@ -69,7 +69,12 @@ public class BlockAssetGenerator implements IResourceGenerator {
     @Override
     public Map<ResourceLocation, byte[]> getResource(ResourceLocation resource) {
 
-        return this.convert(this.resources.get(resource).get());
+        if (this.hasResourceLocation(resource)) {
+
+            return this.convert(this.resources.get(resource).get());
+        }
+
+        return Collections.emptyMap();
     }
 
     @Override
