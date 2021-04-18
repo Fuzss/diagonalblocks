@@ -89,9 +89,13 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
             // might be best to manually add blocks with such elements to a blacklist
             if (blockPart.partRotation == null || blockPart.partRotation.angle == 0.0F) {
 
-                Vector3f vec = new Vector3f(8.0F, 8.0F, 8.0F);
-                BlockPartRotation rotation = new BlockPartRotation(vec, Direction.Axis.Y, -45.0F, true);
-                blockPart = new BlockPart(blockPart.positionFrom, blockPart.positionTo, blockPart.mapFaces, rotation, blockPart.shade);
+                // cos(-pi/4)
+                final float angle = 0.7071067812F;
+                final float center = 8.0F;
+                Vector3f positionFrom = new Vector3f(blockPart.positionFrom.getX(), blockPart.positionFrom.getY(), (blockPart.positionFrom.getZ() - center) / angle + center);
+                Vector3f positionTo = new Vector3f(blockPart.positionTo.getX(), blockPart.positionTo.getY(), (blockPart.positionTo.getZ() - center) / angle + center);
+                BlockPartRotation rotation = new BlockPartRotation(new Vector3f(center, center, center), Direction.Axis.Y, -45.0F, false);
+                blockPart = new BlockPart(positionFrom, positionTo, blockPart.mapFaces, rotation, blockPart.shade);
                 rotatedElements.add(blockPart);
             }
         }
