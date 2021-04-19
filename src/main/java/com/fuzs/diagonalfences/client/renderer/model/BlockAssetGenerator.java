@@ -8,8 +8,8 @@ import com.google.gson.JsonElement;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.state.Property;
 import net.minecraft.util.ResourceLocation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +30,7 @@ public class BlockAssetGenerator implements IResourceGenerator {
         this.resourceManager = resourceManager;
     }
 
-    public IResourceGenerator addUnits(Collection<Block> blocks, Map<Property<?>, Property<?>> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public IResourceGenerator addUnits(Collection<Block> blocks, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
 
         for (Block block : blocks) {
 
@@ -40,7 +40,7 @@ public class BlockAssetGenerator implements IResourceGenerator {
         return this;
     }
 
-    public IResourceGenerator addUnit(Block block, Map<Property<?>, Property<?>> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public IResourceGenerator addUnit(Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
 
         BlockStateModelUnit unit = new BlockStateModelUnit(this.resourceManager, block, propertyConverter, elementsConverter);
         this.resources.put(AssetLocations.getBlockStatesPath(unit.blockLocation), unit::load);

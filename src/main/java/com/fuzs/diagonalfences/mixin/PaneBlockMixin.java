@@ -2,6 +2,7 @@ package com.fuzs.diagonalfences.mixin;
 
 import com.fuzs.diagonalfences.block.IEightWayBlock;
 import com.fuzs.diagonalfences.element.DiagonalWindowsElement;
+import com.fuzs.puzzleslib_df.util.math.shapes.VoxelCollection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
@@ -100,6 +101,33 @@ public abstract class PaneBlockMixin extends FourWayBlock implements IEightWayBl
 
         Block block = blockstate.getBlock();
         return block instanceof PaneBlock && ((IEightWayBlock) block).canConnectDiagonally();
+    }
+
+    @Override
+    public VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes) {
+
+        VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
+        for (int i = 0; i < stateShapes.length; i++) {
+
+            // don't render outline for node as the texture is transparent making it feel out of place
+            if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
+
+                stateShapes[i] = new VoxelCollection();
+            } else {
+
+                stateShapes[i] = new VoxelCollection(nodeShape);
+            }
+
+            for (int j = 0; j < directionalShapes.length; j++) {
+
+                if ((i & (1 << j)) != 0) {
+
+                    stateShapes[i].addVoxelShape(directionalShapes[j]);
+                }
+            }
+        }
+
+        return stateShapes;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))

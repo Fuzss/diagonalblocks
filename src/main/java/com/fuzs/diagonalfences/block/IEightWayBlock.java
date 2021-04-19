@@ -203,6 +203,7 @@ public interface IEightWayBlock {
         VoxelShape collisionShape = this.getDiagonalCollisionShape(extensionWidth, extensionBottom, extensionHeight, direction);
         // adept width for diagonal rotation
         extensionWidth = (float) Math.sqrt(extensionWidth * extensionWidth * 2);
+        // cos(-pi/4)
         final float diagonalSide = 0.7071067812F * extensionWidth;
         Vector3d[] corners = VoxelUtils.createVectorArray(-diagonalSide, extensionHeight, diagonalSide, -diagonalSide + 8.0F, extensionHeight, diagonalSide + 8.0F, -diagonalSide, extensionBottom, diagonalSide, -diagonalSide + 8.0F, extensionBottom, diagonalSide + 8.0F, diagonalSide, extensionHeight, -diagonalSide, diagonalSide + 8.0F, extensionHeight, -diagonalSide + 8.0F, diagonalSide, extensionBottom, -diagonalSide, diagonalSide + 8.0F, extensionBottom, -diagonalSide + 8.0F);
         Vector3d[] edges = VoxelUtils.create12Edges(corners);

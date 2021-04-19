@@ -15,12 +15,13 @@ import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.client.renderer.model.BlockPartRotation;
 import net.minecraft.resources.ResourcePackInfo;
 import net.minecraft.resources.ResourcePackList;
-import net.minecraft.state.Property;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +73,11 @@ public class DiagonalWindowsExtension extends ElementExtension<DiagonalWindowsEl
         Set<Block> allFences = ForgeRegistries.BLOCKS.getValues().stream()
                 .filter(block -> block instanceof PaneBlock && ((IEightWayBlock) block).hasProperties())
                 .collect(Collectors.toSet());
-        List<Property<?>> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
-        Map<Property<?>, Property<?>> propertyConverter = IntStream.range(0, properties.size() / 2)
-                .boxed().collect(Collectors.toMap(properties::get, i -> properties.get(i + 4)));
+        List<BooleanProperty> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
+        Map<Pair<String, String>, String> propertyConverter = IntStream.range(0, properties.size() / 2)
+                .boxed()
+                .map(i -> Pair.of(properties.get(i), properties.get(i + 4).getName()))
+                .collect(Collectors.toMap(entry -> Pair.of(entry.getKey().getName(), entry.getKey().getName(true)), Pair::getValue));
 
         this.generator.addUnits(allFences, propertyConverter, this::modifyElements);
     }
@@ -88,15 +91,42 @@ public class DiagonalWindowsExtension extends ElementExtension<DiagonalWindowsEl
             // might be best to manually add blocks with such elements to a blacklist
             if (blockPart.partRotation == null || blockPart.partRotation.angle == 0.0F) {
 
-                Vector3f vec = new Vector3f(8.0F, 8.0F, 8.0F);
-                BlockPartRotation rotation = new BlockPartRotation(vec, Direction.Axis.Y, -45.0F, true);
-                blockPart = new BlockPart(blockPart.positionFrom, blockPart.positionTo, blockPart.mapFaces, rotation, blockPart.shade);
+                final float center = 8.0F;
+                Vector3f positionFrom = this.rescalePosition(blockPart.positionFrom, center);
+                Vector3f positionTo = this.rescalePosition(blockPart.positionTo, center);
+                BlockPartRotation rotation = new BlockPartRotation(new Vector3f(center, center, center), Direction.Axis.Y, -45.0F, false);
+                blockPart = new BlockPart(positionFrom, positionTo, blockPart.mapFaces, rotation, blockPart.shade);
                 rotatedElements.add(blockPart);
             }
         }
 
         elements.clear();
         elements.addAll(rotatedElements);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private Vector3f rescalePosition(Vector3f position, float center) {
+
+        // cos(-pi/4)
+        final float angle = 0.7071067812F;
+        // decrease height slightly to prevent z-fighting
+        float posY = position.getY();
+        if (posY == 0.0F) {
+
+            posY = 0.01F;
+        } else if (posY == 16.0F) {
+
+            posY = 15.99F;
+        }
+
+        // make texture start in the middle, otherwise a gap would be left
+        float posZ = position.getZ();
+        if (Math.abs(posZ - center) <= 1.0F) {
+
+            posZ = center;
+        }
+
+        return new Vector3f(position.getX(), posY, (posZ - center) / angle + center);
     }
 
 }

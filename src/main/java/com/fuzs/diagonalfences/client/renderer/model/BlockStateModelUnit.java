@@ -16,8 +16,8 @@ import net.minecraft.block.Block;
 import net.minecraft.client.renderer.model.BlockModel;
 import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.resources.IResourceManager;
-import net.minecraft.state.Property;
 import net.minecraft.util.ResourceLocation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class BlockStateModelUnit {
 
@@ -39,17 +38,16 @@ public class BlockStateModelUnit {
     @Nonnull
     public final ResourceLocation blockLocation;
     private final Map<ResourceLocation, JsonElement> resources = Maps.newHashMap();
-    private final Map<String, String> propertyConverter;
+    private final Map<Pair<String, String>, String> propertyConverter;
     private final Consumer<List<BlockPart>> elementsConverter;
 
     @SuppressWarnings("ConstantConditions")
-    public BlockStateModelUnit(IResourceManager resourceManager, Block block, Map<Property<?>, Property<?>> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public BlockStateModelUnit(IResourceManager resourceManager, Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
 
         this.resourceManager = resourceManager;
         this.block = block;
         this.blockLocation = block.getRegistryName();
-        this.propertyConverter = propertyConverter.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().getName()));
+        this.propertyConverter = propertyConverter;
         // this should really convert the whole model and not just its elements,
         // but that would require serializing the whole model also which there is no need to currently
         this.elementsConverter = elementsConverter;
@@ -87,7 +85,7 @@ public class BlockStateModelUnit {
 
         // only convert when there is at least one key which would change
         boolean isConvertible = conditionObject.entrySet().stream()
-                .map(Map.Entry::getKey)
+                .map(entry -> Pair.of(entry.getKey(), entry.getValue().getAsString()))
                 .anyMatch(this.propertyConverter::containsKey);
 
         if (isConvertible) {
@@ -111,8 +109,9 @@ public class BlockStateModelUnit {
         for (Map.Entry<String, JsonElement> entry : whenObject.entrySet()) {
 
             String property = entry.getKey();
-            property = this.propertyConverter.getOrDefault(property, property);
-            convertedWhenObject.add(property, entry.getValue());
+            String value = entry.getValue().getAsString();
+            property = this.propertyConverter.getOrDefault(Pair.of(property, value), property);
+            convertedWhenObject.addProperty(property, value);
         }
 
         return convertedWhenObject;

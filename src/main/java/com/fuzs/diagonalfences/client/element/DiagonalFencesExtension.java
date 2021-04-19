@@ -16,12 +16,13 @@ import net.minecraft.client.renderer.model.BlockPart;
 import net.minecraft.client.renderer.model.BlockPartRotation;
 import net.minecraft.resources.ResourcePackInfo;
 import net.minecraft.resources.ResourcePackList;
-import net.minecraft.state.Property;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,9 +74,11 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
         Set<Block> allFences = ForgeRegistries.BLOCKS.getValues().stream()
                 .filter(block -> block instanceof FenceBlock && ((IEightWayBlock) block).hasProperties())
                 .collect(Collectors.toSet());
-        List<Property<?>> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
-        Map<Property<?>, Property<?>> propertyConverter = IntStream.range(0, properties.size() / 2)
-                .boxed().collect(Collectors.toMap(properties::get, i -> properties.get(i + 4)));
+        List<BooleanProperty> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
+        Map<Pair<String, String>, String> propertyConverter = IntStream.range(0, properties.size() / 2)
+                .boxed()
+                .map(i -> Pair.of(properties.get(i), properties.get(i + 4).getName()))
+                .collect(Collectors.toMap(entry -> Pair.of(entry.getKey().getName(), entry.getKey().getName(true)), Pair::getValue));
 
         this.generator.addUnits(allFences, propertyConverter, this::modifyElements);
     }
@@ -89,15 +92,26 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
             // might be best to manually add blocks with such elements to a blacklist
             if (blockPart.partRotation == null || blockPart.partRotation.angle == 0.0F) {
 
-                Vector3f vec = new Vector3f(8.0F, 8.0F, 8.0F);
-                BlockPartRotation rotation = new BlockPartRotation(vec, Direction.Axis.Y, -45.0F, true);
-                blockPart = new BlockPart(blockPart.positionFrom, blockPart.positionTo, blockPart.mapFaces, rotation, blockPart.shade);
+                final float center = 8.0F;
+                Vector3f positionFrom = this.rescalePosition(blockPart.positionFrom, center);
+                Vector3f positionTo = this.rescalePosition(blockPart.positionTo, center);
+                BlockPartRotation rotation = new BlockPartRotation(new Vector3f(center, center, center), Direction.Axis.Y, -45.0F, false);
+                blockPart = new BlockPart(positionFrom, positionTo, blockPart.mapFaces, rotation, blockPart.shade);
                 rotatedElements.add(blockPart);
             }
         }
 
         elements.clear();
         elements.addAll(rotatedElements);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private Vector3f rescalePosition(Vector3f position, float center) {
+
+        // cos(-pi/4)
+        final float angle = 0.7071067812F;
+
+        return new Vector3f(position.getX(), position.getY(), (position.getZ() - center) / angle + center);
     }
 
 }
