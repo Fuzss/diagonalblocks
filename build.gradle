@@ -15,6 +15,11 @@ buildscript {
     }
 }
 
+plugins {
+
+    id "com.wynprice.cursemaven" version "2.1.0"
+}
+
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'java-library'
 apply plugin: 'maven-publish'
@@ -42,12 +47,16 @@ minecraft {
 
             workingDirectory project.file('run')
             jvmArgs '-ea'
+            properties 'mixin.env.remapRefMap': 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
 
         server {
 
             workingDirectory project.file('run')
             jvmArgs '-ea'
+            properties 'mixin.env.remapRefMap': 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
     }
 
@@ -61,6 +70,7 @@ repositories {
 dependencies {
 
     minecraft "net.minecraftforge:forge:${forge_version}"
+    compile fg.deobf("curse.maven:statement:3321010")
 }
 
 mixin {

@@ -14,7 +14,6 @@ import net.minecraft.block.SixWayBlock;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.shapes.VoxelShape;
@@ -50,23 +49,13 @@ public interface IEightWayBlock {
         directions.put(EightWayDirection.NORTH_WEST, NORTH_WEST);
     });
 
-    boolean hasProperties();
+    void updateStatePaletteMap();
 
     boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction);
 
     boolean canConnectDiagonally();
 
     boolean canConnectDiagonally(BlockState blockstate);
-
-    default BlockState getDefaultStates(BlockState defaultState) {
-
-        return defaultState.with(NORTH_EAST, Boolean.FALSE).with(SOUTH_EAST, Boolean.FALSE).with(SOUTH_WEST, Boolean.FALSE).with(NORTH_WEST, Boolean.FALSE);
-    }
-
-    default void fillStateContainer2(StateContainer.Builder<Block, BlockState> builder) {
-
-        builder.add(NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NORTH_WEST);
-    }
 
     default int makeIndex(BlockState stateIn) {
 

@@ -24,3 +24,10 @@ issueTrackerURL="${mod_issue}"
     versionRange="[${mc_version},${next_mc_version})"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="statement"
+    mandatory=true
+    versionRange="*"
+    ordering="NONE"
+    side="BOTH"

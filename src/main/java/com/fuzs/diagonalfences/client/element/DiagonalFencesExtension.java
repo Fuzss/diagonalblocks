@@ -71,7 +71,7 @@ public class DiagonalFencesExtension extends ElementExtension<DiagonalFencesElem
     private void addUnits() {
 
         Set<Block> allFences = ForgeRegistries.BLOCKS.getValues().stream()
-                .filter(block -> block instanceof FenceBlock && ((IEightWayBlock) block).hasProperties())
+                .filter(block -> block instanceof FenceBlock)
                 .collect(Collectors.toSet());
         List<Property<?>> properties = new ArrayList<>(IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.values());
         Map<Property<?>, Property<?>> propertyConverter = IntStream.range(0, properties.size() / 2)
