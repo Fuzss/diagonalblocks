@@ -1,5 +1,7 @@
 {
   "replace": false,
   "values": [
+    "assorteddecor:colorizer_fence",
+    "framedblocks:framed_fence"
   ]
 }

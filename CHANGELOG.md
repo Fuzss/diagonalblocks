@@ -4,11 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog].
 
 ## [v1.1-1.16.5] - 2021-06-23
-### Added
-- Very simple api
 ### Changed
 - New dependency: [Puzzles Lib]
-- Added some mods' fences to the default blacklist
+- Added some mods' fences to `non_diagonal_fences` block tag
 ### Fixed
 - No longer breaks Twilight Forest generation
 

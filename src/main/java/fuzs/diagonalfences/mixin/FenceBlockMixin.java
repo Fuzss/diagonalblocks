@@ -1,12 +1,8 @@
 package fuzs.diagonalfences.mixin;
 
-import com.google.common.collect.ImmutableSortedMap;
-import com.mojang.serialization.Decoder;
-import com.mojang.serialization.Encoder;
 import com.mojang.serialization.MapCodec;
 import fuzs.diagonalfences.block.IEightWayBlock;
 import fuzs.diagonalfences.element.DiagonalFencesElement;
-import fuzs.diagonalfences.mixin.accessor.IStateContainerAccessor;
 import fuzs.diagonalfences.mixin.accessor.IStateHolderAccessor;
 import fuzs.diagonalfences.state.ExposedStateContainerBuilder;
 import fuzs.puzzleslib.util.PuzzlesUtil;
@@ -15,7 +11,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.*;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.Property;
 import net.minecraft.state.StateContainer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -29,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
@@ -125,40 +118,23 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
         return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isWoodenFence(block);
     }
 
+    @SuppressWarnings("unchecked")
     @Inject(method = "<init>", at = @At("TAIL"))
     public void init(AbstractBlock.Properties properties, CallbackInfo callbackInfo) {
 
         if (this.hasProperties()) {
 
+            // most properties are added in actual constructor
             this.setDefaultState(this.getDefaultStates(this.getDefaultState()));
 
+            // we get all states and then just the ones added by us to be ignored when building the codec
             ExposedStateContainerBuilder<Block, BlockState> builder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), this::fillStateContainer);
             ExposedStateContainerBuilder<Block, BlockState> additionalBuilder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), this::fillStateContainer2);
-
-            Block owner = this.stateContainer.getOwner();
-            Supplier<BlockState> supplier = owner::getDefaultState;
-            MapCodec<BlockState> mapcodec = MapCodec.of(Encoder.empty(), Decoder.unit(supplier));
-
-            for (Map.Entry<String, Property<?>> entry : ImmutableSortedMap.copyOf(builder.properties).entrySet()) {
-
-                if (!additionalBuilder.properties.containsKey(entry.getKey())) {
-
-                    mapcodec = IStateContainerAccessor.callSetPropertyCodec(mapcodec, supplier, entry.getKey(), entry.getValue());
-                }
-            }
-
-            MapCodec<BlockState> mapcodec1 = mapcodec;
-
+            MapCodec<BlockState> mapcodec = this.makeLenientMapCodec(this.stateContainer.getOwner()::getDefaultState, builder, additionalBuilder);
+            // set new codec for all states used somewhere
             Stream.concat(Stream.of(this.getDefaultState()), this.stateContainer.getValidStates().stream())
                     .map(state -> (IStateHolderAccessor<Block, BlockState>) state)
-                    .forEach(state -> state.setCodec(mapcodec1));
-
-
-//            LenientStateContainer.LenientBuilder<Block, BlockState> builder = new LenientStateContainer.LenientBuilder<>(this);
-//            this.fillStateContainer(builder);
-//            this.fillAdditionalStateContainer(builder);
-//            ((IBlockAccessor) this).setStateContainer(builder.func_235882_a_(Block::getDefaultState, BlockState::new));
-//            this.setDefaultState(this.stateContainer.getBaseState());
+                    .forEach(state -> state.setCodec(mapcodec));
         }
     }
 

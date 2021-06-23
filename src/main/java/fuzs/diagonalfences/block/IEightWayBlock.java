@@ -1,9 +1,14 @@
 package fuzs.diagonalfences.block;
 
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.mojang.serialization.Decoder;
+import com.mojang.serialization.Encoder;
+import com.mojang.serialization.MapCodec;
 import fuzs.diagonalfences.api.IDiagonalBlock;
-import fuzs.diagonalfences.state.LenientStateContainer;
+import fuzs.diagonalfences.mixin.accessor.IStateContainerAccessor;
+import fuzs.diagonalfences.state.ExposedStateContainerBuilder;
 import fuzs.diagonalfences.util.EightWayDirection;
 import fuzs.diagonalfences.util.math.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.util.math.shapes.VoxelCollection;
@@ -16,6 +21,7 @@ import net.minecraft.block.SixWayBlock;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.state.BooleanProperty;
+import net.minecraft.state.Property;
 import net.minecraft.state.StateContainer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
@@ -29,15 +35,11 @@ import net.minecraft.world.IWorld;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public interface IEightWayBlock extends IDiagonalBlock {
-
-    BooleanProperty NORTH_EAST = BooleanProperty.create("north_east");
-    BooleanProperty SOUTH_EAST = BooleanProperty.create("south_east");
-    BooleanProperty SOUTH_WEST = BooleanProperty.create("south_west");
-    BooleanProperty NORTH_WEST = BooleanProperty.create("north_west");
 
     Map<List<Float>, VoxelShape[]> DIMENSIONS_TO_SHAPE_MAP = Maps.newHashMap();
     Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = PuzzlesUtil.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
@@ -46,27 +48,37 @@ public interface IEightWayBlock extends IDiagonalBlock {
         directions.put(EightWayDirection.EAST, SixWayBlock.EAST);
         directions.put(EightWayDirection.SOUTH, SixWayBlock.SOUTH);
         directions.put(EightWayDirection.WEST, SixWayBlock.WEST);
-        directions.put(EightWayDirection.NORTH_EAST, NORTH_EAST);
-        directions.put(EightWayDirection.SOUTH_EAST, SOUTH_EAST);
-        directions.put(EightWayDirection.SOUTH_WEST, SOUTH_WEST);
-        directions.put(EightWayDirection.NORTH_WEST, NORTH_WEST);
+        directions.put(EightWayDirection.NORTH_EAST, IDiagonalBlock.NORTH_EAST);
+        directions.put(EightWayDirection.SOUTH_EAST, IDiagonalBlock.SOUTH_EAST);
+        directions.put(EightWayDirection.SOUTH_WEST, IDiagonalBlock.SOUTH_WEST);
+        directions.put(EightWayDirection.NORTH_WEST, IDiagonalBlock.NORTH_WEST);
     });
 
-    boolean hasProperties();
+    boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction);
 
     default BlockState getDefaultStates(BlockState defaultState) {
 
-        return defaultState.with(NORTH_EAST, Boolean.FALSE).with(SOUTH_EAST, Boolean.FALSE).with(SOUTH_WEST, Boolean.FALSE).with(NORTH_WEST, Boolean.FALSE);
+        return defaultState.with(IDiagonalBlock.NORTH_EAST, Boolean.FALSE).with(IDiagonalBlock.SOUTH_EAST, Boolean.FALSE).with(IDiagonalBlock.SOUTH_WEST, Boolean.FALSE).with(IDiagonalBlock.NORTH_WEST, Boolean.FALSE);
+    }
+
+    default MapCodec<BlockState> makeLenientMapCodec(Supplier<BlockState> defaultState, ExposedStateContainerBuilder<Block, BlockState> builder, ExposedStateContainerBuilder<Block, BlockState> additionalBuilder) {
+
+        MapCodec<BlockState> mapcodec = MapCodec.of(Encoder.empty(), Decoder.unit(defaultState));
+        for (Map.Entry<String, Property<?>> entry : ImmutableSortedMap.copyOf(builder.properties).entrySet()) {
+
+            // ignore states added by us, world gen structures will otherwise fail to generate when our states are missing
+            if (!additionalBuilder.properties.containsKey(entry.getKey())) {
+
+                mapcodec = IStateContainerAccessor.callSetPropertyCodec(mapcodec, defaultState, entry.getKey(), entry.getValue());
+            }
+        }
+
+        return mapcodec;
     }
 
     default void fillStateContainer2(StateContainer.Builder<Block, BlockState> builder) {
 
-        builder.add(NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NORTH_WEST);
-    }
-
-    default void fillAdditionalStateContainer(LenientStateContainer.LenientBuilder<Block, BlockState> builder) {
-
-        builder.addAdditional(NORTH_EAST, SOUTH_EAST, SOUTH_WEST, NORTH_WEST);
+        builder.add(IDiagonalBlock.NORTH_EAST, IDiagonalBlock.SOUTH_EAST, IDiagonalBlock.SOUTH_WEST, IDiagonalBlock.NORTH_WEST);
     }
 
     default int makeIndex(BlockState stateIn) {

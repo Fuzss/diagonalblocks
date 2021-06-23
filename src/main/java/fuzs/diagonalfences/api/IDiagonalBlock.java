@@ -1,16 +1,32 @@
 package fuzs.diagonalfences.api;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.state.BooleanProperty;
 
+/**
+ * mainly contains four new block states for diagonal directions
+ */
 public interface IDiagonalBlock {
 
-    boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction);
+    BooleanProperty NORTH_EAST = BooleanProperty.create("north_east");
+    BooleanProperty SOUTH_EAST = BooleanProperty.create("south_east");
+    BooleanProperty SOUTH_WEST = BooleanProperty.create("south_west");
+    BooleanProperty NORTH_WEST = BooleanProperty.create("north_west");
 
+    /**
+     * @return have diagonal properties successfully been applied to this block
+     */
+    boolean hasProperties();
+
+    /**
+     * @return is this block not blacklisted via a block tag
+     */
     boolean canConnectDiagonally();
 
+    /**
+     * @param blockstate other block
+     * @return is a diagonal connection between both blocks allowed
+     */
     boolean canConnectDiagonally(BlockState blockstate);
 
 }
