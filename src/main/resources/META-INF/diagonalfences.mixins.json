@@ -2,11 +2,13 @@
   "required": true,
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
-  "package": "com.fuzs.diagonalfences.mixin",
+  "package": "fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
-    "FenceBlockMixin",
-    "PaneBlockMixin"
+    "accessor.IStateHolderAccessor",
+    "accessor.IBlockAccessor",
+    "accessor.IStateContainerAccessor",
+    "FenceBlockMixin"
   ],
   "client": [
   ],

@@ -10,9 +10,15 @@ buildscript {
 
     dependencies {
 
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
+}
+
+plugins {
+
+    id "com.wynprice.cursemaven" version "2.1.5"
+    id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -29,8 +35,7 @@ ext.modversion = "${mod_version}"
 ext.author = "${mod_author}"
 ext.loader = "${loader_version.replaceAll("\\..*", "")}"
 
-// need this here so eclipse task generates correctly.
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
 
@@ -41,13 +46,19 @@ minecraft {
         client {
 
             workingDirectory project.file('run')
+            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             jvmArgs '-ea'
+            properties 'mixin.env.remapRefMap': 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
 
         server {
 
             workingDirectory project.file('run')
+            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             jvmArgs '-ea'
+            properties 'mixin.env.remapRefMap': 'true'
+            property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
     }
 
@@ -61,6 +72,12 @@ repositories {
 dependencies {
 
     minecraft "net.minecraftforge:forge:${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+
+    // local maven
+//    compile fg.deobf("fuzs.puzzleslib:PuzzlesLib:v1.0.1-1.16.5")
+    // curse maven
+    compile fg.deobf("curse.maven:puzzles-lib:3362029")
 }
 
 mixin {
@@ -83,6 +100,7 @@ processResources {
     inputs.property "forge_version", "${loader_version}"
     inputs.property "mc_version", "${mc_version}"
     inputs.property "next_mc_version", "${next_mc_version}"
+    inputs.property "puzzles_version", "${puzzles_version}"
     inputs.property "pack_format", "${pack_format}"
 
     // replace stuff in mods.toml and pack.mcmeta
@@ -104,6 +122,7 @@ processResources {
                 'forge_version': "${loader_version}",
                 'mc_version': "${mc_version}",
                 "next_mc_version": "${next_mc_version}",
+                "puzzles_version": "${puzzles_version}",
                 "pack_format": "${pack_format}"
         )
     }
@@ -126,7 +145,7 @@ ext.jarAttributes = [
         "Implementation-Vendor-Id"  : project.group,
         "Implementation-URL"        : "${mod_url}",
         "Implementation-Timestamp"  : new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-        "MixinConnector"            : "${project.group}.mixin.MixinConnector"
+        "MixinConfigs"              : "META-INF/${project.id}.mixins.json"
 ]
 
 def createJarTask(def name, def type, def sources) {
@@ -202,6 +221,40 @@ publishing {
             artifact javadocJar
             from components.java
         }
+    }
+}
+
+curseforge {
+
+    def changelogFile = file('CHANGELOG.md')
+    if (!changelogFile.getText("UTF-8").find(version)) {
+
+        println("ERROR: Aborting upload to CurseForge: No changelog specified for version " + version)
+        return
+    }
+
+    apiKey = project.findProperty('curseApiKey')
+    project {
+
+        id = project.findProperty('curseProjectId')
+        releaseType = project.findProperty('curseReleaseType')
+        changelogType = 'markdown'
+        changelog = changelogFile
+        project.findProperty('curseProjectVersion').replaceAll(" ", "").split(",").each {version -> addGameVersion version}
+        mainArtifact jar
+        addArtifact sourceJar
+        relations {
+
+            requiredDependency 'puzzleslib'
+        }
+    }
+
+    options {
+
+        // doesn't upload, only prints json to console
+//        debug = true
+        javaVersionAutoDetect = false
+        forgeGradleIntegration = false
     }
 }
 
