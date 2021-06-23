@@ -245,7 +245,7 @@ curseforge {
         addArtifact sourceJar
         relations {
 
-            requiredDependency 'puzzleslib'
+            requiredDependency 'puzzles-lib'
         }
     }
 
