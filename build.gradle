@@ -48,8 +48,8 @@ minecraft {
         client {
 
             workingDirectory project.file('run')
-            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             jvmArgs '-ea'
+            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             properties 'mixin.env.remapRefMap': 'true'
             property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
@@ -57,8 +57,8 @@ minecraft {
         server {
 
             workingDirectory project.file('run')
-            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             jvmArgs '-ea'
+            arg "-mixin.config=META-INF/${project.id}.mixins.json".toString()
             properties 'mixin.env.remapRefMap': 'true'
             property 'mixin.env.refMapRemappingFile', "${project.projectDir}/build/createSrgToMcp/output.srg"
         }
@@ -109,7 +109,7 @@ processResources {
     // replace stuff in mods.toml and pack.mcmeta
     from(sourceSets.main.resources.srcDirs) {
 
-        include 'META-INF/mods.toml', 'META-INF/MANIFEST.MF', 'pack.mcmeta'
+        include 'META-INF/mods.toml', 'pack.mcmeta'
 
         expand (
 
@@ -133,7 +133,7 @@ processResources {
     // copy everything else except mods.toml and pack.mcmeta
     from(sourceSets.main.resources.srcDirs) {
 
-        exclude 'META-INF/mods.toml', 'META-INF/MANIFEST.MF', 'pack.mcmeta'
+        exclude 'META-INF/mods.toml', 'pack.mcmeta'
     }
 }
 
@@ -177,8 +177,7 @@ def createSignJarTask(def name, def jarTask) {
         alias = project.findProperty('keyStoreAlias')
         storePass = project.findProperty('keyStorePass')
         keyPass = project.findProperty('keyStoreKeyPass')
-        inputFile = jarTask.archivePath
-        outputFile = jarTask.archivePath
+        inputFile = outputFile = jarTask.archivePath
         dependsOn jarTask
         group 'jar'
     }
