@@ -15,11 +15,11 @@ public class DiagonalFences {
     public static final String NAME = "Diagonal Fences";
     public static final Logger LOGGER = LogManager.getLogger(DiagonalFences.NAME);
 
-    public static final AbstractElement DIAGONAL_FENCES = PuzzlesLib.register("diagonal_fences", DiagonalFencesElement::new);
+    public static final AbstractElement DIAGONAL_FENCES = PuzzlesLib.register(MODID, "diagonal_fences", DiagonalFencesElement::new);
 
     public DiagonalFences() {
 
-        PuzzlesLib.setup(MODID, false);
+        PuzzlesLib.setup(false);
     }
 
 }
