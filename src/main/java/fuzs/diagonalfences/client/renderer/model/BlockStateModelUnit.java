@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.client.renderer.model;
 
 import fuzs.diagonalfences.DiagonalFences;
-import fuzs.diagonalfences.client.json.adapter.BlockPartAdapter;
+import fuzs.diagonalfences.client.json.adapter.BlockElementAdapter;
 import fuzs.diagonalfences.client.util.AssetLocations;
 import fuzs.puzzleslib.json.JsonConfigFileUtil;
 import com.google.common.collect.ImmutableMap;
@@ -12,11 +12,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.model.BlockModel;
-import net.minecraft.client.renderer.model.BlockPart;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.BlockElement;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
@@ -33,16 +33,16 @@ import java.util.function.Function;
 
 public class BlockStateModelUnit {
 
-    private final IResourceManager resourceManager;
+    private final ResourceManager resourceManager;
     public final Block block;
     @Nonnull
     public final ResourceLocation blockLocation;
     private final Map<ResourceLocation, JsonElement> resources = Maps.newHashMap();
     private final Map<Pair<String, String>, String> propertyConverter;
-    private final Consumer<List<BlockPart>> elementsConverter;
+    private final Consumer<List<BlockElement>> elementsConverter;
 
     @SuppressWarnings("ConstantConditions")
-    public BlockStateModelUnit(IResourceManager resourceManager, Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public BlockStateModelUnit(ResourceManager resourceManager, Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockElement>> elementsConverter) {
 
         this.resourceManager = resourceManager;
         this.block = block;
@@ -163,21 +163,21 @@ public class BlockStateModelUnit {
                     reader -> JsonConfigFileUtil.GSON.fromJson(reader, JsonElement.class));
             if (modelElement instanceof JsonObject) {
 
-                List<BlockPart> elements = this.getConvertedModelElements(modelLocation);
+                List<BlockElement> elements = this.getConvertedModelElements(modelLocation);
                 // read model from json once more, but this time we keep it as a json element
-                modelElement.getAsJsonObject().add("elements", BlockPartAdapter.GSON.toJsonTree(elements));
+                modelElement.getAsJsonObject().add("elements", BlockElementAdapter.GSON.toJsonTree(elements));
                 this.resources.put(AssetLocations.getBlockModelPath(convertedModelLocation), modelElement);
             }
         }
     }
 
     @SuppressWarnings("deprecation")
-    private List<BlockPart> getConvertedModelElements(ResourceLocation modelLocation) {
+    private List<BlockElement> getConvertedModelElements(ResourceLocation modelLocation) {
 
         BlockModel blockModel = this.loadModel(modelLocation);
         // load all parent models which is important when getting elements
-        blockModel.getTextures(this::loadModel, Sets.newHashSet());
-        List<BlockPart> elements = blockModel.getElements();
+        blockModel.getMaterials(this::loadModel, Sets.newHashSet());
+        List<BlockElement> elements = blockModel.getElements();
         // modify elements list using provided converter
         this.elementsConverter.accept(elements);
 
@@ -188,7 +188,7 @@ public class BlockStateModelUnit {
 
         return this.loadResource(AssetLocations.getBlockModelPath(location), reader -> {
 
-            BlockModel blockmodel = BlockModel.deserialize(reader);
+            BlockModel blockmodel = BlockModel.fromStream(reader);
             // vanilla does it like that
             blockmodel.name = location.toString();
             return blockmodel;

@@ -2,9 +2,9 @@ package fuzs.diagonalfences.util.math.shapes;
 
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class VoxelCollection extends ExtensibleVoxelShape {
 
     public VoxelCollection() {
 
-        this(VoxelShapes.empty());
+        this(Shapes.empty());
     }
 
     public VoxelCollection(VoxelShape baseShape) {
@@ -27,7 +27,7 @@ public class VoxelCollection extends ExtensibleVoxelShape {
     }
 
     @Override
-    protected DoubleList getValues(Direction.Axis axis) {
+    protected DoubleList getCoords(Direction.Axis axis) {
 
         return this.callGetValues(this.collisionShape, axis);
     }
@@ -45,8 +45,8 @@ public class VoxelCollection extends ExtensibleVoxelShape {
             this.addNoneVoxelShape((NoneVoxelShape) voxelShape);
         } else {
 
-            this.setCollisionShape(VoxelShapes.or(this.collisionShape, voxelShape));
-            this.outlineShape = VoxelShapes.or(this.outlineShape, voxelShape);
+            this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
+            this.outlineShape = Shapes.or(this.outlineShape, voxelShape);
         }
     }
 
@@ -54,14 +54,14 @@ public class VoxelCollection extends ExtensibleVoxelShape {
 
         this.noneVoxels.add(voxelShape);
         // combine collision shapes
-        this.setCollisionShape(VoxelShapes.or(this.collisionShape, voxelShape));
+        this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
     }
 
     @Override
-    public void forEachEdge(VoxelShapes.ILineConsumer boxConsumer) {
+    public void forAllEdges(Shapes.DoubleLineConsumer boxConsumer) {
 
-        this.outlineShape.forEachEdge(boxConsumer);
-        this.noneVoxels.forEach(voxelShape -> voxelShape.forEachEdge(boxConsumer));
+        this.outlineShape.forAllEdges(boxConsumer);
+        this.noneVoxels.forEach(voxelShape -> voxelShape.forAllEdges(boxConsumer));
     }
 
 }

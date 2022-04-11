@@ -1,22 +1,24 @@
 package fuzs.diagonalfences.mixin;
 
 import com.mojang.serialization.MapCodec;
+import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.block.IEightWayBlock;
-import fuzs.diagonalfences.element.DiagonalFencesElement;
 import fuzs.diagonalfences.mixin.accessor.IStateHolderAccessor;
 import fuzs.diagonalfences.state.ExposedStateContainerBuilder;
 import fuzs.puzzleslib.util.PuzzlesUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.*;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.StateContainer;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IWorld;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.*;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.core.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.ITagManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,11 +26,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 @Mixin(FenceBlock.class)
-public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayBlock {
+public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEightWayBlock {
 
     private boolean hasProperties;
     private Object2IntMap<BlockState> statePaletteMap;
@@ -50,7 +53,7 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     }
 
     @Override
-    protected int getIndex(BlockState state) {
+    protected int getAABBIndex(BlockState state) {
 
         if (this.hasProperties()) {
 
@@ -60,15 +63,15 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
                 this.statePaletteMap = new Object2IntOpenHashMap<>();
             }
 
-            return this.statePaletteMap.computeIntIfAbsent(state, this::makeIndex);
+            return this.statePaletteMap.computeIfAbsent(state, this::makeIndex);
         }
 
-        return super.getIndex(state);
+        return super.getAABBIndex(state);
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public void updateDiagonalNeighbors(BlockState state, IWorld world, BlockPos pos, int flags, int recursionLeft) {
+    public void updateIndirectNeighbourShapes(BlockState state, LevelAccessor world, BlockPos pos, int flags, int recursionLeft) {
 
         if (this.canConnectDiagonally()) {
 
@@ -77,13 +80,15 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     }
 
     @Shadow
-    public abstract boolean canConnect(BlockState state, boolean isSideSolid, Direction direction);
+    public abstract boolean connectsTo(BlockState state, boolean isSideSolid, Direction direction);
 
     @Shadow
-    private boolean isWoodenFence(Block block) {
+    private boolean isSameFence(BlockState state) {
 
         throw new IllegalStateException();
     }
+
+    @Shadow protected abstract void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> p_53334_);
 
     @Override
     public boolean hasProperties() {
@@ -92,54 +97,50 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
     }
 
     @Override
-    public boolean canConnect(IBlockReader iblockreader, BlockPos position, BlockState state, Direction direction) {
+    public boolean canConnect(BlockGetter iblockreader, BlockPos position, BlockState state, Direction direction) {
 
-        return this.canConnect(state, state.isSolidSide(iblockreader, position, direction), direction);
+        return this.connectsTo(state, state.isFaceSturdy(iblockreader, position, direction), direction);
     }
 
     @Override
     public boolean canConnectDiagonally() {
 
-        try {
+        ITagManager<Block> blockTags = Objects.requireNonNull(ForgeRegistries.BLOCKS.tags(), "ITagManager missing for Block registry?!");
 
-            // use this with care as the tag might not have been fetched yet
-            return this.hasProperties() && !this.isIn(DiagonalFencesElement.NON_DIAGONAL_FENCES_TAG);
-        } catch (Exception ignored) {
-
-        }
-
-        return this.hasProperties();
+        // Unbound tags will gracefully handle queries with an empty collection
+        return this.hasProperties() && !blockTags.getTag(DiagonalFences.NON_DIAGONAL_FENCES_TAG).contains(this);
     }
 
     @Override
     public boolean canConnectDiagonally(BlockState blockstate) {
 
         Block block = blockstate.getBlock();
-        return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isWoodenFence(block);
+        return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isSameFence(blockstate);
     }
 
-    @SuppressWarnings("unchecked")
+    //Can't use method refs for the state container builders because it creates an explicit reference to the Mixin class, which is invalid
+    @SuppressWarnings({ "unchecked", "Convert2MethodRef" })
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void init(AbstractBlock.Properties properties, CallbackInfo callbackInfo) {
+    public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callbackInfo) {
 
         if (this.hasProperties()) {
 
             // most properties are added in actual constructor
-            this.setDefaultState(this.getDefaultStates(this.getDefaultState()));
+            this.registerDefaultState(this.getDefaultStates(this.defaultBlockState()));
 
             // we get all states and then just the ones added by us to be ignored when building the codec
-            ExposedStateContainerBuilder<Block, BlockState> builder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), this::fillStateContainer);
-            ExposedStateContainerBuilder<Block, BlockState> additionalBuilder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), this::fillStateContainer2);
-            MapCodec<BlockState> mapcodec = this.makeLenientMapCodec(this.stateContainer.getOwner()::getDefaultState, builder, additionalBuilder);
+            ExposedStateContainerBuilder<Block, BlockState> builder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), sdb -> createBlockStateDefinition(sdb));
+            ExposedStateContainerBuilder<Block, BlockState> additionalBuilder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), sdb -> fillStateContainer2(sdb));
+            MapCodec<BlockState> mapcodec = this.makeLenientMapCodec(this.stateDefinition.getOwner()::defaultBlockState, builder, additionalBuilder);
             // set new codec for all states used somewhere
-            Stream.concat(Stream.of(this.getDefaultState()), this.stateContainer.getValidStates().stream())
+            Stream.concat(Stream.of(this.defaultBlockState()), this.stateDefinition.getPossibleStates().stream())
                     .map(state -> (IStateHolderAccessor<Block, BlockState>) state)
                     .forEach(state -> state.setCodec(mapcodec));
         }
     }
 
-    @Inject(method = "fillStateContainer", at = @At("TAIL"))
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
+    @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
+    protected void diagonalfences_createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
 
         // do nothing later on when this wasn't called
         this.hasProperties = true;
@@ -148,13 +149,13 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
 
     @SuppressWarnings("ConstantConditions")
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
-    public void getStateForPlacement(BlockItemUseContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
+    public void diagonalfences_getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
 
         if (this.canConnectDiagonally()) {
 
-            IBlockReader iblockreader = context.getWorld();
-            BlockPos basePos = context.getPos();
-            FluidState fluidState = context.getWorld().getFluidState(context.getPos());
+            BlockGetter iblockreader = context.getLevel();
+            BlockPos basePos = context.getClickedPos();
+            FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
 
             BlockState placementState = super.getStateForPlacement(context);
             placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
@@ -162,12 +163,12 @@ public abstract class FenceBlockMixin extends FourWayBlock implements IEightWayB
         }
     }
 
-    @Inject(method = "updatePostPlacement", at = @At("TAIL"), cancellable = true)
-    public void updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callbackInfo) {
+    @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
+    public void diagonalfences_updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callbackInfo) {
 
         if (this.canConnectDiagonally()) {
 
-            BlockState returnState = this.updatePostPlacement2(stateIn, facing, facingState, worldIn, currentPos, facingPos, callbackInfo.getReturnValue());
+            BlockState returnState = this.updatePostPlacement2(state, facing, facingState, level, currentPos, facingPos, callbackInfo.getReturnValue());
             if (returnState != null) {
 
                 callbackInfo.setReturnValue(returnState);

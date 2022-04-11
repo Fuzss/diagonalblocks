@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.client.util;
 
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 @SuppressWarnings("unused")
 public class AssetLocations {

@@ -5,10 +5,10 @@ import fuzs.diagonalfences.client.util.AssetLocations;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.model.BlockPart;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.client.renderer.block.model.BlockElement;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
 @SuppressWarnings("UnusedReturnValue")
 public class BlockAssetGenerator implements IResourceGenerator {
 
-    private final IResourceManager resourceManager;
+    private final ResourceManager resourceManager;
     private final Map<ResourceLocation, Supplier<Map<ResourceLocation, JsonElement>>> resources = Maps.newHashMap();
 
-    public BlockAssetGenerator(IResourceManager resourceManager) {
+    public BlockAssetGenerator(ResourceManager resourceManager) {
 
         this.resourceManager = resourceManager;
     }
 
-    public IResourceGenerator addUnits(Collection<Block> blocks, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public IResourceGenerator addUnits(Collection<Block> blocks, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockElement>> elementsConverter) {
 
         for (Block block : blocks) {
 
@@ -40,7 +40,7 @@ public class BlockAssetGenerator implements IResourceGenerator {
         return this;
     }
 
-    public IResourceGenerator addUnit(Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockPart>> elementsConverter) {
+    public IResourceGenerator addUnit(Block block, Map<Pair<String, String>, String> propertyConverter, Consumer<List<BlockElement>> elementsConverter) {
 
         BlockStateModelUnit unit = new BlockStateModelUnit(this.resourceManager, block, propertyConverter, elementsConverter);
         this.resources.put(AssetLocations.getBlockStatesPath(unit.blockLocation), unit::load);

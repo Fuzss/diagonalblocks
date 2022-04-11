@@ -1,14 +1,17 @@
 package fuzs.diagonalfences.mixin.accessor;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.state.StateHolder;
+import net.minecraft.world.level.block.state.StateHolder;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+@SuppressWarnings("unused")
 @Mixin(StateHolder.class)
 public interface IStateHolderAccessor<O, S> {
 
-    @Accessor("field_235893_d_")
+    @Mutable //Java 9+ checks write access to final fields more strictly
+    @Accessor("propertiesCodec")
     void setCodec(MapCodec<S> codec);
 
 }

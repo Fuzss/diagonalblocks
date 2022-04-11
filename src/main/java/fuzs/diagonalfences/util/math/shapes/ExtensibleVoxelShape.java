@@ -2,17 +2,17 @@ package fuzs.diagonalfences.util.math.shapes;
 
 import fuzs.diagonalfences.DiagonalFences;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.shapes.SplitVoxelShape;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapePart;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.shapes.SliceShape;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.DiscreteVoxelShape;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public abstract class ExtensibleVoxelShape extends SplitVoxelShape {
+public abstract class ExtensibleVoxelShape extends SliceShape {
 
     private final Field partField;
     private final Method getValuesMethod;
@@ -20,16 +20,16 @@ public abstract class ExtensibleVoxelShape extends SplitVoxelShape {
     public ExtensibleVoxelShape(VoxelShape voxelProvider) {
 
         super(voxelProvider, Direction.Axis.X, 0);
-        this.partField = ObfuscationReflectionHelper.findField(VoxelShape.class, "field_197768_g");
-        this.getValuesMethod = ObfuscationReflectionHelper.findMethod(VoxelShape.class, "func_197757_a", Direction.Axis.class);
+        this.partField = ObfuscationReflectionHelper.findField(VoxelShape.class, "shape");
+        this.getValuesMethod = ObfuscationReflectionHelper.findMethod(VoxelShape.class, "getCoords", Direction.Axis.class);
         this.setVoxelPart(this, this.getVoxelPart(voxelProvider));
     }
 
     @SuppressWarnings("NullableProblems")
     @Override
-    protected abstract DoubleList getValues(Direction.Axis axis);
+    protected abstract DoubleList getCoords(Direction.Axis axis);
 
-    protected final void setVoxelPart(VoxelShape voxelShape, VoxelShapePart part) {
+    protected final void setVoxelPart(VoxelShape voxelShape, DiscreteVoxelShape part) {
 
         try {
 
@@ -40,11 +40,11 @@ public abstract class ExtensibleVoxelShape extends SplitVoxelShape {
         }
     }
 
-    protected final VoxelShapePart getVoxelPart(VoxelShape voxelShape) {
+    protected final DiscreteVoxelShape getVoxelPart(VoxelShape voxelShape) {
 
         try {
 
-            return (VoxelShapePart) this.partField.get(voxelShape);
+            return (DiscreteVoxelShape) this.partField.get(voxelShape);
         } catch (IllegalAccessException ignored) {
 
             DiagonalFences.LOGGER.warn("Unable to get part field in {}", voxelShape.getClass().toString());

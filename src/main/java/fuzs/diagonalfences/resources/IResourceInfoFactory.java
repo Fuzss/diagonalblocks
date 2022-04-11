@@ -1,14 +1,14 @@
 package fuzs.diagonalfences.resources;
 
-import net.minecraft.resources.ResourcePackInfo;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.network.chat.TextComponent;
 
 public interface IResourceInfoFactory {
 
     String getName();
 
-    StringTextComponent getDescription();
+    TextComponent getDescription();
 
-    ResourcePackInfo createResourcePack(String owner, boolean alwaysEnabled, ResourcePackInfo.Priority priority, boolean orderLocked, boolean hidden);
+    Pack createResourcePack(String owner, boolean alwaysEnabled, Pack.Position position, boolean orderLocked, boolean hidden);
 
 }

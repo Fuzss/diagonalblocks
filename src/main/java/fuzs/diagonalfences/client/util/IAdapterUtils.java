@@ -1,8 +1,8 @@
 package fuzs.diagonalfences.client.util;
 
 import com.google.gson.JsonArray;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.resources.ResourceLocation;
+import com.mojang.math.Vector3f;
 
 public interface IAdapterUtils {
 
@@ -25,9 +25,9 @@ public interface IAdapterUtils {
     default JsonArray serializeVector3f(Vector3f vec) {
 
         JsonArray jsonArray = new JsonArray();
-        jsonArray.add(this.serializeFloat(vec.getX()));
-        jsonArray.add(this.serializeFloat(vec.getY()));
-        jsonArray.add(this.serializeFloat(vec.getZ()));
+        jsonArray.add(this.serializeFloat(vec.x()));
+        jsonArray.add(this.serializeFloat(vec.y()));
+        jsonArray.add(this.serializeFloat(vec.z()));
 
         return jsonArray;
     }
