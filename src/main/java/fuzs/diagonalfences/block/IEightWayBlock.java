@@ -1,14 +1,8 @@
 package fuzs.diagonalfences.block;
 
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mojang.serialization.Decoder;
-import com.mojang.serialization.Encoder;
-import com.mojang.serialization.MapCodec;
 import fuzs.diagonalfences.api.IDiagonalBlock;
-import fuzs.diagonalfences.mixin.accessor.IStateContainerAccessor;
-import fuzs.diagonalfences.state.ExposedStateContainerBuilder;
 import fuzs.diagonalfences.util.EightWayDirection;
 import fuzs.diagonalfences.util.math.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.util.math.shapes.VoxelCollection;
@@ -21,7 +15,6 @@ import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
@@ -35,7 +28,6 @@ import net.minecraft.world.level.LevelAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
@@ -59,21 +51,6 @@ public interface IEightWayBlock extends IDiagonalBlock {
     default BlockState getDefaultStates(BlockState defaultState) {
 
         return defaultState.setValue(IDiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(IDiagonalBlock.SOUTH_EAST, Boolean.FALSE).setValue(IDiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(IDiagonalBlock.NORTH_WEST, Boolean.FALSE);
-    }
-
-    default MapCodec<BlockState> makeLenientMapCodec(Supplier<BlockState> defaultState, ExposedStateContainerBuilder<Block, BlockState> builder, ExposedStateContainerBuilder<Block, BlockState> additionalBuilder) {
-
-        MapCodec<BlockState> mapcodec = MapCodec.of(Encoder.empty(), Decoder.unit(defaultState));
-        for (Map.Entry<String, Property<?>> entry : ImmutableSortedMap.copyOf(builder.properties).entrySet()) {
-
-            // ignore states added by us, world gen structures will otherwise fail to generate when our states are missing
-            if (!additionalBuilder.properties.containsKey(entry.getKey())) {
-
-                mapcodec = IStateContainerAccessor.callSetPropertyCodec(mapcodec, defaultState, entry.getKey(), entry.getValue());
-            }
-        }
-
-        return mapcodec;
     }
 
     default void fillStateContainer2(StateDefinition.Builder<Block, BlockState> builder) {

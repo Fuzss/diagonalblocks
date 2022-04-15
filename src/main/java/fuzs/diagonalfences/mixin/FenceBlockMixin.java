@@ -1,11 +1,7 @@
 package fuzs.diagonalfences.mixin;
 
-import com.mojang.serialization.MapCodec;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.block.IEightWayBlock;
-import fuzs.diagonalfences.mixin.accessor.IStateHolderAccessor;
-import fuzs.diagonalfences.state.ExposedStateContainerBuilder;
-import fuzs.puzzleslib.util.PuzzlesUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.level.block.*;
@@ -27,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 @Mixin(FenceBlock.class)
@@ -97,9 +92,9 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
     }
 
     @Override
-    public boolean canConnect(BlockGetter iblockreader, BlockPos position, BlockState state, Direction direction) {
+    public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
 
-        return this.connectsTo(state, state.isFaceSturdy(iblockreader, position, direction), direction);
+        return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
     }
 
     @Override
@@ -118,8 +113,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
         return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isSameFence(blockstate);
     }
 
-    //Can't use method refs for the state container builders because it creates an explicit reference to the Mixin class, which is invalid
-    @SuppressWarnings({ "unchecked", "Convert2MethodRef" })
     @Inject(method = "<init>", at = @At("TAIL"))
     public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callbackInfo) {
 
@@ -127,15 +120,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
 
             // most properties are added in actual constructor
             this.registerDefaultState(this.getDefaultStates(this.defaultBlockState()));
-
-            // we get all states and then just the ones added by us to be ignored when building the codec
-            ExposedStateContainerBuilder<Block, BlockState> builder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), sdb -> createBlockStateDefinition(sdb));
-            ExposedStateContainerBuilder<Block, BlockState> additionalBuilder = PuzzlesUtil.make(new ExposedStateContainerBuilder<>(), sdb -> fillStateContainer2(sdb));
-            MapCodec<BlockState> mapcodec = this.makeLenientMapCodec(this.stateDefinition.getOwner()::defaultBlockState, builder, additionalBuilder);
-            // set new codec for all states used somewhere
-            Stream.concat(Stream.of(this.defaultBlockState()), this.stateDefinition.getPossibleStates().stream())
-                    .map(state -> (IStateHolderAccessor<Block, BlockState>) state)
-                    .forEach(state -> state.setCodec(mapcodec));
         }
     }
 
