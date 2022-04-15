@@ -20,8 +20,8 @@ public abstract class ExtensibleVoxelShape extends SliceShape {
     public ExtensibleVoxelShape(VoxelShape voxelProvider) {
 
         super(voxelProvider, Direction.Axis.X, 0);
-        this.partField = ObfuscationReflectionHelper.findField(VoxelShape.class, "shape");
-        this.getValuesMethod = ObfuscationReflectionHelper.findMethod(VoxelShape.class, "getCoords", Direction.Axis.class);
+        this.partField = ObfuscationReflectionHelper.findField(VoxelShape.class, "f_83211_");
+        this.getValuesMethod = ObfuscationReflectionHelper.findMethod(VoxelShape.class, "m_7700_", Direction.Axis.class);
         this.setVoxelPart(this, this.getVoxelPart(voxelProvider));
     }
 
