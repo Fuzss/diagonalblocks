@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.api;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.state.BooleanProperty;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /**
  * mainly contains four new block states for diagonal directions

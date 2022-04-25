@@ -2,7 +2,7 @@ package fuzs.diagonalfences.resources;
 
 import fuzs.puzzleslib.json.JsonConfigFileUtil;
 import com.google.gson.JsonElement;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;

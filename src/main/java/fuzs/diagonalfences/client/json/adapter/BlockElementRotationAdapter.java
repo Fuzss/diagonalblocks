@@ -2,22 +2,22 @@ package fuzs.diagonalfences.client.json.adapter;
 
 import fuzs.diagonalfences.client.util.IAdapterUtils;
 import com.google.gson.*;
-import net.minecraft.client.renderer.model.BlockPartRotation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.renderer.block.model.BlockElementRotation;
+import net.minecraft.util.Mth;
 
 import java.lang.reflect.Type;
 
 /**
- * adapted from {@link net.minecraft.client.renderer.model.BlockPart.Deserializer}
+ * adapted from {@link net.minecraft.client.renderer.block.model.BlockElement.Deserializer}
  */
-public class BlockPartRotationAdapter implements JsonSerializer<BlockPartRotation>, IAdapterUtils {
+public class BlockElementRotationAdapter implements JsonSerializer<BlockElementRotation>, IAdapterUtils {
 
     @Override
-    public JsonElement serialize(BlockPartRotation src, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(BlockElementRotation src, Type typeOfSrc, JsonSerializationContext context) {
 
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("origin", this.serializeVector3f(src.origin));
-        jsonObject.addProperty("axis", src.axis.getName2());
+        jsonObject.addProperty("axis", src.axis.getName());
         this.addAngle(jsonObject, src.angle);
         if (src.rescale) {
 
@@ -29,7 +29,7 @@ public class BlockPartRotationAdapter implements JsonSerializer<BlockPartRotatio
 
     private void addAngle(JsonObject jsonObject, float angle) {
 
-        if (angle == 0.0F || MathHelper.abs(angle) == 22.5F || MathHelper.abs(angle) == 45.0F) {
+        if (angle == 0.0F || Mth.abs(angle) == 22.5F || Mth.abs(angle) == 45.0F) {
 
             jsonObject.addProperty("angle", angle);
         } else {

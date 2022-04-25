@@ -1,65 +1,71 @@
 package fuzs.diagonalfences.util.math.shapes;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.stream.Stream;
 
 public class VoxelUtils {
 
-    public static Vector3d[] scaleDown(Vector3d[] edges) {
+    public static Vec3[] scaleDown(Vec3[] edges) {
 
         return scale(edges, 0.0625);
     }
 
-    public static Vector3d[] scale(Vector3d[] edges, double amount) {
+    public static Vec3[] scale(Vec3[] edges, double amount) {
 
-        return Stream.of(edges).map(edge -> edge.scale(amount)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> edge.scale(amount)).toArray(Vec3[]::new);
     }
 
-    public static Vector3d[] flipX(Vector3d[] edges) {
+    public static Vec3[] flipX(Vec3[] edges) {
 
-        return Stream.of(edges).map(edge -> new Vector3d(16.0 - edge.x, edge.y, edge.z)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> new Vec3(16.0 - edge.x, edge.y, edge.z)).toArray(Vec3[]::new);
     }
 
-    public static Vector3d[] flipZ(Vector3d[] edges) {
+    public static Vec3[] flipZ(Vec3[] edges) {
 
-        return Stream.of(edges).map(edge -> new Vector3d(edge.x, edge.y, 16.0 - edge.z)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> new Vec3(edge.x, edge.y, 16.0 - edge.z)).toArray(Vec3[]::new);
     }
 
-    public static Vector3d[] mirror(Vector3d[] edges) {
+    public static Vec3[] mirror(Vec3[] edges) {
 
         return flipZ(flipX(edges));
     }
 
-    public static Vector3d[] ortho(Vector3d[] edges) {
+    public static Vec3[] ortho(Vec3[] edges) {
 
-        return Stream.of(edges).map(edge -> new Vector3d(edge.z, edge.y, edge.x)).toArray(Vector3d[]::new);
+        return Stream.of(edges).map(edge -> new Vec3(edge.z, edge.y, edge.x)).toArray(Vec3[]::new);
     }
 
-    public static VoxelShape makeCuboidShape(Vector3d[] outline) {
+    public static VoxelShape makeCuboidShape(Vec3[] outline) {
 
-        Vector3d start = outline[0];
-        Vector3d end = outline[1];
+        Vec3 start = outline[0];
+        Vec3 end = outline[1];
 
-        return Block.makeCuboidShape(start.x, start.y, start.z, end.x, end.y, end.z);
+        double startX = Math.min(start.x, end.x);
+        double startY = Math.min(start.y, end.y);
+        double startZ = Math.min(start.z, end.z);
+        double endX = Math.max(start.x, end.x);
+        double endY = Math.max(start.y, end.y);
+        double endZ = Math.max(start.z, end.z);
+        return Block.box(startX, startY, startZ, endX, endY, endZ);
     }
 
-    public static Vector3d[] createVectorArray(Float... values) {
+    public static Vec3[] createVectorArray(Float... values) {
 
         return createVectorArray(Stream.of(values).map(Float::doubleValue).toArray(Double[]::new));
     }
 
-    public static Vector3d[] createVectorArray(Double... values) {
+    public static Vec3[] createVectorArray(Double... values) {
 
         assert values.length % 3 == 0 : "Unable to create proper number of vectors";
 
-        Vector3d[] array = new Vector3d[values.length / 3];
+        Vec3[] array = new Vec3[values.length / 3];
         for (int i = 0; i < array.length; i++) {
 
             int index = 3 * i;
-            array[i] = new Vector3d(values[index], values[index + 1], values[index + 2]);
+            array[i] = new Vec3(values[index], values[index + 1], values[index + 2]);
         }
 
         return array;
@@ -69,11 +75,11 @@ public class VoxelUtils {
      * @param corners provided edges as top left, top right, bottom left and bottom right
      * @return vectors as pairs representing the edges
      */
-    public static Vector3d[] create12Edges(Vector3d[] corners) {
+    public static Vec3[] create12Edges(Vec3[] corners) {
 
         assert corners.length == 8 : "Amount of corners must be 8";
 
-        return new Vector3d[]{
+        return new Vec3[]{
 
                 // skew side
                 corners[0], corners[1],

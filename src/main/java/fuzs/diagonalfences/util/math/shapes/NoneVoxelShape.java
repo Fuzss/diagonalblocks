@@ -2,10 +2,10 @@ package fuzs.diagonalfences.util.math.shapes;
 
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.math.shapes.VoxelShapes;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
@@ -14,14 +14,14 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
 
     private final VoxelShape collisionShape;
     private final VoxelShape outlineShapeBase;
-    private final List<Vector3d[]> outlineShapeEdges;
+    private final List<Vec3[]> outlineShapeEdges;
 
-    public NoneVoxelShape(VoxelShape collisionShape, Vector3d... outlineShapeEdges) {
+    public NoneVoxelShape(VoxelShape collisionShape, Vec3... outlineShapeEdges) {
 
-        this(collisionShape, VoxelShapes.empty(), outlineShapeEdges);
+        this(collisionShape, Shapes.empty(), outlineShapeEdges);
     }
 
-    public NoneVoxelShape(VoxelShape collisionShape, VoxelShape outlineShapeBase, Vector3d... outlineShapeEdges) {
+    public NoneVoxelShape(VoxelShape collisionShape, VoxelShape outlineShapeBase, Vec3... outlineShapeEdges) {
 
         super(collisionShape);
 
@@ -30,30 +30,30 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
         this.outlineShapeEdges = this.createOutlineList(outlineShapeEdges);
     }
 
-    private List<Vector3d[]> createOutlineList(Vector3d[] outlineShapeEdges) {
+    private List<Vec3[]> createOutlineList(Vec3[] outlineShapeEdges) {
 
         assert outlineShapeEdges.length % 2 == 0 : "Edges must be in groups of two points";
 
-        List<Vector3d[]> list = Lists.newArrayList();
+        List<Vec3[]> list = Lists.newArrayList();
         for (int i = 0; i < outlineShapeEdges.length; i += 2) {
 
-            list.add(new Vector3d[]{outlineShapeEdges[i], outlineShapeEdges[i + 1]});
+            list.add(new Vec3[]{outlineShapeEdges[i], outlineShapeEdges[i + 1]});
         }
 
         return list;
     }
 
     @Override
-    protected DoubleList getValues(Direction.Axis axis) {
+    protected DoubleList getCoords(Direction.Axis axis) {
 
         return this.callGetValues(this.collisionShape, axis);
     }
 
     @Override
-    public void forEachEdge(VoxelShapes.ILineConsumer boxConsumer) {
+    public void forAllEdges(Shapes.DoubleLineConsumer boxConsumer) {
 
-        this.outlineShapeBase.forEachEdge(boxConsumer);
-        for (Vector3d[] edge : this.outlineShapeEdges) {
+        this.outlineShapeBase.forAllEdges(boxConsumer);
+        for (Vec3[] edge : this.outlineShapeEdges) {
 
             boxConsumer.consume(edge[0].x, edge[0].y, edge[0].z, edge[1].x, edge[1].y, edge[1].z);
         }

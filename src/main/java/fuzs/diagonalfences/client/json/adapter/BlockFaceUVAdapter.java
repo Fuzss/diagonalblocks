@@ -2,12 +2,12 @@ package fuzs.diagonalfences.client.json.adapter;
 
 import fuzs.diagonalfences.client.util.IAdapterUtils;
 import com.google.gson.*;
-import net.minecraft.client.renderer.model.BlockFaceUV;
+import net.minecraft.client.renderer.block.model.BlockFaceUV;
 
 import java.lang.reflect.Type;
 
 /**
- * adapted from {@link net.minecraft.client.renderer.model.BlockFaceUV.Deserializer}
+ * adapted from {@link net.minecraft.client.renderer.block.model.BlockFaceUV.Deserializer}
  */
 public class BlockFaceUVAdapter extends BlockFaceUV.Deserializer implements JsonSerializer<BlockFaceUV>, IAdapterUtils {
 

@@ -2,22 +2,22 @@ buildscript {
 
     repositories {
 
-        jcenter()
         mavenCentral()
         maven { url = 'https://files.minecraftforge.net/maven' }
         maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://maven.parchmentmc.org' }
     }
 
     dependencies {
 
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.+', changing: true
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
+        classpath 'org.parchmentmc:librarian:1.+'
     }
 }
 
 plugins {
 
-    id "com.wynprice.cursemaven" version "2.1.5"
     id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
@@ -27,6 +27,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply plugin: 'eclipse'
 apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 version = "v${mod_version}-${forge_version.replaceAll("-.*", "")}"
 group = "${mod_group}"
@@ -36,7 +37,7 @@ ext.author = "${mod_author}"
 ext.loader = "${loader_version}"
 ext.puzzles = "${puzzles_version.substring(1, puzzles_version.indexOf("-"))}"
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
 
@@ -69,18 +70,24 @@ minecraft {
 repositories {
 
     mavenLocal()
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 dependencies {
 
     minecraft "net.minecraftforge:forge:${forge_version}"
-    annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // local maven
-    compile "fuzs.puzzleslib:PuzzlesLib:${puzzles_version}"
+    implementation "fuzs.puzzleslib:PuzzlesLib:${puzzles_version}"
     // try use curse maven when local maven is not available
     // file id is end of url (7 digits usually) when on file details page on curse
-//    compile fg.deobf("curse.maven:puzzles-lib:<file-id>")
+//    implementation fg.deobf("curse.maven:puzzles-lib-495476:<file-id>")
 }
 
 mixin {
@@ -135,6 +142,9 @@ processResources {
 
         exclude 'META-INF/mods.toml', 'pack.mcmeta'
     }
+
+    //TODO: this is ugly but seems to be required for the above to work
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 ext.jarAttributes = [
@@ -166,7 +176,7 @@ def createJarTask(def name, def type, def sources) {
 
 def createSignJarTask(def name, def jarTask) {
 
-    return tasks.create(name, net.minecraftforge.gradle.common.task.SignJar) {
+    return tasks.create(name, net.minecraftforge.gradle.common.tasks.SignJar) {
 
         onlyIf {
 

@@ -1,9 +1,9 @@
 package fuzs.diagonalfences.util;
 
 import fuzs.diagonalfences.util.math.shapes.VoxelUtils;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Vec3i;
 
 import java.util.stream.Stream;
 
@@ -19,12 +19,12 @@ public enum EightWayDirection {
     SOUTH_EAST(3, 1, 1);
 
     public final int index;
-    public final Vector3i directionVec;
+    public final Vec3i directionVec;
 
     EightWayDirection(int index, int directionX, int directionZ) {
 
         this.index = index;
-        this.directionVec = new Vector3i(directionX, 0, directionZ);
+        this.directionVec = new Vec3i(directionX, 0, directionZ);
     }
 
     public boolean isCardinal() {
@@ -42,7 +42,7 @@ public enum EightWayDirection {
         return 1 << (this.isIntercardinal() ? 4 + this.index : this.index);
     }
 
-    public Vector3d[] transform(Vector3d[] vectors) {
+    public Vec3[] transform(Vec3[] vectors) {
 
         if (this.directionVec.getX() != 0) {
 
@@ -77,12 +77,12 @@ public enum EightWayDirection {
     public Direction convertTo() {
 
         assert this.isCardinal() : "Cannot convert intercardinal direction to vanilla direction";
-        return Direction.byHorizontalIndex(this.index);
+        return Direction.from2DDataValue(this.index);
     }
 
     public static EightWayDirection convertTo(Direction direction) {
 
-        return EightWayDirection.getAllCardinals()[direction.getHorizontalIndex()];
+        return EightWayDirection.getAllCardinals()[direction.get2DDataValue()];
     }
 
     public static EightWayDirection[] getAllCardinals() {
