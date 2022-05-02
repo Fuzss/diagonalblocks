@@ -83,6 +83,8 @@ dependencies {
     minecraft "net.minecraftforge:forge:${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+    runtimeOnly fg.deobf("curse.maven:macaws-fences-and-walls-453925:3755729")
+
     // local maven
     implementation "fuzs.puzzleslib:PuzzlesLib:${puzzles_version}"
     // try use curse maven when local maven is not available
