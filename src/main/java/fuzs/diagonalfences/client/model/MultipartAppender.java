@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.client.model;
 
-import fuzs.diagonalfences.block.IEightWayBlock;
+import fuzs.diagonalfences.block.EightWayBlock;
 import fuzs.diagonalfences.util.EightWayDirection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -101,7 +101,7 @@ public class MultipartAppender {
     private static BooleanProperty getClockwiseIntercardinalProperty(Direction cardinal) {
 
         EightWayDirection dir = EightWayDirection.byIndex(cardinal.get2DDataValue(), true);
-        return IEightWayBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
+        return EightWayBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
     }
 
     private static List<Pair<Predicate<BlockState>, BakedModel>> getMultiPartSelectors(MultiPartBakedModel model) {

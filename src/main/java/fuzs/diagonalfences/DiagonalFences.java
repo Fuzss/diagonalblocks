@@ -8,18 +8,11 @@ import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@SuppressWarnings("unused")
-@Mod(DiagonalFences.MODID)
+@Mod(DiagonalFences.MOD_ID)
 public class DiagonalFences {
+    public static final String MOD_ID = "diagonalfences";
+    public static final String MOD_NAME = "Diagonal Fences";
+    public static final Logger LOGGER = LogManager.getLogger(DiagonalFences.MOD_NAME);
 
-    public static final String MODID = "diagonalfences";
-    public static final String NAME = "Diagonal Fences";
-    public static final Logger LOGGER = LogManager.getLogger(DiagonalFences.NAME);
-
-    public static final TagKey<Block> NON_DIAGONAL_FENCES_TAG = BlockTags.create(new ResourceLocation(DiagonalFences.MODID, "non_diagonal_fences"));
-
-    public DiagonalFences() {
-
-    }
-
+    public static final TagKey<Block> NON_DIAGONAL_FENCES_TAG = BlockTags.create(new ResourceLocation(DiagonalFences.MOD_ID, "non_diagonal_fences"));
 }

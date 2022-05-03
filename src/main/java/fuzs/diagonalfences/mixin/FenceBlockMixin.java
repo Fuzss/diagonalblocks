@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.mixin;
 
 import fuzs.diagonalfences.DiagonalFences;
-import fuzs.diagonalfences.block.IEightWayBlock;
+import fuzs.diagonalfences.block.EightWayBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.level.block.*;
@@ -24,10 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 @Mixin(FenceBlock.class)
-public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEightWayBlock {
-
+public abstract class FenceBlockMixin extends CrossCollisionBlock implements EightWayBlock {
     private boolean hasProperties;
     private Object2IntMap<BlockState> statePaletteMap;
 
@@ -87,13 +85,11 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
 
     @Override
     public boolean hasProperties() {
-
         return this.hasProperties;
     }
 
     @Override
     public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
-
         return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
     }
 
@@ -110,7 +106,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
     public boolean canConnectDiagonally(BlockState blockstate) {
 
         Block block = blockstate.getBlock();
-        return block instanceof FenceBlock && ((IEightWayBlock) block).canConnectDiagonally() && this.isSameFence(blockstate);
+        return block instanceof FenceBlock && ((EightWayBlock) block).canConnectDiagonally() && this.isSameFence(blockstate);
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -119,7 +115,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements IEi
         if (this.hasProperties()) {
 
             // most properties are added in actual constructor
-            this.registerDefaultState(this.getDefaultStates(this.defaultBlockState()));
+            this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
         }
     }
 

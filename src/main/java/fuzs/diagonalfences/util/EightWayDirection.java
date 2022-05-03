@@ -2,44 +2,53 @@ package fuzs.diagonalfences.util;
 
 import fuzs.diagonalfences.util.math.shapes.VoxelUtils;
 import net.minecraft.core.Direction;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.stream.Stream;
 
+/**
+ * an extension to {@link Direction} to allow for intercardinals in the horizontal plane
+ */
 public enum EightWayDirection {
+    SOUTH(0, new Vec3i(0, 0, 1)),
+    WEST(1, new Vec3i(-1, 0, 0)),
+    NORTH(2, new Vec3i(0, 0, -1)),
+    EAST(3, new Vec3i(1, 0, 0)),
+    SOUTH_WEST(0, new Vec3i(-1, 0, 1)),
+    NORTH_WEST(1, new Vec3i(-1, 0, -1)),
+    NORTH_EAST(2, new Vec3i(1, 0, -1)),
+    SOUTH_EAST(3, new Vec3i(1, 0, 1));
 
-    SOUTH(0, 0, 1),
-    WEST(1, -1, 0),
-    NORTH(2, 0, -1),
-    EAST(3, 1, 0),
-    SOUTH_WEST(0, -1, 1),
-    NORTH_WEST(1, -1, -1),
-    NORTH_EAST(2, 1, -1),
-    SOUTH_EAST(3, 1, 1);
+    public static final EightWayDirection[] CARDINAL_DIRECTIONS = Stream.of(EightWayDirection.values())
+            .filter(EightWayDirection::cardinal)
+            .toArray(EightWayDirection[]::new);
+    public static final EightWayDirection[] INTERCARDINAL_DIRECTIONS = Stream.of(EightWayDirection.values())
+            .filter(EightWayDirection::intercardinal)
+            .toArray(EightWayDirection[]::new);
 
-    public final int index;
-    public final Vec3i directionVec;
+    private final int data2d;
+    private final Vec3i directionVec;
 
-    EightWayDirection(int index, int directionX, int directionZ) {
-
-        this.index = index;
-        this.directionVec = new Vec3i(directionX, 0, directionZ);
+    EightWayDirection(int data2d, Vec3i directionVec) {
+        this.data2d = data2d;
+        this.directionVec = directionVec;
     }
 
-    public boolean isCardinal() {
-
-        return !this.isIntercardinal();
+    public Vec3i directionVec() {
+        return this.directionVec;
     }
 
-    public boolean isIntercardinal() {
+    public boolean cardinal() {
+        return !this.intercardinal();
+    }
 
-        return Math.abs(this.directionVec.getX()) + Math.abs(this.directionVec.getZ()) == 2;
+    public boolean intercardinal() {
+        return this.directionVec.getX() != 0 && this.directionVec.getZ() != 0;
     }
 
     public int getHorizontalIndex() {
-
-        return 1 << (this.isIntercardinal() ? 4 + this.index : this.index);
+        return 1 << (this.intercardinal() ? 4 + this.data2d : this.data2d);
     }
 
     public Vec3[] transform(Vec3[] vectors) {
@@ -57,57 +66,36 @@ public enum EightWayDirection {
         return vectors;
     }
 
-    public EightWayDirection getOpposite() {
-
-        return EightWayDirection.byIndex((this.index + 2), this.isIntercardinal());
+    public EightWayDirection opposite() {
+        return EightWayDirection.byIndex((this.data2d + 2), this.intercardinal());
     }
 
     public EightWayDirection[] getCardinalNeighbors() {
-
-        assert this.isIntercardinal() : "Direction already is cardinal";
-        return new EightWayDirection[]{EightWayDirection.byIndex(this.index, false), EightWayDirection.byIndex(this.index + 1, false)};
+        if (!this.intercardinal()) {
+            throw new IllegalStateException("Direction already is cardinal");
+        }
+        return new EightWayDirection[]{EightWayDirection.byIndex(this.data2d, false), EightWayDirection.byIndex(this.data2d + 1, false)};
     }
 
     public EightWayDirection[] getIntercardinalNeighbors() {
-
-        assert this.isCardinal() : "Direction already is intercardinal";
-        return new EightWayDirection[]{EightWayDirection.byIndex(this.index + 3, true), EightWayDirection.byIndex(this.index, true)};
+        if (!this.cardinal()) {
+            throw new IllegalStateException("Direction already is intercardinal");
+        }
+        return new EightWayDirection[]{EightWayDirection.byIndex(this.data2d + 3, true), EightWayDirection.byIndex(this.data2d, true)};
     }
 
-    public Direction convertTo() {
-
-        assert this.isCardinal() : "Cannot convert intercardinal direction to vanilla direction";
-        return Direction.from2DDataValue(this.index);
+    public Direction toDirection() {
+        if (!this.cardinal()) {
+            throw new IllegalStateException("Cannot convert intercardinal direction to vanilla direction");
+        }
+        return Direction.from2DDataValue(this.data2d);
     }
 
-    public static EightWayDirection convertTo(Direction direction) {
-
-        return EightWayDirection.getAllCardinals()[direction.get2DDataValue()];
-    }
-
-    public static EightWayDirection[] getAllCardinals() {
-
-        return Stream.of(EightWayDirection.values())
-                .filter(EightWayDirection::isCardinal)
-                .toArray(EightWayDirection[]::new);
-    }
-
-    public static EightWayDirection[] getAllIntercardinals() {
-
-        return Stream.of(EightWayDirection.values())
-                .filter(EightWayDirection::isIntercardinal)
-                .toArray(EightWayDirection[]::new);
+    public static EightWayDirection toEightWayDirection(Direction direction) {
+        return CARDINAL_DIRECTIONS[direction.get2DDataValue()];
     }
 
     public static EightWayDirection byIndex(int index, boolean intercardinal) {
-
-        index %= 4;
-        return intercardinal ? getAllIntercardinals()[index] : getAllCardinals()[index];
+        return intercardinal ? INTERCARDINAL_DIRECTIONS[index % 4] : CARDINAL_DIRECTIONS[index % 4];
     }
-
-    public static EightWayDirection byHorizontalIndex(int index) {
-
-        return byIndex(index, index >= 4);
-    }
-
 }
