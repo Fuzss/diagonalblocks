@@ -5,7 +5,8 @@
   "package": "fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
-    "FenceBlockMixin"
+    "FenceBlockMixin",
+    "IronBarsBlockMixin"
   ],
   "client": [
   ],

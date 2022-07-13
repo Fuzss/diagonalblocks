@@ -2,6 +2,7 @@ package fuzs.diagonalfences.mixin;
 
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.block.EightWayBlock;
+import fuzs.diagonalfences.util.math.shapes.VoxelCollection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -11,7 +12,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CrossCollisionBlock;
-import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -28,12 +29,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-@Mixin(FenceBlock.class)
-public abstract class FenceBlockMixin extends CrossCollisionBlock implements EightWayBlock {
+@SuppressWarnings("unused")
+@Mixin(IronBarsBlock.class)
+public abstract class IronBarsBlockMixin extends CrossCollisionBlock implements EightWayBlock {
+
     private boolean hasProperties;
     private Object2IntMap<BlockState> statePaletteMap;
 
-    public FenceBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
+    public IronBarsBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
 
         super(nodeWidth, extensionWidth, nodeHeight, extensionHeight, collisionY, properties);
     }
@@ -76,22 +79,17 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Shadow
-    public abstract boolean connectsTo(BlockState state, boolean isSideSolid, Direction direction);
-
-    @Shadow
-    private boolean isSameFence(BlockState state) {
-
-        throw new IllegalStateException();
-    }
+    public abstract boolean attachsTo(BlockState pState, boolean pSolidSide);
 
     @Override
     public boolean hasProperties() {
+
         return this.hasProperties;
     }
 
     @Override
     public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
-        return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
+        return this.attachsTo(state, state.isFaceSturdy(blockGetter, position, direction));
     }
 
     @Override
@@ -107,21 +105,47 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     public boolean canConnectDiagonally(BlockState blockstate) {
 
         Block block = blockstate.getBlock();
-        return block instanceof FenceBlock && ((EightWayBlock) block).canConnectDiagonally() && this.isSameFence(blockstate);
+        return block instanceof IronBarsBlock && ((EightWayBlock) block).canConnectDiagonally();
+    }
+
+    @Override
+    public VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes) {
+
+        VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
+        for (int i = 0; i < stateShapes.length; i++) {
+
+            // don't render outline for node as the texture is transparent making it feel out of place
+            if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
+
+                stateShapes[i] = new VoxelCollection();
+            } else {
+
+                stateShapes[i] = new VoxelCollection(nodeShape);
+            }
+
+            for (int j = 0; j < directionalShapes.length; j++) {
+
+                if ((i & (1 << j)) != 0) {
+
+                    stateShapes[i].addVoxelShape(directionalShapes[j]);
+                }
+            }
+        }
+
+        return stateShapes;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callback) {
+    public void init$tail(BlockBehaviour.Properties properties, CallbackInfo callback) {
 
         if (this.hasProperties()) {
 
-            // most properties are added in actual constructor
             this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
         }
     }
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
-    protected void diagonalfences_createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
+    protected void createBlockStateDefinition$tail(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
 
         // do nothing later on when this wasn't called
         this.hasProperties = true;
@@ -129,13 +153,13 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
-    public void diagonalfences_getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
+    public void getStateForPlacement$head(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
 
         if (this.canConnectDiagonally()) {
 
             BlockGetter iblockreader = context.getLevel();
             BlockPos basePos = context.getClickedPos();
-            FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
+            FluidState fluidState = context.getLevel().getFluidState(basePos);
 
             BlockState placementState = super.getStateForPlacement(context);
             placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
@@ -144,11 +168,11 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
-    public void diagonalfences_updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
+    public void updateShape$tail(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
 
         if (this.canConnectDiagonally()) {
 
-            BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
+            BlockState returnState = this.updateShape2(stateIn, facing, facingState, worldIn, currentPos, facingPos, callback.getReturnValue());
             if (returnState != null) {
 
                 callback.setReturnValue(returnState);

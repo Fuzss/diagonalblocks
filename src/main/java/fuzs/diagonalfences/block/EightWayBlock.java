@@ -57,7 +57,7 @@ public interface EightWayBlock extends DiagonalBlock {
         return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
     }
 
-    default void fillStateContainer2(StateDefinition.Builder<Block, BlockState> builder) {
+    default void createBlockStateDefinition2(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(DiagonalBlock.NORTH_EAST, DiagonalBlock.SOUTH_EAST, DiagonalBlock.SOUTH_WEST, DiagonalBlock.NORTH_WEST);
     }
 
@@ -101,7 +101,7 @@ public interface EightWayBlock extends DiagonalBlock {
         return placementState;
     }
 
-    default BlockState updatePostPlacement2(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, BlockState newState) {
+    default BlockState updateShape2(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, BlockState newState) {
 
         if (facing.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
 
@@ -130,7 +130,7 @@ public interface EightWayBlock extends DiagonalBlock {
     /**
      * similar to {@link net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#updateIndirectNeighbourShapes}
      */
-    default void updateDiagonalNeighbors2(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
+    default void updateIndirectNeighbourShapes2(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
 
         BlockPos.MutableBlockPos diagonalPos = new BlockPos.MutableBlockPos();
 

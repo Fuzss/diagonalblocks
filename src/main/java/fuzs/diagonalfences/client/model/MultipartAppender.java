@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.client.model;
 
+import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.block.EightWayBlock;
 import fuzs.diagonalfences.util.EightWayDirection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -7,6 +8,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraftforge.client.model.data.EmptyModelData;
@@ -29,22 +31,22 @@ public class MultipartAppender {
      * @param model The original multipart model
      * @return The new multipart model with the original selectors and the new diagonal selectors
      */
-    public static MultiPartBakedModel appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model) {
+    public static MultiPartBakedModel appendDiagonalSelectors(Block block, List<MultipartDirectionData> oneArmStates, MultiPartBakedModel model) {
 
         List<Pair<Predicate<BlockState>, BakedModel>> selectors = new ArrayList<>(getMultiPartSelectors(model));
 
         List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = new ArrayList<>();
         for (Pair<Predicate<BlockState>, BakedModel> selector : selectors) {
 
-            for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
+            //Filter out the fence/wall post
+            if (selector.getKey().test(block.defaultBlockState())) {
 
-                //Filter out the fence/wall post
-                if (selector.getKey().test(block.defaultBlockState())) {
+                continue;
+            }
 
-                    continue;
-                }
+            for (MultipartDirectionData armEntry : oneArmStates) {
 
-                if (selector.getKey().test(armEntry.getKey())) {
+                if (selector.getKey().test(armEntry.testState())) {
 
                     BooleanProperty diagonalProp = getClockwiseIntercardinalProperty(armEntry.getValue());
                     newSelectors.add(Pair.of(
@@ -52,6 +54,46 @@ public class MultipartAppender {
                             rotateMultipartSegment(armEntry.getKey(), selector.getValue(), armEntry.getValue())
                     ));
                 }
+            }
+        }
+        selectors.addAll(newSelectors);
+
+        return new MultiPartBakedModel(selectors);
+    }
+
+    /**
+     * Append the multipart model selectors needed for the diagonal arms of the fence, wall, etc.
+     * @param block The Block to which the model belongs
+     * @param oneArmStates All BlockStates that signify a single arm being present associated with the direction the arm points in
+     * @param model The original multipart model
+     * @return The new multipart model with the original selectors and the new diagonal selectors
+     */
+    public static MultiPartBakedModel appendDiagonalSelectors2(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model) {
+
+        List<Pair<Predicate<BlockState>, BakedModel>> selectors = new ArrayList<>(getMultiPartSelectors(model));
+
+        List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = new ArrayList<>();
+        for (Iterator<Pair<Predicate<BlockState>, BakedModel>> iterator = selectors.iterator(); iterator.hasNext(); ) {
+            Pair<Predicate<BlockState>, BakedModel> selector = iterator.next();
+
+            for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
+
+                //Filter out the fence/wall post
+                if (selector.getKey().test(block.defaultBlockState())) {
+
+                    BooleanProperty diagonalProp = getClockwiseIntercardinalProperty(armEntry.getValue());
+                    newSelectors.add(Pair.of(state -> state.getValue(diagonalProp), rotateMultipartSegment(block.defaultBlockState(), selector.getValue(), armEntry.getValue())));
+                } else if (selector.getKey().test(armEntry.getKey())) {
+
+                    BooleanProperty diagonalProp = getClockwiseIntercardinalProperty(armEntry.getValue());
+                    newSelectors.add(Pair.of(state -> state.getValue(diagonalProp), rotateMultipartSegment(armEntry.getKey(), selector.getValue(), armEntry.getValue())));
+                }
+            }
+
+            if (selector.getKey().test(block.defaultBlockState())) {
+
+                iterator.remove();
+                newSelectors.add((Pair.of(state -> selector.getKey().test(state) && (state.getValue(CrossCollisionBlock.NORTH) || state.getValue(CrossCollisionBlock.EAST) || state.getValue(CrossCollisionBlock.SOUTH) || state.getValue(CrossCollisionBlock.WEST) || !state.getValue(DiagonalBlock.NORTH_EAST) && !state.getValue(DiagonalBlock.SOUTH_EAST) && !state.getValue(DiagonalBlock.SOUTH_WEST) && !state.getValue(DiagonalBlock.NORTH_WEST)), selector.getValue())));
             }
         }
         selectors.addAll(newSelectors);
