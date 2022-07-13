@@ -4,15 +4,19 @@ import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.block.EightWayBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.*;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CrossCollisionBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.tags.ITagManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -62,13 +66,12 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
         return super.getAABBIndex(state);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void updateIndirectNeighbourShapes(BlockState state, LevelAccessor world, BlockPos pos, int flags, int recursionLeft) {
 
         if (this.canConnectDiagonally()) {
 
-            this.updateDiagonalNeighbors2(state, world, pos, flags, recursionLeft);
+            this.updateIndirectNeighbourShapes2(state, world, pos, flags, recursionLeft);
         }
     }
 
@@ -80,8 +83,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
         throw new IllegalStateException();
     }
-
-    @Shadow protected abstract void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> p_53334_);
 
     @Override
     public boolean hasProperties() {
@@ -110,7 +111,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callbackInfo) {
+    public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callback) {
 
         if (this.hasProperties()) {
 
@@ -120,16 +121,15 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
-    protected void diagonalfences_createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callbackInfo) {
+    protected void diagonalfences_createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
 
         // do nothing later on when this wasn't called
         this.hasProperties = true;
-        this.fillStateContainer2(builder);
+        this.createBlockStateDefinition2(builder);
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
-    public void diagonalfences_getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callbackInfo) {
+    public void diagonalfences_getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
 
         if (this.canConnectDiagonally()) {
 
@@ -139,19 +139,19 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
             BlockState placementState = super.getStateForPlacement(context);
             placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
-            callbackInfo.setReturnValue(placementState);
+            callback.setReturnValue(placementState);
         }
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
-    public void diagonalfences_updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callbackInfo) {
+    public void diagonalfences_updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
 
         if (this.canConnectDiagonally()) {
 
-            BlockState returnState = this.updatePostPlacement2(state, facing, facingState, level, currentPos, facingPos, callbackInfo.getReturnValue());
+            BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
             if (returnState != null) {
 
-                callbackInfo.setReturnValue(returnState);
+                callback.setReturnValue(returnState);
             }
         }
     }
