@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.util.math.shapes;
+package fuzs.diagonalfences.world.phys.shapes;
 
 import com.google.common.collect.Lists;
 import fuzs.diagonalfences.mixin.accessor.VoxelShapeAccessor;

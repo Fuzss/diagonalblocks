@@ -5,9 +5,9 @@
   "package": "fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
+    "ForgeFenceBlockMixin"
   ],
   "client": [
-    "client.ParticleEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.util.math.shapes;
+package fuzs.diagonalfences.world.phys.shapes;
 
 import com.google.common.collect.Lists;
 import fuzs.diagonalfences.mixin.accessor.VoxelShapeAccessor;
@@ -12,6 +12,7 @@ import java.util.List;
 public class VoxelCollection extends ExtensibleVoxelShape {
     private VoxelShape collisionShape;
     private VoxelShape outlineShape;
+    private VoxelShape particleShape;
     private final List<NoneVoxelShape> noneVoxels = Lists.newArrayList();
 
     public VoxelCollection() {
@@ -22,6 +23,7 @@ public class VoxelCollection extends ExtensibleVoxelShape {
         super(baseShape);
         this.collisionShape = baseShape;
         this.outlineShape = baseShape;
+        this.particleShape = baseShape;
     }
 
     @Override
@@ -35,18 +37,27 @@ public class VoxelCollection extends ExtensibleVoxelShape {
     }
 
     public void addVoxelShape(VoxelShape voxelShape) {
+        this.addVoxelShape(voxelShape, voxelShape);
+    }
+
+    public void addVoxelShape(VoxelShape voxelShape, VoxelShape particleShape) {
         if (voxelShape instanceof NoneVoxelShape) {
             this.addNoneVoxelShape((NoneVoxelShape) voxelShape);
         } else {
             this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
             this.outlineShape = Shapes.or(this.outlineShape, voxelShape);
         }
+        this.particleShape = Shapes.or(this.particleShape, particleShape);
     }
 
     private void addNoneVoxelShape(NoneVoxelShape voxelShape) {
         this.noneVoxels.add(voxelShape);
         // combine collision shapes
         this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
+    }
+
+    public void forAllParticleBoxes(Shapes.DoubleLineConsumer doubleLineConsumer) {
+        this.particleShape.forAllBoxes(doubleLineConsumer);
     }
 
     @Override

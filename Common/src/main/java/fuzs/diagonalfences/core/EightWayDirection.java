@@ -1,6 +1,6 @@
-package fuzs.diagonalfences.util;
+package fuzs.diagonalfences.core;
 
-import fuzs.diagonalfences.util.math.shapes.VoxelUtils;
+import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.Vec3;

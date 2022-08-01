@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.block.EightWayBlock;
+import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.init.ModRegistry;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;

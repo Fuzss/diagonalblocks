@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.util.math.shapes;
+package fuzs.diagonalfences.world.phys.shapes;
 
 import fuzs.diagonalfences.mixin.accessor.VoxelShapeAccessor;
 import it.unimi.dsi.fastutil.doubles.DoubleList;

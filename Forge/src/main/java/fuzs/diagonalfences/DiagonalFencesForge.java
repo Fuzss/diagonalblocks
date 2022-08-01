@@ -1,6 +1,6 @@
 package fuzs.diagonalfences;
 
-import net.minecraftforge.api.distmarker.Dist;
+import fuzs.puzzleslib.core.CoreServices;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
@@ -11,6 +11,6 @@ public class DiagonalFencesForge {
 
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
-        DiagonalFences.onConstructMod();
+        CoreServices.FACTORIES.modConstructor(DiagonalFences.MOD_ID).accept(new DiagonalFences());
     }
 }

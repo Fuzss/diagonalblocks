@@ -1,9 +1,9 @@
 package fuzs.diagonalfences.client.model;
 
-import fuzs.diagonalfences.block.EightWayBlock;
+import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.client.core.ModClientCoreServices;
 import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
-import fuzs.diagonalfences.util.EightWayDirection;
+import fuzs.diagonalfences.core.EightWayDirection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;

@@ -1,12 +1,13 @@
 package fuzs.diagonalfences.client;
 
-import fuzs.diagonalfences.api.client.event.ModelEvents;
+import fuzs.diagonalfences.DiagonalFences;
+import fuzs.puzzleslib.client.core.ClientCoreServices;
 import net.fabricmc.api.ClientModInitializer;
 
 public class DiagonalFencesFabricClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        ModelEvents.BAKING_COMPLETED.register(DiagonalFencesClient::onBakingCompleted);
+        ClientCoreServices.FACTORIES.clientModConstructor(DiagonalFences.MOD_ID).accept(new DiagonalFencesClient());
     }
 }

@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.util.math.shapes;
+package fuzs.diagonalfences.world.phys.shapes;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;

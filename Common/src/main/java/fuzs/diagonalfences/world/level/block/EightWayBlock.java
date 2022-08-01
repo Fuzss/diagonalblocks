@@ -1,12 +1,12 @@
-package fuzs.diagonalfences.block;
+package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.util.EightWayDirection;
-import fuzs.diagonalfences.util.math.shapes.NoneVoxelShape;
-import fuzs.diagonalfences.util.math.shapes.VoxelCollection;
-import fuzs.diagonalfences.util.math.shapes.VoxelUtils;
+import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
+import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
+import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
 import fuzs.puzzleslib.util.PuzzlesUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -168,17 +168,30 @@ public interface EightWayBlock extends DiagonalBlock {
         float extensionEnd = 8.0F + extensionWidth;
 
         VoxelShape nodeShape = Block.box(nodeStart, 0.0, nodeStart, nodeEnd, nodeHeight, nodeEnd);
-        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, extensionStart)};
-
+        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, nodeStart)};
+        Vec3[] sideParticleShape = new Vec3[]{new Vec3(0.0, extensionBottom, 0.0), new Vec3(nodeStart, extensionHeight, nodeStart)};
         VoxelShape[] verticalShapes = Stream.of(EightWayDirection.CARDINAL_DIRECTIONS).map(direction -> direction.transform(sideShape)).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
-
         VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.INTERCARDINAL_DIRECTIONS).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction)).toArray(VoxelShape[]::new);
-        VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
+        VoxelShape[] diagonalParticleShapes = Stream.of(EightWayDirection.INTERCARDINAL_DIRECTIONS).map(direction -> {
+            Vec3[] edges = sideParticleShape;
+            if (direction.directionVec().getX() != 1) {
 
-        return this.constructStateShapes(nodeShape, sideShapes);
+                edges = VoxelUtils.flipX(edges);
+            }
+
+            if (direction.directionVec().getZ() != 1) {
+
+                edges = VoxelUtils.flipZ(edges);
+            }
+            return edges;
+        }).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
+        VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
+        VoxelShape[] particleSideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalParticleShapes[2], diagonalParticleShapes[3], diagonalParticleShapes[0], diagonalParticleShapes[1]};
+
+        return this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
     }
 
-    default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes) {
+    default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
 
         VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
         for (int i = 0; i < stateShapes.length; i++) {
@@ -188,7 +201,7 @@ public interface EightWayBlock extends DiagonalBlock {
 
                 if ((i & (1 << j)) != 0) {
 
-                    stateShapes[i].addVoxelShape(directionalShapes[j]);
+                    stateShapes[i].addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
                 }
             }
         }

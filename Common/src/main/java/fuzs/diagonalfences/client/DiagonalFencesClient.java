@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.client.model.MultipartAppender;
+import fuzs.puzzleslib.client.core.ClientModConstructor;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
@@ -19,9 +20,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import java.util.Map;
 import java.util.Set;
 
-public class DiagonalFencesClient {
+public class DiagonalFencesClient implements ClientModConstructor {
 
-    public static void onBakingCompleted(ModelManager modelManager, Map<ResourceLocation, BakedModel> models, ModelBakery modelBakery) {
+    @Override
+    public void onLoadModels(ModelManager modelManager, Map<ResourceLocation, BakedModel> models, ModelBakery modelBakery) {
+        onBakingCompleted(modelManager, models, modelBakery);
+    }
+
+    private static void onBakingCompleted(ModelManager modelManager, Map<ResourceLocation, BakedModel> models, ModelBakery modelBakery) {
         Set<Block> erroredBlocks = Sets.newHashSet();
         Registry.BLOCK.stream()
                 .filter(block -> block instanceof FenceBlock)
