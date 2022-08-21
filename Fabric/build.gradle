@@ -39,7 +39,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
     mappings loom.layered() {
         officialMojangMappings()
-//        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
+        parchment("org.parchmentmc.data:parchment-${minecraftVersion}:${parchmentMappingsVersion}@zip")
     }
 
     // Fabric
@@ -47,10 +47,10 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 
     // Forge Configs
-    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.1.2"
+    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.2.0"
 
     // Mod Menu
-    modRuntimeOnly "com.terraformersmc:modmenu:4.0.5"
+    modRuntimeOnly "com.terraformersmc:modmenu:4.0.6"
 
     // Puzzles Lib
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
