@@ -17,7 +17,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class DiagonalFencesClient implements ClientModConstructor {
@@ -37,8 +39,7 @@ public class DiagonalFencesClient implements ClientModConstructor {
                     ResourceLocation fenceLocation = BlockModelShaper.stateToModelLocation(state);
                     BakedModel model = models.get(fenceLocation);
                     if (model instanceof MultiPartBakedModel fenceModel) {
-                        MultiPartBakedModel newModel = appendDiagonalFenceSelectors(state.getBlock(), fenceModel);
-                        models.put(fenceLocation, newModel);
+                        appendDiagonalFenceSelectors(state.getBlock(), fenceModel).ifPresent(newModel -> models.put(fenceLocation, newModel));
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
                         DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections may not be visible!", state.getBlock());
@@ -46,13 +47,19 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 });
     }
 
-    private static MultiPartBakedModel appendDiagonalFenceSelectors(Block block, MultiPartBakedModel model) {
+    private static Optional<BakedModel> appendDiagonalFenceSelectors(Block block, MultiPartBakedModel model) {
         Map<BlockState, Direction> oneArmStates = Map.of(
                 block.defaultBlockState().setValue(FenceBlock.NORTH, true), Direction.NORTH,
                 block.defaultBlockState().setValue(FenceBlock.EAST, true), Direction.EAST,
                 block.defaultBlockState().setValue(FenceBlock.SOUTH, true), Direction.SOUTH,
                 block.defaultBlockState().setValue(FenceBlock.WEST, true), Direction.WEST
         );
-        return MultipartAppender.appendDiagonalSelectors(block, oneArmStates, model);
+        List<BlockState> testStates = List.of(
+                block.defaultBlockState().setValue(DiagonalBlock.NORTH_EAST, true),
+                block.defaultBlockState().setValue(DiagonalBlock.NORTH_WEST, true),
+                block.defaultBlockState().setValue(DiagonalBlock.SOUTH_EAST, true),
+                block.defaultBlockState().setValue(DiagonalBlock.SOUTH_WEST, true)
+        );
+        return MultipartAppender.appendDiagonalSelectors(block, oneArmStates, model, testStates);
     }
 }

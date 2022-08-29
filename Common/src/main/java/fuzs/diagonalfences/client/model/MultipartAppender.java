@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.client.model;
 
+import com.google.common.collect.Lists;
 import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.client.core.ModClientCoreServices;
 import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
@@ -14,10 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class MultipartAppender {
@@ -29,19 +27,22 @@ public class MultipartAppender {
      * @param model The original multipart model
      * @return The new multipart model with the original selectors and the new diagonal selectors
      */
-    public static MultiPartBakedModel appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model) {
+    public static Optional<BakedModel> appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model, List<BlockState> testStates) {
 
-        List<Pair<Predicate<BlockState>, BakedModel>> selectors = new ArrayList<>(((MultiPartBakedModelAccessor) model).getSelectors());
-        List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = new ArrayList<>();
+        List<Pair<Predicate<BlockState>, BakedModel>> selectors = Lists.newArrayList(((MultiPartBakedModelAccessor) model).getSelectors());
+        List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = Lists.newArrayList();
 
         for (Pair<Predicate<BlockState>, BakedModel> selector : selectors) {
 
-            for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
+            // filter out the fence/wall post
+            if (selector.getKey().test(block.defaultBlockState())) continue;
 
-                //Filter out the fence/wall post
-                if (selector.getKey().test(block.defaultBlockState())) {
-                    continue;
-                }
+            // aiming for some sort of resource pack compatibility here, so avoid doing anything if at least one of our states is somehow present already
+            for (BlockState testState : testStates) {
+                if (selector.getKey().test(testState)) return Optional.empty();
+            }
+
+            for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
 
                 if (selector.getKey().test(armEntry.getKey())) {
                     BooleanProperty diagonalProp = getClockwiseIntercardinalProperty(armEntry.getValue());
@@ -54,7 +55,7 @@ public class MultipartAppender {
         }
 
         selectors.addAll(newSelectors);
-        return new MultiPartBakedModel(selectors);
+        return Optional.of(new MultiPartBakedModel(selectors));
     }
 
     /**
@@ -78,7 +79,7 @@ public class MultipartAppender {
      */
     private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
         List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RandomSource.create());
-        List<BakedQuad> newQuads = new ArrayList<>();
+        List<BakedQuad> newQuads = Lists.newArrayList();
 
         for (BakedQuad quad : quads) {
             BakedQuad copy = QuadUtils.duplicateQuad(quad);
