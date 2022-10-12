@@ -20,7 +20,7 @@ public class ForgeClientAbstractions implements ClientAbstractions {
     }
 
     @Override
-    public Optional<MultiPartBakedModel> getMultiPartBakedModel(BakedModel model) {
+    public Optional<MultiPartBakedModel> getMultiPartBakedModels(BakedModel model) {
         if (model instanceof MultiPartBakedModel multiPartBakedModel) {
             return Optional.of(multiPartBakedModel);
         }

@@ -13,5 +13,5 @@ public interface ClientAbstractions {
 
     BakedModel createWrappedBakedModel(BakedModel baseModel, Map<Direction, List<BakedQuad>> quadMap);
 
-    Optional<MultiPartBakedModel> getMultiPartBakedModel(BakedModel model);
+    List<MultiPartBakedModel> getMultiPartBakedModels(BakedModel model);
 }

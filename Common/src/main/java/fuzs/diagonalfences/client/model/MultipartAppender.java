@@ -22,14 +22,16 @@ public class MultipartAppender {
 
     /**
      * Append the multipart model selectors needed for the diagonal arms of the fence, wall, etc.
-     * @param block The Block to which the model belongs
+     *
+     * @param block        The Block to which the model belongs
      * @param oneArmStates All BlockStates that signify a single arm being present associated with the direction the arm points in
-     * @param model The original multipart model
-     * @return The new multipart model with the original selectors and the new diagonal selectors
+     * @param model        The original multipart model
      */
-    public static Optional<BakedModel> appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model, List<BlockState> testStates) {
+    public static void appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model, List<BlockState> testStates) {
 
-        List<Pair<Predicate<BlockState>, BakedModel>> selectors = Lists.newArrayList(((MultiPartBakedModelAccessor) model).getSelectors());
+        // this used to create a new multipart model used to replace the original in the baked models map
+        // but with Lambda Better Grass support this isn't really feasible anymore as there
+        List<Pair<Predicate<BlockState>, BakedModel>> selectors = ((MultiPartBakedModelAccessor) model).getSelectors();
         List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = Lists.newArrayList();
 
         for (Pair<Predicate<BlockState>, BakedModel> selector : selectors) {
@@ -39,7 +41,7 @@ public class MultipartAppender {
 
             // aiming for some sort of resource pack compatibility here, so avoid doing anything if at least one of our states is somehow present already
             for (BlockState testState : testStates) {
-                if (selector.getKey().test(testState)) return Optional.empty();
+                if (selector.getKey().test(testState)) return;
             }
 
             for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
@@ -55,7 +57,6 @@ public class MultipartAppender {
         }
 
         selectors.addAll(newSelectors);
-        return Optional.of(new MultiPartBakedModel(selectors));
     }
 
     /**

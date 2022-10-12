@@ -20,7 +20,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class DiagonalFencesClient implements ClientModConstructor {
@@ -39,9 +38,11 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 .forEach(state -> {
                     ResourceLocation fenceLocation = BlockModelShaper.stateToModelLocation(state);
                     BakedModel model = models.get(fenceLocation);
-                    Optional<MultiPartBakedModel> multiPartBakedModel = ClientModServices.ABSTRACTIONS.getMultiPartBakedModel(model);
-                    if (multiPartBakedModel.isPresent()) {
-                        appendDiagonalFenceSelectors(state.getBlock(), multiPartBakedModel.get());
+                    List<MultiPartBakedModel> multiPartBakedModels = ClientModServices.ABSTRACTIONS.getMultiPartBakedModels(model);
+                    if (!multiPartBakedModels.isEmpty()) {
+                        for (MultiPartBakedModel multiPartBakedModel : multiPartBakedModels) {
+                            appendDiagonalFenceSelectors(state.getBlock(), multiPartBakedModel);
+                        }
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
                         DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections may not be visible!", state.getBlock());
@@ -49,7 +50,7 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 });
     }
 
-    private static Optional<BakedModel> appendDiagonalFenceSelectors(Block block, MultiPartBakedModel model) {
+    private static void appendDiagonalFenceSelectors(Block block, MultiPartBakedModel model) {
         Map<BlockState, Direction> oneArmStates = Map.of(
                 block.defaultBlockState().setValue(FenceBlock.NORTH, true), Direction.NORTH,
                 block.defaultBlockState().setValue(FenceBlock.EAST, true), Direction.EAST,
@@ -62,6 +63,6 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 block.defaultBlockState().setValue(DiagonalBlock.SOUTH_EAST, true),
                 block.defaultBlockState().setValue(DiagonalBlock.SOUTH_WEST, true)
         );
-        return MultipartAppender.appendDiagonalSelectors(block, oneArmStates, model, testStates);
+        MultipartAppender.appendDiagonalSelectors(block, oneArmStates, model, testStates);
     }
 }
