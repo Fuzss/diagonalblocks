@@ -3,6 +3,7 @@ package fuzs.diagonalfences.client;
 import com.google.common.collect.Sets;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
+import fuzs.diagonalfences.client.core.ClientModServices;
 import fuzs.diagonalfences.client.model.MultipartAppender;
 import fuzs.puzzleslib.client.core.ClientModConstructor;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -38,8 +39,9 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 .forEach(state -> {
                     ResourceLocation fenceLocation = BlockModelShaper.stateToModelLocation(state);
                     BakedModel model = models.get(fenceLocation);
-                    if (model instanceof MultiPartBakedModel fenceModel) {
-                        appendDiagonalFenceSelectors(state.getBlock(), fenceModel).ifPresent(newModel -> models.put(fenceLocation, newModel));
+                    Optional<MultiPartBakedModel> multiPartBakedModel = ClientModServices.ABSTRACTIONS.getMultiPartBakedModel(model);
+                    if (multiPartBakedModel.isPresent()) {
+                        appendDiagonalFenceSelectors(state.getBlock(), multiPartBakedModel.get());
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
                         DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections may not be visible!", state.getBlock());

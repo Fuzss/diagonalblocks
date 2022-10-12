@@ -2,7 +2,7 @@ package fuzs.diagonalfences.client.model;
 
 import com.google.common.collect.Lists;
 import fuzs.diagonalfences.world.level.block.EightWayBlock;
-import fuzs.diagonalfences.client.core.ModClientCoreServices;
+import fuzs.diagonalfences.client.core.ClientModServices;
 import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
 import fuzs.diagonalfences.core.EightWayDirection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -70,7 +70,7 @@ public class MultipartAppender {
             rotateQuads(quadMap, state, segmentModel, cullFace, armDir);
         }
 
-        return ModClientCoreServices.CLIENT_ABSTRACTIONS.createWrappedBakedModel(segmentModel, quadMap);
+        return ClientModServices.ABSTRACTIONS.createWrappedBakedModel(segmentModel, quadMap);
     }
 
     /**

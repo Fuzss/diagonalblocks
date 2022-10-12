@@ -29,6 +29,10 @@ repositories {
         name = "jamieswhiteshirt"
         url = "https://maven.jamieswhiteshirt.com/libs-release/"
     }
+    maven {
+        name 'Gegy'
+        url 'https://maven.gegy.dev'
+    }
 }
 
 dependencies {
@@ -51,6 +55,10 @@ dependencies {
 
     // Mod Menu
     modRuntimeOnly "com.terraformersmc:modmenu:4.0.6"
+
+    // Lambda Better Grass
+    modImplementation "dev.lambdaurora:spruceui:4.0.0+1.19"
+    modImplementation "curse.maven:lambdabettergrass-400322:3834055"
 
     // Puzzles Lib
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"

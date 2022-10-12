@@ -8,6 +8,7 @@
     "ForgeFenceBlockMixin"
   ],
   "client": [
+    "client.accessor.BakedModelWrapperAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
