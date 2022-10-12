@@ -7,8 +7,7 @@
   "mixins": [
   ],
   "client": [
-    "client.ParticleEngineMixin",
-    "client.accessor.ForwardingBakedModelAccessor"
+    "client.ParticleEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,10 +1,10 @@
 package fuzs.diagonalfences.client.model;
 
 import com.google.common.collect.Lists;
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.client.core.ClientModServices;
-import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
 import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
+import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
@@ -15,7 +15,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class MultipartAppender {
@@ -25,13 +28,10 @@ public class MultipartAppender {
      *
      * @param block        The Block to which the model belongs
      * @param oneArmStates All BlockStates that signify a single arm being present associated with the direction the arm points in
-     * @param model        The original multipart model
+     * @param mutator        The original multipart model, including a setter for the newly created copy
      */
-    public static void appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model, List<BlockState> testStates) {
-
-        // this used to create a new multipart model used to replace the original in the baked models map
-        // but with Lambda Better Grass support this isn't really feasible anymore as there
-        List<Pair<Predicate<BlockState>, BakedModel>> selectors = ((MultiPartBakedModelAccessor) model).getSelectors();
+    public static void appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModelMutator mutator, List<BlockState> testStates) {
+        List<Pair<Predicate<BlockState>, BakedModel>> selectors = Lists.newArrayList(((MultiPartBakedModelAccessor) mutator.model()).getSelectors());
         List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = Lists.newArrayList();
 
         for (Pair<Predicate<BlockState>, BakedModel> selector : selectors) {
@@ -57,6 +57,7 @@ public class MultipartAppender {
         }
 
         selectors.addAll(newSelectors);
+        mutator.accept(new MultiPartBakedModel(selectors));
     }
 
     /**
@@ -97,5 +98,23 @@ public class MultipartAppender {
     private static BooleanProperty getClockwiseIntercardinalProperty(Direction cardinal) {
         EightWayDirection dir = EightWayDirection.byIndex(cardinal.get2DDataValue(), true);
         return EightWayBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
+    }
+
+    public static final class MultiPartBakedModelMutator {
+        private final MultiPartBakedModel model;
+        private final Consumer<BakedModel> consumer;
+
+        public MultiPartBakedModelMutator(MultiPartBakedModel model, Consumer<BakedModel> consumer) {
+            this.model = model;
+            this.consumer = consumer;
+        }
+
+        public MultiPartBakedModel model() {
+            return this.model;
+        }
+
+        public void accept(BakedModel model) {
+            this.consumer.accept(model);
+        }
     }
 }
