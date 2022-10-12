@@ -83,8 +83,8 @@ public interface EightWayBlock extends DiagonalBlock {
         placementState = this.withDirections(EightWayDirection.CARDINAL_DIRECTIONS, basePos, placementState, (mutablePos, newPlacementState, direction) ->
                 this.canConnect(blockGetter, mutablePos, blockGetter.getBlockState(mutablePos), direction.toDirection().getOpposite()));
 
-        placementState = this.withDirections(EightWayDirection.INTERCARDINAL_DIRECTIONS, basePos, placementState, (mutablePos, newPlacementState, direction) ->
-                this.canConnectDiagonally(blockGetter.getBlockState(mutablePos)) && Stream.of(direction.getCardinalNeighbors()).map(DIRECTION_TO_PROPERTY_MAP::get).noneMatch(newPlacementState::getValue));
+        placementState = this.withDirections(EightWayDirection.INTERCARDINAL_DIRECTIONS, basePos, placementState, (pos, newPlacementState, direction) ->
+                this.canConnectToMe(blockGetter.getBlockState(pos), direction.opposite()) && Stream.of(direction.getCardinalNeighbors()).map(DIRECTION_TO_PROPERTY_MAP::get).noneMatch(newPlacementState::getValue));
 
         return placementState;
     }
@@ -116,10 +116,10 @@ public interface EightWayBlock extends DiagonalBlock {
                 boolean isBlocked = false;
                 for (EightWayDirection cardinal : direction.getCardinalNeighbors()) {
 
-                    isBlocked = isBlocked || newState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
+                    isBlocked |= newState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
                 }
 
-                newState = newState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), !isBlocked && this.canConnectDiagonally(diagonalState));
+                newState = newState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), !isBlocked && this.canConnectToMe(diagonalState, direction));
             }
 
             return newState;
@@ -140,16 +140,16 @@ public interface EightWayBlock extends DiagonalBlock {
             Vec3i directionVec = direction.directionVec();
             diagonalPos.setWithOffset(pos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
             BlockState diagonalState = level.getBlockState(diagonalPos);
-            if (diagonalState.getBlock() instanceof EightWayBlock && ((EightWayBlock) diagonalState.getBlock()).canConnectDiagonally()) {
+            if (diagonalState.getBlock() instanceof EightWayBlock eightWayBlock && eightWayBlock.supportsDiagonalConnections()) {
 
                 // checks if there are vertical connections where a diagonal connection should be formed
                 boolean isBlocked = false;
                 for (EightWayDirection cardinal : direction.opposite().getCardinalNeighbors()) {
 
-                    isBlocked = isBlocked || diagonalState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
+                    isBlocked |= diagonalState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
                 }
 
-                BlockState newState = diagonalState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction.opposite()), !isBlocked && ((EightWayBlock) diagonalState.getBlock()).canConnectDiagonally(level.getBlockState(pos)));
+                BlockState newState = diagonalState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction.opposite()), !isBlocked && eightWayBlock.canConnectToMe(level.getBlockState(pos), direction));
                 Block.updateOrDestroy(diagonalState, newState, level, diagonalPos, flags, recursionLeft);
             }
         }

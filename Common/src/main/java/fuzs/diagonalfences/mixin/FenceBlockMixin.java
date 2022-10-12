@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.mixin;
 
+import fuzs.diagonalfences.core.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -55,7 +56,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
     @Override
     public void updateIndirectNeighbourShapes(BlockState state, LevelAccessor world, BlockPos pos, int flags, int recursionLeft) {
-        if (this.canConnectDiagonally()) {
+        if (this.supportsDiagonalConnections()) {
             this.updateIndirectNeighbourShapes2(state, world, pos, flags, recursionLeft);
         }
     }
@@ -79,13 +80,23 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Override
-    public boolean canConnectDiagonally() {
+    public boolean supportsDiagonalConnections() {
         return this.hasProperties() && !this.builtInRegistryHolder().is(ModRegistry.NON_DIAGONAL_FENCES_TAG);
     }
 
     @Override
-    public boolean canConnectDiagonally(BlockState blockstate) {
-        return blockstate.getBlock() instanceof FenceBlock && ((EightWayBlock) blockstate.getBlock()).canConnectDiagonally() && this.isSameFence(blockstate);
+    public boolean canConnectToMe(BlockState neighborState, EightWayDirection neighborDirectionToMe) {
+        if (neighborState.getBlock() instanceof FenceBlock && ((EightWayBlock) neighborState.getBlock()).supportsDiagonalConnections() && this.isSameFence(neighborState)) {
+            // TODO remove in next major version, only remains for backwards compatibility with old overload
+            if (neighborDirectionToMe == null) return true;
+            for (EightWayDirection neighbor : neighborDirectionToMe.getCardinalNeighbors()) {
+                if (neighborState.getValue(DIRECTION_TO_PROPERTY_MAP.get(neighbor))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -105,7 +116,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
     public void diagonalfences$getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
-        if (this.canConnectDiagonally()) {
+        if (this.supportsDiagonalConnections()) {
             BlockGetter level = context.getLevel();
             BlockPos pos = context.getClickedPos();
             FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
@@ -117,7 +128,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
     public void diagonalfences$updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
-        if (this.canConnectDiagonally()) {
+        if (this.supportsDiagonalConnections()) {
             BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
             if (returnState != null) {
                 callback.setReturnValue(returnState);
