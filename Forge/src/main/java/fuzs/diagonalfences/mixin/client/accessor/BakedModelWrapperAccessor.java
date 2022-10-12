@@ -9,10 +9,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(BakedModelWrapper.class)
 public interface BakedModelWrapperAccessor<T extends BakedModel> {
 
-    @Accessor
+    @Accessor(remap = false)
     T getOriginalModel();
 
-    @Accessor
+    @Accessor(remap = false)
     @Mutable
     void setOriginalModel(T originalModel);
 }

@@ -2,12 +2,13 @@ package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.core.EightWayDirection;
 import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
-import fuzs.puzzleslib.util.PuzzlesUtil;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -24,8 +25,8 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.apache.commons.lang3.time.StopWatch;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -35,7 +36,7 @@ public interface EightWayBlock extends DiagonalBlock {
      * calculating shape unions is rather expensive, and since {@link VoxelShape} is immutable we use a cache for all diagonal blocks with the same shape
      */
     Map<List<Float>, VoxelShape[]> DIMENSIONS_TO_SHAPE_CACHE = Maps.newHashMap();
-    Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = PuzzlesUtil.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
+    Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = Util.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
         directions.put(EightWayDirection.NORTH, PipeBlock.NORTH);
         directions.put(EightWayDirection.EAST, PipeBlock.EAST);
         directions.put(EightWayDirection.SOUTH, PipeBlock.SOUTH);
@@ -46,12 +47,12 @@ public interface EightWayBlock extends DiagonalBlock {
         directions.put(EightWayDirection.NORTH_WEST, DiagonalBlock.NORTH_WEST);
     });
 
-    boolean canConnect(BlockGetter iblockreader, BlockPos position, BlockState state, Direction direction);
+    boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction);
 
     /**
-     * sets default states for intercardinal properties
+     * sets default states for inter-cardinal properties
      * @param defaultState already modified default state obtained from {@link Block#defaultBlockState()}
-     * @return state after setting intercardinal block states
+     * @return state after setting inter-cardinal block states
      */
     default BlockState addDefaultStates(BlockState defaultState) {
         return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
@@ -77,7 +78,7 @@ public interface EightWayBlock extends DiagonalBlock {
 
     default BlockState makeStateForPlacement(BlockState placementState, BlockGetter blockGetter, BlockPos basePos, FluidState fluidState) {
 
-        placementState.setValue(CrossCollisionBlock.WATERLOGGED, fluidState.getType() == Fluids.WATER);
+        placementState = placementState.setValue(CrossCollisionBlock.WATERLOGGED, fluidState.getType() == Fluids.WATER);
 
         placementState = this.withDirections(EightWayDirection.CARDINAL_DIRECTIONS, basePos, placementState, (mutablePos, newPlacementState, direction) ->
                 this.canConnect(blockGetter, mutablePos, blockGetter.getBlockState(mutablePos), direction.toDirection().getOpposite()));
@@ -156,11 +157,14 @@ public interface EightWayBlock extends DiagonalBlock {
 
     default VoxelShape[] getShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
 
-        ArrayList<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        List<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
         return DIMENSIONS_TO_SHAPE_CACHE.computeIfAbsent(dimensions, dimension -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
     }
 
     default VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         float nodeStart = 8.0F - nodeWidth;
         float nodeEnd = 8.0F + nodeWidth;
@@ -188,7 +192,12 @@ public interface EightWayBlock extends DiagonalBlock {
         VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
         VoxelShape[] particleSideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalParticleShapes[2], diagonalParticleShapes[3], diagonalParticleShapes[0], diagonalParticleShapes[1]};
 
-        return this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
+        VoxelCollection[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
+
+        stopWatch.stop();
+        DiagonalFences.LOGGER.info("Constructing shapes for nodeWith {}, extensionWidth {}, nodeHeight {}, extensionBottom {}, extensionHeight {} took {}ms", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopWatch.getTime());
+
+        return stateShapes;
     }
 
     default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {

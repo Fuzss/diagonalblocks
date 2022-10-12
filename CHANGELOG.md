@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.2.3-1.19.2] - 2022-10-12
+### Changed
+- The time it took to construct diagonal fence shapes is now printed to the log to be better able to diagnose potential performance issues
+### Fixed
+- No longer crashes without any message when Puzzles Lib is missing, you should now properly be yelled at by the mod loader itself
+- Fixed placing fences deleting water source blocks
+
 ## [v4.2.2-1.19.2] - 2022-10-12
 ### Added
 - Added compatibility with Lambda Better Grass mod

@@ -41,7 +41,7 @@ public class DiagonalFencesClient implements ClientModConstructor {
                         }
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
-                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections may not be visible!", state.getBlock());
+                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
                     }
                 });
     }

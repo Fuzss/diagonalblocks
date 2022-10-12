@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.init.ModRegistry;
+import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -89,7 +89,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void diagonalfences_init(BlockBehaviour.Properties properties, CallbackInfo callback) {
+    public void diagonalfences$init(BlockBehaviour.Properties properties, CallbackInfo callback) {
         if (this.hasProperties()) {
             // most properties are added in actual constructor
             this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
@@ -97,26 +97,26 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
-    protected void diagonalfences_createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
+    protected void diagonalfences$createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
         // do nothing later on when this wasn't called
         this.hasProperties = true;
         this.createBlockStateDefinition2(builder);
     }
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
-    public void diagonalfences_getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
+    public void diagonalfences$getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
         if (this.canConnectDiagonally()) {
-            BlockGetter iblockreader = context.getLevel();
-            BlockPos basePos = context.getClickedPos();
+            BlockGetter level = context.getLevel();
+            BlockPos pos = context.getClickedPos();
             FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
             BlockState placementState = super.getStateForPlacement(context);
-            placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
+            placementState = this.makeStateForPlacement(placementState, level, pos, fluidState);
             callback.setReturnValue(placementState);
         }
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
-    public void diagonalfences_updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
+    public void diagonalfences$updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
         if (this.canConnectDiagonally()) {
             BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
             if (returnState != null) {
