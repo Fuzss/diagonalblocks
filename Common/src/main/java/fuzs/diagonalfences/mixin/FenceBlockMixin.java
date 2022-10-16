@@ -1,8 +1,9 @@
 package fuzs.diagonalfences.mixin;
 
+import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.core.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
+import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -17,18 +18,22 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FenceBlock.class)
-public abstract class FenceBlockMixin extends CrossCollisionBlock implements EightWayBlock {
-    private boolean hasProperties;
-    private Object2IntMap<BlockState> statePaletteMap;
+abstract class FenceBlockMixin extends CrossCollisionBlock implements StarCollisionBlock {
+    @Unique
+    private boolean diagonalfences$hasProperties;
+    @Unique
+    private Object2IntMap<BlockState> diagonalfences$statePaletteMap;
 
     public FenceBlockMixin(float nodeWidth, float extensionWidth, float nodeHeight, float extensionHeight, float collisionY, Properties properties) {
         super(nodeWidth, extensionWidth, nodeHeight, extensionHeight, collisionY, properties);
@@ -46,10 +51,10 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     protected int getAABBIndex(BlockState state) {
         if (this.hasProperties()) {
             // can't do this in constructor injection as an injection is only possible at tail, but this method is called prior to that
-            if (this.statePaletteMap == null) {
-                this.statePaletteMap = new Object2IntOpenHashMap<>();
+            if (this.diagonalfences$statePaletteMap == null) {
+                this.diagonalfences$statePaletteMap = new Object2IntOpenHashMap<>();
             }
-            return this.statePaletteMap.computeIfAbsent(state, this::makeIndex);
+            return this.diagonalfences$statePaletteMap.computeIfAbsent(state, this::makeIndex);
         }
         return super.getAABBIndex(state);
     }
@@ -71,7 +76,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
     @Override
     public boolean hasProperties() {
-        return this.hasProperties;
+        return this.diagonalfences$hasProperties;
     }
 
     @Override
@@ -86,7 +91,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
 
     @Override
     public boolean canConnectToMe(BlockState neighborState, EightWayDirection neighborDirectionToMe) {
-        if (neighborState.getBlock() instanceof FenceBlock && ((EightWayBlock) neighborState.getBlock()).supportsDiagonalConnections() && this.isSameFence(neighborState)) {
+        if (neighborState.getBlock() instanceof FenceBlock && ((DiagonalBlock) neighborState.getBlock()).supportsDiagonalConnections() && this.isSameFence(neighborState)) {
             // TODO remove in next major version, only remains for backwards compatibility with old overload
             if (neighborDirectionToMe == null) return true;
             for (EightWayDirection neighbor : neighborDirectionToMe.getCardinalNeighbors()) {
@@ -97,6 +102,18 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean canConnectToNeighbor(BlockState myState, BlockState neighborState, EightWayDirection directionToNeighbor) {
+        if (!(myState.getBlock() instanceof DiagonalBlock myBlock) || !myBlock.supportsDiagonalConnections()) return false;
+        if (neighborState.getBlock() instanceof FenceBlock && !this.isSameFence(neighborState)) return false;
+        for (EightWayDirection neighbor : directionToNeighbor.getCardinalNeighbors()) {
+            if (neighborState.getValue(DIRECTION_TO_PROPERTY_MAP.get(neighbor))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -110,7 +127,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
     protected void diagonalfences$createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
         // do nothing later on when this wasn't called
-        this.hasProperties = true;
+        this.diagonalfences$hasProperties = true;
         this.createBlockStateDefinition2(builder);
     }
 
@@ -124,6 +141,11 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
             placementState = this.makeStateForPlacement(placementState, level, pos, fluidState);
             callback.setReturnValue(placementState);
         }
+    }
+
+    @Inject(method = "getOcclusionShape", at = @At("HEAD"), cancellable = true)
+    public void diagonalfences$getOcclusionShape(BlockState state, BlockGetter level, BlockPos pos, CallbackInfoReturnable<VoxelShape> callback) {
+        if (state.getValue(NORTH_EAST) || state.getValue(SOUTH_EAST) || state.getValue(SOUTH_WEST) || state.getValue(NORTH_WEST)) callback.setReturnValue(Shapes.empty());
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)

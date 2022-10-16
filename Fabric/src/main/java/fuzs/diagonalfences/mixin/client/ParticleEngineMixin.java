@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.mixin.client;
 
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
+import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
@@ -24,7 +24,7 @@ public abstract class ParticleEngineMixin {
 
     @Inject(method = "destroy", at = @At("HEAD"), cancellable = true)
     public void destroy$inject$head(BlockPos blockPos, BlockState blockState, CallbackInfo callback) {
-        if (!blockState.isAir() && blockState.getBlock() instanceof EightWayBlock) {
+        if (!blockState.isAir() && blockState.getBlock() instanceof StarCollisionBlock) {
             if (this.custom$addDestroyEffects(blockState, this.level, blockPos, (ParticleEngine) (Object) this)) {
                 callback.cancel();
             }

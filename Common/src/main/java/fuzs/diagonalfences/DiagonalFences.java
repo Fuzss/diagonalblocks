@@ -19,6 +19,5 @@ public class DiagonalFences implements ModConstructor {
     @Override
     public void onConstructMod() {
         CONFIG.bakeConfigs(MOD_ID);
-        ModRegistry.touch();
     }
 }

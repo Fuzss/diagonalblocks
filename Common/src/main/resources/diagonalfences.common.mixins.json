@@ -6,6 +6,7 @@
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
     "FenceBlockMixin",
+    "FenceGateBlockMixin",
     "accessor.VoxelShapeAccessor"
   ],
   "client": [

@@ -10,10 +10,11 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.List;
 
 public class VoxelCollection extends ExtensibleVoxelShape {
+    private final List<NoneVoxelShape> noneVoxels = Lists.newArrayList();
     private VoxelShape collisionShape;
     private VoxelShape outlineShape;
     private VoxelShape particleShape;
-    private final List<NoneVoxelShape> noneVoxels = Lists.newArrayList();
+    private boolean finished;
 
     public VoxelCollection() {
         this(Shapes.empty());
@@ -31,16 +32,12 @@ public class VoxelCollection extends ExtensibleVoxelShape {
         return ((VoxelShapeAccessor) this.collisionShape).callGetCoords(axis);
     }
 
-    private void setCollisionShape(VoxelShape voxelShape) {
-        this.collisionShape = voxelShape;
-        ((VoxelShapeAccessor) this).setShape(((VoxelShapeAccessor) this.collisionShape).getShape());
-    }
-
     public void addVoxelShape(VoxelShape voxelShape) {
         this.addVoxelShape(voxelShape, voxelShape);
     }
 
     public void addVoxelShape(VoxelShape voxelShape, VoxelShape particleShape) {
+        if (this.finished) throw new IllegalStateException("Unable to modify VoxelCollection, already finished");
         if (voxelShape instanceof NoneVoxelShape) {
             this.addNoneVoxelShape((NoneVoxelShape) voxelShape);
         } else {
@@ -54,6 +51,15 @@ public class VoxelCollection extends ExtensibleVoxelShape {
         this.noneVoxels.add(voxelShape);
         // combine collision shapes
         this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
+    }
+
+    private void setCollisionShape(VoxelShape voxelShape) {
+        this.collisionShape = voxelShape;
+        ((VoxelShapeAccessor) this).setShape(((VoxelShapeAccessor) this.collisionShape).getShape());
+    }
+
+    public void finish() {
+        this.finished = true;
     }
 
     public void forAllParticleBoxes(Shapes.DoubleLineConsumer doubleLineConsumer) {

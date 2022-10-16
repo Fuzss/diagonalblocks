@@ -1,16 +1,18 @@
 package fuzs.diagonalfences.client.model;
 
 import com.google.common.collect.Lists;
+import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.client.core.ClientModServices;
 import fuzs.diagonalfences.core.EightWayDirection;
 import fuzs.diagonalfences.mixin.client.accessor.MultiPartBakedModelAccessor;
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
+import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.apache.commons.lang3.tuple.Pair;
@@ -60,6 +62,17 @@ public class MultipartAppender {
         mutator.accept(new MultiPartBakedModel(selectors));
     }
 
+    public static void appendDiagonalSelectors(BlockState state, BakedModel model, Consumer<BakedModel> consumer) {
+
+        Direction.Plane.HORIZONTAL.stream().forEach(direction -> {
+
+            if (state.getValue(FenceGateBlock.FACING) == direction && state.getValue(DiagonalBlock.FACING2) == EightWayDirection.byIndex(direction.get2DDataValue(), true)) {
+                BakedModel rotatedModel = rotateMultipartSegment(state, model, direction.getCounterClockWise());
+                consumer.accept(rotatedModel);
+            }
+        });
+    }
+
     /**
      * Duplicate and rotate all {@link BakedQuad quads} from the given {@link BakedModel segmentModel} to produce a new
      * model for a diagonal segment
@@ -97,7 +110,7 @@ public class MultipartAppender {
      */
     private static BooleanProperty getClockwiseIntercardinalProperty(Direction cardinal) {
         EightWayDirection dir = EightWayDirection.byIndex(cardinal.get2DDataValue(), true);
-        return EightWayBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
+        return StarCollisionBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
     }
 
     public static final class MultiPartBakedModelMutator {

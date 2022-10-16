@@ -8,6 +8,7 @@ import fuzs.diagonalfences.client.model.MultipartAppender;
 import fuzs.puzzleslib.client.core.ClientModConstructor;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.SimpleBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -42,7 +43,7 @@ public class DiagonalFencesClient implements ClientModConstructor {
                         }
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
-                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
+                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal connections will not be visible!", state.getBlock());
                     }
                 });
         Set<Block> erroredBlocks2 = Sets.newHashSet();
@@ -52,14 +53,12 @@ public class DiagonalFencesClient implements ClientModConstructor {
                 .forEach(state -> {
                     ResourceLocation fenceLocation = BlockModelShaper.stateToModelLocation(state);
                     BakedModel model = models.get(fenceLocation);
-                    List<MultipartAppender.MultiPartBakedModelMutator> mutators = ClientModServices.ABSTRACTIONS.getMultiPartBakedModels(model, newModel -> models.put(fenceLocation, newModel));
-                    if (!mutators.isEmpty()) {
-                        for (MultipartAppender.MultiPartBakedModelMutator mutator : mutators) {
-                            appendDiagonalFenceSelectors(state.getBlock(), mutator);
-                        }
+//                    List<MultipartAppender.MultiPartBakedModelMutator> mutators = ClientModServices.ABSTRACTIONS.getMultiPartBakedModels(model, newModel -> models.put(fenceLocation, newModel));
+                    if (model instanceof SimpleBakedModel) {
+                        MultipartAppender.appendDiagonalSelectors(state, model, newModel -> models.put(fenceLocation, newModel));
                     } else if (!erroredBlocks2.contains(state.getBlock())){
                         erroredBlocks2.add(state.getBlock());
-                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
+                        DiagonalFences.LOGGER.info("Fence gate block '{}' is not using simple models, diagonal connections will not be visible!", state.getBlock());
                     }
                 });
     }
