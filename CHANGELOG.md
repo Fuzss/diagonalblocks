@@ -3,37 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
-## [v4.2.3-1.19.2] - 2022-10-12
+## [v3.2.0-1.18.2] - 2022-11-04
+- Backported from 1.19
+
+## [v3.1.0-1.18.2] - 2022-05-02
 ### Changed
-- The time it took to construct diagonal fence shapes is now printed to the log to be better able to diagnose potential performance issues
-### Fixed
-- No longer crashes without any message when Puzzles Lib is missing, you should now properly be yelled at by the mod loader itself
-- Fixed placing fences deleting water source blocks
+- Replace virtual resource pack with post-bake transformations, once again all done by and thanks to [XFactHD]
 
-## [v4.2.2-1.19.2] - 2022-10-12
-### Added
-- Added compatibility with Lambda Better Grass mod
-
-## [v4.2.1-1.19.2] - 2022-08-29
-### Changed
-- Adding custom models for diagonal fences via resource packs is now supported
-
-## [v4.2.0-1.19.2] - 2022-08-21
-- Compiled for Minecraft 1.19.2
-
-## [v4.1.0-1.19.1] - 2022-08-01
-- Compiled for Minecraft 1.19.1
-- Updated to Puzzles Lib v4.1.0
-### Fixed
-- Fixed too many particles appearing when a diagonal fence is broken, thanks to [XFactHD] for pointing me into the right direction!
-
-## [v4.0.1-1.19] - 2022-07-15
-### Fixed
-- Fixed start-up crash on Forge due to methods in mixin classes not being properly obfuscated
-
-## [v4.0.0-1.19] - 2022-07-14
-- Ported to Minecraft 1.19 and Fabric for the first time
-- Split into multi-loader project
+## [v3.0.0-1.18.2] - 2022-04-25
+- Ported to Minecraft 1.18.2 thanks to [XFactHD]
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
-[XFactHD]: https://github.com/XFactHD
+[XFactHD]: https://www.curseforge.com/members/xfacthd

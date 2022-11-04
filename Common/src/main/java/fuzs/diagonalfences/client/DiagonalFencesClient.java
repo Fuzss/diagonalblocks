@@ -13,7 +13,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FenceBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -42,23 +41,6 @@ public class DiagonalFencesClient implements ClientModConstructor {
                         }
                     } else if (!erroredBlocks.contains(state.getBlock())){
                         erroredBlocks.add(state.getBlock());
-                        DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
-                    }
-                });
-        Set<Block> erroredBlocks2 = Sets.newHashSet();
-        Registry.BLOCK.stream()
-                .filter(block -> block instanceof FenceGateBlock)
-                .flatMap(block -> block.getStateDefinition().getPossibleStates().stream())
-                .forEach(state -> {
-                    ResourceLocation fenceLocation = BlockModelShaper.stateToModelLocation(state);
-                    BakedModel model = models.get(fenceLocation);
-                    List<MultipartAppender.MultiPartBakedModelMutator> mutators = ClientModServices.ABSTRACTIONS.getMultiPartBakedModels(model, newModel -> models.put(fenceLocation, newModel));
-                    if (!mutators.isEmpty()) {
-                        for (MultipartAppender.MultiPartBakedModelMutator mutator : mutators) {
-                            appendDiagonalFenceSelectors(state.getBlock(), mutator);
-                        }
-                    } else if (!erroredBlocks2.contains(state.getBlock())){
-                        erroredBlocks2.add(state.getBlock());
                         DiagonalFences.LOGGER.info("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
                     }
                 });

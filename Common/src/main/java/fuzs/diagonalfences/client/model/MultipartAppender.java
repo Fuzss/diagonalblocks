@@ -9,7 +9,6 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -18,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -80,7 +80,7 @@ public class MultipartAppender {
      * The quads are duplicated, rotated and have their vertex normals recalculated.
      */
     private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
-        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RandomSource.create());
+        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, new Random());
         List<BakedQuad> newQuads = Lists.newArrayList();
 
         for (BakedQuad quad : quads) {

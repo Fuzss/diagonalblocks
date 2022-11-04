@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.client.extensions.common.IClientBlockExtensions;
+import net.minecraftforge.client.IBlockRenderProperties;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.function.Consumer;
@@ -24,13 +24,13 @@ public abstract class ForgeFenceBlockMixin extends CrossCollisionBlock {
     }
 
     @Override
-    public void initializeClient(Consumer<IClientBlockExtensions> consumer) {
-        consumer.accept(new IClientBlockExtensions() {
+    public void initializeClient(Consumer<IBlockRenderProperties> consumer) {
+        consumer.accept(new IBlockRenderProperties() {
 
             @Override
             public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
                 VoxelShape voxelshape = state.getShape(level, pos);
-                if (!(voxelshape instanceof VoxelCollection voxelCollection)) return IClientBlockExtensions.super.addDestroyEffects(state, level, pos, manager);
+                if (!(voxelshape instanceof VoxelCollection voxelCollection)) return IBlockRenderProperties.super.addDestroyEffects(state, level, pos, manager);
                 voxelCollection.forAllParticleBoxes((p_172273_, p_172274_, p_172275_, p_172276_, p_172277_, p_172278_) -> {
                     double d1 = Math.min(1.0D, p_172276_ - p_172273_);
                     double d2 = Math.min(1.0D, p_172277_ - p_172274_);

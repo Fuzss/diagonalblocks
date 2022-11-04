@@ -50,15 +50,13 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabricVersion}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
 
-    // Forge Configs
-    modImplementation "net.minecraftforge:forgeconfigapiport-fabric:4.2.0"
-
-    // Mod Menu
-    modRuntimeOnly "com.terraformersmc:modmenu:4.0.6"
+    // Quality of Life Mods
+    modRuntimeOnly "com.terraformersmc:modmenu:3.2.4"
+    modRuntimeOnly "curse.maven:tooltipfix-411557:3543273"
 
     // Lambda Better Grass
-    modImplementation "dev.lambdaurora:spruceui:4.0.0+1.19"
-    modImplementation "curse.maven:lambdabettergrass-400322:3834055"
+    modImplementation "dev.lambdaurora:spruceui:3.3.3+1.18"
+    modImplementation "curse.maven:lambdabettergrass-400322:3833479"
 
     // Puzzles Lib
     modImplementation "fuzs.puzzleslib:puzzleslib-fabric:${puzzlesVersion}"
