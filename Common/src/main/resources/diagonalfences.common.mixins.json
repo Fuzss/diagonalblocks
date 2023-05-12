@@ -9,7 +9,9 @@
     "accessor.VoxelShapeAccessor"
   ],
   "client": [
-    "client.accessor.MultiPartBakedModelAccessor"
+    "client.ModelBakeryMixin",
+    "client.accessor.KeyValueConditionAccessor",
+    "client.accessor.SelectorAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

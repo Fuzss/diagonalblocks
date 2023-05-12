@@ -23,7 +23,6 @@
       "${mainEntryPoint}"
     ],
     "client": [
-      "${clientEntryPoint}"
     ]
   },
   "mixins": [

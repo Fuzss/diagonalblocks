@@ -7,7 +7,7 @@
   "mixins": [
   ],
   "client": [
-    "client.ParticleEngineMixin"
+    "client.ParticleEngineFabricMixin"
   ],
   "injectors": {
     "defaultRequire": 1

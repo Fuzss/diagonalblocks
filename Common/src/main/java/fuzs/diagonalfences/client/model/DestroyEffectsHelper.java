@@ -1,6 +1,5 @@
-package fuzs.diagonalfences.mixin.client;
+package fuzs.diagonalfences.client.model;
 
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
@@ -10,31 +9,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ParticleEngine.class)
-public abstract class ParticleEngineMixin {
-    @Shadow
-    protected ClientLevel level;
+import java.util.function.BooleanSupplier;
 
-    @Inject(method = "destroy", at = @At("HEAD"), cancellable = true)
-    public void destroy$inject$head(BlockPos blockPos, BlockState blockState, CallbackInfo callback) {
-        if (!blockState.isAir() && blockState.getBlock() instanceof EightWayBlock) {
-            if (this.custom$addDestroyEffects(blockState, this.level, blockPos, (ParticleEngine) (Object) this)) {
-                callback.cancel();
-            }
-        }
-    }
-
-    @Unique
-    private boolean custom$addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
+public class DestroyEffectsHelper {
+    public static boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager, BooleanSupplier altResult) {
         VoxelShape voxelshape = state.getShape(level, pos);
-        if (!(voxelshape instanceof VoxelCollection voxelCollection)) return false;
+        if (!(voxelshape instanceof VoxelCollection voxelCollection)) return altResult.getAsBoolean();
         voxelCollection.forAllParticleBoxes((p_172273_, p_172274_, p_172275_, p_172276_, p_172277_, p_172278_) -> {
             double d1 = Math.min(1.0D, p_172276_ - p_172273_);
             double d2 = Math.min(1.0D, p_172277_ - p_172274_);

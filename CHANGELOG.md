@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.2.4-1.19.2] - 2023-05-12
+### Changed
+- Overhauled internal implementation for making model parts diagonal, possibly allowing for future support of new kinds of blocks such as diagonal glass panes
+### Fixed
+- Fixed a long-standing issue where Diagonal Fences would duplicate block models for every single block state, whereas vanilla would only use a single model with different selectors applied; leading to extremely high memory usage, making the game easily run out of heap space when paired with other mods that add a lot of fences
+### Removed
+- Removed the client config, due to internal changes all available options are no longer necessary
+- Removed dedicated support for the [Lambda Better Grass](https://www.curseforge.com/minecraft/mc-mods/lambdabettergrass) mod, the mod now just works out of the box with the new implementation
+
 ## [v4.2.3-1.19.2] - 2022-10-12
 ### Changed
 - The time it took to construct diagonal fence shapes is now printed to the log to be better able to diagnose potential performance issues

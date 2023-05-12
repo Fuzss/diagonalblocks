@@ -17,8 +17,8 @@ import java.util.Map;
 public class MultipartSegmentBakedModelForge extends BakedModelWrapper<BakedModel> {
     private final Map<Direction, List<BakedQuad>> quadMap;
 
-    public MultipartSegmentBakedModelForge(BakedModel baseModel, Map<Direction, List<BakedQuad>> quadMap) {
-        super(baseModel);
+    public MultipartSegmentBakedModelForge(BakedModel originalModel, Map<Direction, List<BakedQuad>> quadMap) {
+        super(originalModel);
         this.quadMap = quadMap;
     }
 

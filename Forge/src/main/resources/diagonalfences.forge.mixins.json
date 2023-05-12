@@ -5,10 +5,9 @@
   "package": "fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
   "mixins": [
-    "ForgeFenceBlockMixin"
+    "FenceBlockForgeMixin"
   ],
   "client": [
-    "client.accessor.BakedModelWrapperAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

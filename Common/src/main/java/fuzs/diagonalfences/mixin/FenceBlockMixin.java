@@ -100,7 +100,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void diagonalfences$init(BlockBehaviour.Properties properties, CallbackInfo callback) {
+    public void init(BlockBehaviour.Properties properties, CallbackInfo callback) {
         if (this.hasProperties()) {
             // most properties are added in actual constructor
             this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
@@ -108,14 +108,14 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
-    protected void diagonalfences$createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
         // do nothing later on when this wasn't called
         this.hasProperties = true;
         this.createBlockStateDefinition2(builder);
     }
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
-    public void diagonalfences$getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
+    public void getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
         if (this.supportsDiagonalConnections()) {
             BlockGetter level = context.getLevel();
             BlockPos pos = context.getClickedPos();
@@ -127,7 +127,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
-    public void diagonalfences$updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
+    public void updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
         if (this.supportsDiagonalConnections()) {
             BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
             if (returnState != null) {

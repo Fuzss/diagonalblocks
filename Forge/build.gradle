@@ -119,6 +119,8 @@ dependencies {
 //    runtimeOnly fg.deobf("curse.maven:configmenusforge-544048:3822820")
 //    runtimeOnly fg.deobf("curse.maven:configured-457570:3903908")
 
+    runtimeOnly fg.deobf("curse.maven:customfence-404768:3909127")
+
     // Puzzles Lib
     implementation fg.deobf("fuzs.puzzleslib:puzzleslib-forge:${puzzlesVersion}")
 }
