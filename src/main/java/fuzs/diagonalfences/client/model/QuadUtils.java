@@ -1,11 +1,13 @@
 package fuzs.diagonalfences.client.model;
 
-import com.mojang.math.*;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.Direction;
 
 public class QuadUtils {
-
     private static final float ROTATION_ANGLE = -45F;
     //Scale factor at a 45 degree rotation
     private static final float SCALE_ROTATION_45 = 1.0F / (float)Math.cos(Math.PI / 4D) - 1.0F;
@@ -106,7 +108,7 @@ public class QuadUtils {
 
     /**
      * Calculate face normals from vertex positions and write them to the given vertex data
-     * Adapted from {@link net.minecraftforge.client.ForgeHooksClient#fillNormal(int[], Direction)}
+     * Adapted from net.minecraftforge.client.ForgeHooksClient#fillNormal(int[], Direction)
      */
     public static void fillNormal(int[] vertexData, float[][] pos) {
 

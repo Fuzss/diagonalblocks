@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v3.1.1-1.18.2] - 2023-05-12
+Backported v4.2.4 to fix a long-standing issue where Diagonal Fences would duplicate block models for every single block state, whereas vanilla would only use a single model with different selectors applied; leading to extremely high memory usage, making the game easily run out of heap space when paired with other mods that add a lot of fences
+
 ## [v3.1.0-1.18.2] - 2022-05-02
 ### Changed
 - Replace virtual resource pack with post-bake transformations, once again all done by and thanks to [XFactHD]

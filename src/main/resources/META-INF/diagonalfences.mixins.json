@@ -3,11 +3,18 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_17",
   "package": "fuzs.diagonalfences.mixin",
-  "refmap": "diagonalfences.refmap.json",
+  "refmap": "META-INF/diagonalfences.refmap.json",
+  "plugin": "fuzs.diagonalfences.mixin.ModMixinConfigPlugin",
   "mixins": [
-    "FenceBlockMixin"
+    "FenceBlockForgeMixin",
+    "FenceBlockMixin",
+    "accessor.VoxelShapeAccessor"
   ],
   "client": [
+    "client.ModelBakeryMixin",
+    "client.accessor.KeyValueConditionAccessor",
+    "client.accessor.ModelBakeryAccessor",
+    "client.accessor.SelectorAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,75 +1,102 @@
 package fuzs.diagonalfences.client.model;
 
-import fuzs.diagonalfences.block.EightWayBlock;
-import fuzs.diagonalfences.util.EightWayDirection;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import fuzs.diagonalfences.DiagonalFences;
+import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
+import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.ModelBakeryAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.MultiVariant;
+import net.minecraft.client.renderer.block.model.Variant;
+import net.minecraft.client.renderer.block.model.multipart.KeyValueCondition;
+import net.minecraft.client.renderer.block.model.multipart.MultiPart;
+import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.MultiPartBakedModel;
+import net.minecraft.client.resources.model.ModelBakery;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraftforge.client.model.data.EmptyModelData;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class MultipartAppender {
+    private static final Random RANDOM = new Random();
 
-    private static final Field SELECTOR_FIELD = ObfuscationReflectionHelper.findField(MultiPartBakedModel.class, "f_119459_");
-    private static final Random RAND = new Random();
+    public static void onPrepareModelBaking(ModelBakery modelBakery) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        Registry.BLOCK.stream()
+                .filter(block -> block instanceof FenceBlock && block instanceof DiagonalBlock diagonalBlock && diagonalBlock.hasProperties())
+                .map(block -> block.getStateDefinition().any())
+                .forEach(state -> {
+
+                    if (modelBakery.getModel(BlockModelShaper.stateToModelLocation(state)) instanceof MultiPart multiPart) {
+                        appendDiagonalSelectors(modelBakery, multiPart);
+                    } else {
+                        DiagonalFences.LOGGER.warn("Fence block '{}' is not using multipart models, diagonal fence connections will not be visible!", state.getBlock());
+                    }
+                });
+
+        DiagonalFences.LOGGER.info("Constructing diagonal fence block models took {}ms", stopwatch.stop().elapsed().toMillis());
+    }
 
     /**
-     * Append the multipart model selectors needed for the diagonal arms of the fence, wall, etc.
-     * @param block The Block to which the model belongs
-     * @param oneArmStates All BlockStates that signify a single arm being present associated with the direction the arm points in
-     * @param model The original multipart model
-     * @return The new multipart model with the original selectors and the new diagonal selectors
+     * Append the multipart variant selectors needed for the diagonal arms of the fence, wall, etc.
+     *
+     * @param multiPart the original multipart unbaked variant
      */
-    public static MultiPartBakedModel appendDiagonalSelectors(Block block, Map<BlockState, Direction> oneArmStates, MultiPartBakedModel model) {
+    public static void appendDiagonalSelectors(ModelBakery modelBakery, MultiPart multiPart) {
+        List<Selector> selectors = multiPart.getSelectors();
+        List<Selector> newSelectors = Lists.newArrayList();
 
-        List<Pair<Predicate<BlockState>, BakedModel>> selectors = new ArrayList<>(getMultiPartSelectors(model));
+        for (Selector selector : selectors) {
 
-        List<Pair<Predicate<BlockState>, BakedModel>> newSelectors = new ArrayList<>();
-        for (Pair<Predicate<BlockState>, BakedModel> selector : selectors) {
+            if (((SelectorAccessor) selector).diagonalfences$getCondition() instanceof KeyValueCondition condition) {
 
-            for (Map.Entry<BlockState, Direction> armEntry : oneArmStates.entrySet()) {
+                if (Objects.equals(((KeyValueConditionAccessor) condition).diagonalfences$getValue(), "true")) {
 
-                //Filter out the fence/wall post
-                if (selector.getKey().test(block.defaultBlockState())) {
+                    EightWayDirection direction = EightWayDirection.byName(((KeyValueConditionAccessor) condition).diagonalfences$getKey());
+                    if (direction != null) {
 
-                    continue;
-                }
+                        EightWayDirection interDirection = direction.rotateClockwise();
+                        KeyValueCondition newCondition = new KeyValueCondition(interDirection.getSerializedName(), "true");
+                        List<Variant> variants = selector.getVariant().getVariants();
+                        List<Variant> newVariants = Lists.newArrayList();
+                        for (Variant variant : variants) {
 
-                if (selector.getKey().test(armEntry.getKey())) {
+                            ModelResourceLocation location = new ModelResourceLocation(variant.getModelLocation(), interDirection.getSerializedName());
+                            // this is the rotated model part, just make sure it is cached somewhere to avoid recreation multiple times since it's very expensive
+                            // we could also use our own cache, but unbaked models cache works fine
+                            ((ModelBakeryAccessor) modelBakery).diagonalfences$callCacheAndQueueDependencies(location, new RotatedVariant(variant, direction.toDirection()));
+                            // copy old variant which is now backed by the rotated model part, besides that only the weight value should really matter
+                            newVariants.add(new Variant(location, variant.getRotation(), variant.isUvLocked(), variant.getWeight()));
+                        }
 
-                    BooleanProperty diagonalProp = getClockwiseIntercardinalProperty(armEntry.getValue());
-                    newSelectors.add(Pair.of(
-                            state -> state.getValue(diagonalProp),
-                            rotateMultipartSegment(armEntry.getKey(), selector.getValue(), armEntry.getValue())
-                    ));
+                        newSelectors.add(new Selector(newCondition, new MultiVariant(newVariants)));
+                    }
                 }
             }
         }
-        selectors.addAll(newSelectors);
 
-        return new MultiPartBakedModel(selectors);
+        selectors.addAll(newSelectors);
     }
 
     /**
      * Duplicate and rotate all {@link BakedQuad quads} from the given {@link BakedModel segmentModel} to produce a new
-     * model for a diagonal segment
+     * variant for a diagonal segment
      */
-    private static BakedModel rotateMultipartSegment(BlockState state, BakedModel segmentModel, Direction armDir) {
-
+    public static BakedModel rotateMultipartSegment(@Nullable BlockState state, BakedModel segmentModel, Direction armDir) {
         Map<Direction, List<BakedQuad>> quadMap = new HashMap<>();
-
         rotateQuads(quadMap, state, segmentModel, null, armDir);
-        for (Direction cullFace : Direction.values()) {
 
+        for (Direction cullFace : Direction.values()) {
             rotateQuads(quadMap, state, segmentModel, cullFace, armDir);
         }
 
@@ -80,40 +107,16 @@ public class MultipartAppender {
      * Rotate all {@link BakedQuad}s with the given {@link Direction cullFace} of the given {@link BakedModel segmentModel} 45 degrees clockwise.
      * The quads are duplicated, rotated and have their vertex normals recalculated.
      */
-    private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
-
-        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RAND, EmptyModelData.INSTANCE);
-        List<BakedQuad> newQuads = new ArrayList<>();
+    private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, @Nullable BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
+        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RANDOM, EmptyModelData.INSTANCE);
+        List<BakedQuad> newQuads = Lists.newArrayList();
 
         for (BakedQuad quad : quads) {
-
             BakedQuad copy = QuadUtils.duplicateQuad(quad);
             QuadUtils.rotateQuad(copy, segmentDir);
             newQuads.add(copy);
         }
 
         quadMap.put(cullFace, newQuads);
-    }
-
-    /**
-     * Get property for the clockwise intercardinal neighbor to the given cardinal direction
-     */
-    private static BooleanProperty getClockwiseIntercardinalProperty(Direction cardinal) {
-
-        EightWayDirection dir = EightWayDirection.byIndex(cardinal.get2DDataValue(), true);
-        return EightWayBlock.DIRECTION_TO_PROPERTY_MAP.get(dir);
-    }
-
-    private static List<Pair<Predicate<BlockState>, BakedModel>> getMultiPartSelectors(MultiPartBakedModel model) {
-
-        try {
-
-            //noinspection unchecked
-            return (List<Pair<Predicate<BlockState>, BakedModel>>) SELECTOR_FIELD.get(model);
-        }
-        catch (IllegalAccessException e) {
-
-            throw new RuntimeException(e);
-        }
     }
 }

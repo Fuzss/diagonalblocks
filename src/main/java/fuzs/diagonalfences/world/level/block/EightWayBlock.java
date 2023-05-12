@@ -1,13 +1,14 @@
-package fuzs.diagonalfences.block;
+package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.util.EightWayDirection;
-import fuzs.diagonalfences.util.math.shapes.NoneVoxelShape;
-import fuzs.diagonalfences.util.math.shapes.VoxelCollection;
-import fuzs.diagonalfences.util.math.shapes.VoxelUtils;
-import fuzs.puzzleslib.util.PuzzlesUtil;
+import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
+import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
+import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -24,8 +25,8 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.apache.commons.lang3.time.StopWatch;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -35,7 +36,7 @@ public interface EightWayBlock extends DiagonalBlock {
      * calculating shape unions is rather expensive, and since {@link VoxelShape} is immutable we use a cache for all diagonal blocks with the same shape
      */
     Map<List<Float>, VoxelShape[]> DIMENSIONS_TO_SHAPE_CACHE = Maps.newHashMap();
-    Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = PuzzlesUtil.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
+    Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = Util.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
         directions.put(EightWayDirection.NORTH, PipeBlock.NORTH);
         directions.put(EightWayDirection.EAST, PipeBlock.EAST);
         directions.put(EightWayDirection.SOUTH, PipeBlock.SOUTH);
@@ -46,18 +47,18 @@ public interface EightWayBlock extends DiagonalBlock {
         directions.put(EightWayDirection.NORTH_WEST, DiagonalBlock.NORTH_WEST);
     });
 
-    boolean canConnect(BlockGetter iblockreader, BlockPos position, BlockState state, Direction direction);
+    boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction);
 
     /**
-     * sets default states for intercardinal properties
+     * sets default states for inter-cardinal properties
      * @param defaultState already modified default state obtained from {@link Block#defaultBlockState()}
-     * @return state after setting intercardinal block states
+     * @return state after setting inter-cardinal block states
      */
     default BlockState addDefaultStates(BlockState defaultState) {
         return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
     }
 
-    default void fillStateContainer2(StateDefinition.Builder<Block, BlockState> builder) {
+    default void createBlockStateDefinition2(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(DiagonalBlock.NORTH_EAST, DiagonalBlock.SOUTH_EAST, DiagonalBlock.SOUTH_WEST, DiagonalBlock.NORTH_WEST);
     }
 
@@ -77,13 +78,13 @@ public interface EightWayBlock extends DiagonalBlock {
 
     default BlockState makeStateForPlacement(BlockState placementState, BlockGetter blockGetter, BlockPos basePos, FluidState fluidState) {
 
-        placementState.setValue(CrossCollisionBlock.WATERLOGGED, fluidState.getType() == Fluids.WATER);
+        placementState = placementState.setValue(CrossCollisionBlock.WATERLOGGED, fluidState.getType() == Fluids.WATER);
 
         placementState = this.withDirections(EightWayDirection.CARDINAL_DIRECTIONS, basePos, placementState, (mutablePos, newPlacementState, direction) ->
                 this.canConnect(blockGetter, mutablePos, blockGetter.getBlockState(mutablePos), direction.toDirection().getOpposite()));
 
-        placementState = this.withDirections(EightWayDirection.INTERCARDINAL_DIRECTIONS, basePos, placementState, (mutablePos, newPlacementState, direction) ->
-                this.canConnectDiagonally(blockGetter.getBlockState(mutablePos)) && Stream.of(direction.getCardinalNeighbors()).map(DIRECTION_TO_PROPERTY_MAP::get).noneMatch(newPlacementState::getValue));
+        placementState = this.withDirections(EightWayDirection.INTERCARDINAL_DIRECTIONS, basePos, placementState, (pos, newPlacementState, direction) ->
+                this.canConnectToMe(blockGetter.getBlockState(pos), direction.opposite()) && Stream.of(direction.getCardinalNeighbors()).map(DIRECTION_TO_PROPERTY_MAP::get).noneMatch(newPlacementState::getValue));
 
         return placementState;
     }
@@ -101,7 +102,7 @@ public interface EightWayBlock extends DiagonalBlock {
         return placementState;
     }
 
-    default BlockState updatePostPlacement2(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, BlockState newState) {
+    default BlockState updateShape2(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, BlockState newState) {
 
         if (facing.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
 
@@ -115,10 +116,10 @@ public interface EightWayBlock extends DiagonalBlock {
                 boolean isBlocked = false;
                 for (EightWayDirection cardinal : direction.getCardinalNeighbors()) {
 
-                    isBlocked = isBlocked || newState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
+                    isBlocked |= newState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
                 }
 
-                newState = newState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), !isBlocked && this.canConnectDiagonally(diagonalState));
+                newState = newState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), !isBlocked && this.canConnectToMe(diagonalState, direction));
             }
 
             return newState;
@@ -130,7 +131,7 @@ public interface EightWayBlock extends DiagonalBlock {
     /**
      * similar to {@link net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#updateIndirectNeighbourShapes}
      */
-    default void updateDiagonalNeighbors2(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
+    default void updateIndirectNeighbourShapes2(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
 
         BlockPos.MutableBlockPos diagonalPos = new BlockPos.MutableBlockPos();
 
@@ -139,16 +140,16 @@ public interface EightWayBlock extends DiagonalBlock {
             Vec3i directionVec = direction.directionVec();
             diagonalPos.setWithOffset(pos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
             BlockState diagonalState = level.getBlockState(diagonalPos);
-            if (diagonalState.getBlock() instanceof EightWayBlock && ((EightWayBlock) diagonalState.getBlock()).canConnectDiagonally()) {
+            if (diagonalState.getBlock() instanceof EightWayBlock eightWayBlock && eightWayBlock.supportsDiagonalConnections()) {
 
                 // checks if there are vertical connections where a diagonal connection should be formed
                 boolean isBlocked = false;
                 for (EightWayDirection cardinal : direction.opposite().getCardinalNeighbors()) {
 
-                    isBlocked = isBlocked || diagonalState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
+                    isBlocked |= diagonalState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
                 }
 
-                BlockState newState = diagonalState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction.opposite()), !isBlocked && ((EightWayBlock) diagonalState.getBlock()).canConnectDiagonally(level.getBlockState(pos)));
+                BlockState newState = diagonalState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction.opposite()), !isBlocked && eightWayBlock.canConnectToMe(level.getBlockState(pos), direction));
                 Block.updateOrDestroy(diagonalState, newState, level, diagonalPos, flags, recursionLeft);
             }
         }
@@ -156,11 +157,14 @@ public interface EightWayBlock extends DiagonalBlock {
 
     default VoxelShape[] getShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
 
-        ArrayList<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        List<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
         return DIMENSIONS_TO_SHAPE_CACHE.computeIfAbsent(dimensions, dimension -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
     }
 
     default VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         float nodeStart = 8.0F - nodeWidth;
         float nodeEnd = 8.0F + nodeWidth;
@@ -168,17 +172,35 @@ public interface EightWayBlock extends DiagonalBlock {
         float extensionEnd = 8.0F + extensionWidth;
 
         VoxelShape nodeShape = Block.box(nodeStart, 0.0, nodeStart, nodeEnd, nodeHeight, nodeEnd);
-        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, extensionStart)};
-
+        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, nodeStart)};
+        Vec3[] sideParticleShape = new Vec3[]{new Vec3(0.0, extensionBottom, 0.0), new Vec3(nodeStart, extensionHeight, nodeStart)};
         VoxelShape[] verticalShapes = Stream.of(EightWayDirection.CARDINAL_DIRECTIONS).map(direction -> direction.transform(sideShape)).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
-
         VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.INTERCARDINAL_DIRECTIONS).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction)).toArray(VoxelShape[]::new);
-        VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
+        VoxelShape[] diagonalParticleShapes = Stream.of(EightWayDirection.INTERCARDINAL_DIRECTIONS).map(direction -> {
+            Vec3[] edges = sideParticleShape;
+            if (direction.directionVec().getX() != 1) {
 
-        return this.constructStateShapes(nodeShape, sideShapes);
+                edges = VoxelUtils.flipX(edges);
+            }
+
+            if (direction.directionVec().getZ() != 1) {
+
+                edges = VoxelUtils.flipZ(edges);
+            }
+            return edges;
+        }).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
+        VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
+        VoxelShape[] particleSideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalParticleShapes[2], diagonalParticleShapes[3], diagonalParticleShapes[0], diagonalParticleShapes[1]};
+
+        VoxelCollection[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
+
+        stopWatch.stop();
+        DiagonalFences.LOGGER.info("Constructing shapes for nodeWith {}, extensionWidth {}, nodeHeight {}, extensionBottom {}, extensionHeight {} took {}ms", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopWatch.getTime());
+
+        return stateShapes;
     }
 
-    default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes) {
+    default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
 
         VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
         for (int i = 0; i < stateShapes.length; i++) {
@@ -188,7 +210,7 @@ public interface EightWayBlock extends DiagonalBlock {
 
                 if ((i & (1 << j)) != 0) {
 
-                    stateShapes[i].addVoxelShape(directionalShapes[j]);
+                    stateShapes[i].addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
                 }
             }
         }
