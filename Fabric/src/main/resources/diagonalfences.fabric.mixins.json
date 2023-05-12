@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "package": "fuzs.diagonalfences.mixin",
   "refmap": "diagonalfences.refmap.json",
+  "plugin": "fuzs.diagonalfences.mixin.ModMixinConfigPlugin",
   "mixins": [
   ],
   "client": [

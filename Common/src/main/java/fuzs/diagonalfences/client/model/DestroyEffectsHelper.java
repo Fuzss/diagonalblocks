@@ -13,6 +13,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.function.BooleanSupplier;
 
 public class DestroyEffectsHelper {
+
     public static boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager, BooleanSupplier altResult) {
         VoxelShape voxelshape = state.getShape(level, pos);
         if (!(voxelshape instanceof VoxelCollection voxelCollection)) return altResult.getAsBoolean();
@@ -37,7 +38,6 @@ public class DestroyEffectsHelper {
                     }
                 }
             }
-
         });
         return true;
     }

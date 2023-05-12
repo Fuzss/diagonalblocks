@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ParticleEngine.class)
-public abstract class ParticleEngineFabricMixin {
+abstract class ParticleEngineFabricMixin {
     @Shadow
     protected ClientLevel level;
 
