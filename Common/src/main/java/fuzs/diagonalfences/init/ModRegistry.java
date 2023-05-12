@@ -1,13 +1,13 @@
 package fuzs.diagonalfences.init;
 
 import fuzs.diagonalfences.DiagonalFences;
-import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceLocation;
+import fuzs.puzzleslib.api.init.v2.RegistryManager;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 
 public class ModRegistry {
-    public static final TagKey<Block> NON_DIAGONAL_FENCES_TAG = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(DiagonalFences.MOD_ID, "non_diagonal_fences"));
+    static final RegistryManager REGISTRY = RegistryManager.instant(DiagonalFences.MOD_ID);
+    public static final TagKey<Block> NON_DIAGONAL_FENCES_TAG = REGISTRY.createBlockTag("non_diagonal_fences");
 
     public static void touch() {
 

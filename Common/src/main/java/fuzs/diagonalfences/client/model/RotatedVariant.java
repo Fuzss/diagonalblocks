@@ -1,7 +1,6 @@
 package fuzs.diagonalfences.client.model;
 
 import com.google.common.collect.Sets;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
@@ -10,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Function;
 
 public record RotatedVariant(Variant variant, Direction direction) implements UnbakedModel {
@@ -21,13 +19,13 @@ public record RotatedVariant(Variant variant, Direction direction) implements Un
     }
 
     @Override
-    public Collection<Material> getMaterials(Function<ResourceLocation, UnbakedModel> modelGetter, Set<Pair<String, String>> missingTextureErrors) {
-        return modelGetter.apply(this.variant.getModelLocation()).getMaterials(modelGetter, missingTextureErrors);
+    public void resolveParents(Function<ResourceLocation, UnbakedModel> function) {
+        function.apply(this.variant.getModelLocation()).resolveParents(function);
     }
 
     @Nullable
     @Override
-    public BakedModel bake(ModelBakery modelBakery, Function<Material, TextureAtlasSprite> spriteGetter, ModelState transform, ResourceLocation location) {
-        return MultipartAppender.rotateMultipartSegment(null, modelBakery.bake(this.variant.getModelLocation(), this.variant), this.direction);
+    public BakedModel bake(ModelBaker baker, Function<Material, TextureAtlasSprite> spriteGetter, ModelState state, ResourceLocation location) {
+        return MultipartAppender.rotateMultipartSegment(null, baker.bake(this.variant.getModelLocation(), this.variant), this.direction);
     }
 }

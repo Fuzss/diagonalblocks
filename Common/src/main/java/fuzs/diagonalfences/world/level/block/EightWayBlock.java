@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;

@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -87,8 +87,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Eig
     @Override
     public boolean canConnectToMe(BlockState neighborState, EightWayDirection neighborDirectionToMe) {
         if (neighborState.getBlock() instanceof FenceBlock && ((EightWayBlock) neighborState.getBlock()).supportsDiagonalConnections() && this.isSameFence(neighborState)) {
-            // TODO remove in next major version, only remains for backwards compatibility with old overload
-            if (neighborDirectionToMe == null) return true;
             for (EightWayDirection neighbor : neighborDirectionToMe.getCardinalNeighbors()) {
                 if (neighborState.getValue(DIRECTION_TO_PROPERTY_MAP.get(neighbor))) {
                     return false;

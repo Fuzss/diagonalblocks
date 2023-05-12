@@ -1,6 +1,5 @@
 package fuzs.diagonalfences.api.world.level.block;
 
-import fuzs.diagonalfences.core.EightWayDirection;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
@@ -18,20 +17,10 @@ public interface DiagonalBlock {
      */
     boolean hasProperties();
 
-    @Deprecated(forRemoval = true)
-    default boolean canConnectDiagonally() {
-        return this.supportsDiagonalConnections();
-    }
-
     /**
      * @return is this block not blacklisted via a block tag
      */
     boolean supportsDiagonalConnections();
-
-    @Deprecated(forRemoval = true)
-    default boolean canConnectDiagonally(BlockState blockstate) {
-        return this.canConnectToMe(blockstate, null);
-    }
 
     /**
      * @param neighborState neighbor block state to check if it can connect to me diagonally

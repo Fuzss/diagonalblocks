@@ -4,8 +4,8 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
+import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
-import fuzs.diagonalfences.core.EightWayDirection;
 import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
 import fuzs.diagonalfences.mixin.client.accessor.ModelBakeryAccessor;
 import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
@@ -20,7 +20,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -35,7 +35,7 @@ public class MultipartAppender {
 
     public static void onPrepareModelBaking(ModelBakery modelBakery) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        Registry.BLOCK.stream()
+        BuiltInRegistries.BLOCK.stream()
                 .filter(block -> block instanceof FenceBlock && block instanceof DiagonalBlock diagonalBlock && diagonalBlock.hasProperties())
                 .map(block -> block.getStateDefinition().any())
                 .forEach(state -> {

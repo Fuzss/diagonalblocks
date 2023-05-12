@@ -1,19 +1,18 @@
 package fuzs.diagonalfences.client.model;
 
-import com.mojang.math.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.Direction;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public class QuadUtils {
-    private static final float ROTATION_ANGLE = -45F;
+    private static final float ROTATION_ANGLE = -45F * 0.017453292F;
     //Scale factor at a 45 degree rotation
     private static final float SCALE_ROTATION_45 = 1.0F / (float)Math.cos(Math.PI / 4D) - 1.0F;
     private static final Vector3f ROTATION_ORIGIN = new Vector3f(.5F, .5F, .5F);
-    private static final Matrix4f ROTATION_MATRIX = new Matrix4f(new Quaternion(
-            new Vector3f(0.0F, 1.0F, 0.0F),
-            ROTATION_ANGLE,
-            true
-    ));
+    private static final Matrix4f ROTATION_MATRIX = new Matrix4f().rotation(new Quaternionf().setAngleAxis(ROTATION_ANGLE, 0.0F, 1.0F, 0.0F));
 
     /**
      * Create a deep-copy of the given {@link BakedQuad quad}
@@ -39,8 +38,7 @@ public class QuadUtils {
      */
     public static void rotateQuad(BakedQuad quad, Direction dir) {
 
-        Vector3f scaleMult = new Vector3f(dir.getStepX(), 1, dir.getStepZ());
-        scaleMult.map(Math::abs);
+        Vector3f scaleMult = new Vector3f(Math.abs(dir.getStepX()), 1, Math.abs(dir.getStepZ()));
 
         Vector3f scaleVec = new Vector3f(1.0F, 0.0F, 1.0F);
         scaleVec.mul(SCALE_ROTATION_45);
@@ -57,8 +55,8 @@ public class QuadUtils {
                     pos[i][1] - ROTATION_ORIGIN.y(),
                     pos[i][2] - ROTATION_ORIGIN.z(), 1.0F
             );
-            vector4f.mul(scaleVec);
-            vector4f.transform(ROTATION_MATRIX);
+            vector4f.mul(new Vector4f(scaleVec, 1.0F));
+            ROTATION_MATRIX.transform(vector4f);
 
             pos[i][0] = vector4f.x() + ROTATION_ORIGIN.x();
             pos[i][1] = vector4f.y() + ROTATION_ORIGIN.y();
