@@ -10,7 +10,7 @@ import org.joml.Vector4f;
 public class QuadUtils {
     private static final float ROTATION_ANGLE = -45F * 0.017453292F;
     //Scale factor at a 45 degree rotation
-    private static final float SCALE_ROTATION_45 = 1.0F / (float)Math.cos(Math.PI / 4D) - 1.0F;
+    private static final float SCALE_ROTATION_45 = 1.0F / (float) Math.cos(Math.PI / 4D) - 1.0F;
     private static final Vector3f ROTATION_ORIGIN = new Vector3f(.5F, .5F, .5F);
     private static final Matrix4f ROTATION_MATRIX = new Matrix4f().rotation(new Quaternionf().setAngleAxis(ROTATION_ANGLE, 0.0F, 1.0F, 0.0F));
 
@@ -22,19 +22,14 @@ public class QuadUtils {
         int[] vertexData = new int[quad.getVertices().length];
         System.arraycopy(quad.getVertices(), 0, vertexData, 0, vertexData.length);
 
-        return new BakedQuad(
-                vertexData,
-                quad.getTintIndex(),
-                quad.getDirection(),
-                quad.getSprite(),
-                quad.isShade()
-        );
+        return new BakedQuad(vertexData, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade());
     }
 
     /**
      * Rotate the given {@link BakedQuad quad} 45 degree clockwise and recalculate its vertex normals
+     *
      * @param quad The given BakedQuad, must be a deep-copy of the original
-     * @param dir The {@link Direction dir} in which the fence/wall arm this quad belongs to points
+     * @param dir  The {@link Direction dir} in which the fence/wall arm this quad belongs to points
      */
     public static void rotateQuad(BakedQuad quad, Direction dir) {
 
@@ -50,11 +45,7 @@ public class QuadUtils {
 
         for (int i = 0; i < 4; i++) {
 
-            Vector4f vector4f = new Vector4f(
-                    pos[i][0] - ROTATION_ORIGIN.x(),
-                    pos[i][1] - ROTATION_ORIGIN.y(),
-                    pos[i][2] - ROTATION_ORIGIN.z(), 1.0F
-            );
+            Vector4f vector4f = new Vector4f(pos[i][0] - ROTATION_ORIGIN.x(), pos[i][1] - ROTATION_ORIGIN.y(), pos[i][2] - ROTATION_ORIGIN.z(), 1.0F);
             vector4f.mul(new Vector4f(scaleVec, 1.0F));
             ROTATION_MATRIX.transform(vector4f);
 
@@ -124,8 +115,7 @@ public class QuadUtils {
         int normal = x | (y << 0x08) | (z << 0x10);
 
         int step = vertexData.length / 4; //This is needed to support the extended vertex formats used by shaders in OptiFine
-        for (int vert = 0; vert < 4; vert++)
-        {
+        for (int vert = 0; vert < 4; vert++) {
             vertexData[vert * step + 7] = normal;
         }
     }
