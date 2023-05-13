@@ -48,7 +48,7 @@ public class MultipartAppender {
                     }
                 });
 
-        DiagonalFences.LOGGER.info("Constructing diagonal block models took {}ms", stopwatch.stop().elapsed().toMillis());
+        DiagonalFences.LOGGER.info("Constructing diagonal block models took {} milliseconds", stopwatch.stop().elapsed().toMillis());
     }
 
     /**
@@ -72,21 +72,31 @@ public class MultipartAppender {
 
                     if (Objects.equals(((KeyValueConditionAccessor) keyValueCondition).diagonalfences$getValue(), "true")) {
 
+                        // rotates vanilla cardinal direction model parts and adds them as new selectors, all that's necessary for fences
                         KeyValueCondition newCondition = new KeyValueCondition(direction.rotateClockWise().getSerializedName(), "true");
-                        appendNewConditions(modelBakery, newCondition, newSelectors, selector, direction);
+                        appendNewSelector(modelBakery, newCondition, selector, direction, newSelectors);
                     } else {
 
+                        // this deals with the model part that shows on the side of the center post of glass panes when the model part corresponding to that direction is NOT being rendered
+                        // we adjust the condition so it no longer renders when only two opposite intercardinal directions are present, since we handle that with our own model parts
                         Condition newCondition = negateCondition(new OrCondition(rotateCenterConditions().values()));
                         Selector newSelector = new Selector(new AndCondition(Lists.newArrayList(condition, newCondition)), selector.getVariant());
                         iterator.set(newSelector);
+
+                        // the model parts used when only two opposite intercardinal directions are present
+                        Condition otherNewCondition = getAndCondition(direction.rotateCounterClockWise(), direction.rotateCounterClockWise().opposite());
+                        appendNewSelector(modelBakery, otherNewCondition, selector, direction.rotateClockWise().rotateClockWise(), newSelectors);
                     }
                 }
             } else if (rotateCenter && condition == Condition.TRUE) {
 
+                // this is the center post, we only use this for glass panes
+                // it is rotated and used as a separate model part when only two opposite intercardinal directions are present
+                // otherwise it renders normally, but we also change the vanilla condition to exclude the two cases that can result from our new model parts
                 Map<EightWayDirection, Condition> conditions = rotateCenterConditions();
                 for (Map.Entry<EightWayDirection, Condition> entry : conditions.entrySet()) {
 
-                    appendNewConditions(modelBakery, entry.getValue(), newSelectors, selector, entry.getKey());
+                    appendNewSelector(modelBakery, entry.getValue(), selector, entry.getKey(), newSelectors);
                 }
 
                 Selector newSelector = new Selector(negateCondition(new OrCondition(conditions.values())), selector.getVariant());
@@ -102,6 +112,7 @@ public class MultipartAppender {
         Map<EightWayDirection, Condition> conditions = Maps.newHashMap();
         for (EightWayDirection direction : EightWayDirection.getCardinalDirections()) {
 
+            // we just need this once per axis
             if (direction.getX() == 1 || direction.getZ() == 1) {
 
                 EightWayDirection interDirection = direction.rotateClockWise();
@@ -114,6 +125,7 @@ public class MultipartAppender {
     }
 
     private static Condition negateCondition(Condition condition) {
+
         return stateDefinition -> condition.getPredicate(stateDefinition).negate();
     }
 
@@ -129,7 +141,7 @@ public class MultipartAppender {
         return new AndCondition(conditions);
     }
 
-    private static void appendNewConditions(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, Condition newCondition, List<Selector> newSelectors, Selector selector, EightWayDirection direction) {
+    private static void appendNewSelector(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, Condition newCondition, Selector selector, EightWayDirection direction, List<Selector> newSelectors) {
 
         EightWayDirection interDirection = direction.rotateClockWise();
         List<Variant> variants = selector.getVariant().getVariants();

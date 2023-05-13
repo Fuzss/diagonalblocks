@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.world.level.block;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.DiagonalFences;
@@ -25,7 +26,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.apache.commons.lang3.time.StopWatch;
 
 import java.util.List;
 import java.util.Map;
@@ -163,8 +163,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
 
     default VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
 
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
         float nodeStart = 8.0F - nodeWidth;
         float nodeEnd = 8.0F + nodeWidth;
@@ -194,8 +193,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
 
         VoxelCollection[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
 
-        stopWatch.stop();
-        DiagonalFences.LOGGER.info("Constructing shapes for nodeWith {}, extensionWidth {}, nodeHeight {}, extensionBottom {}, extensionHeight {} took {}ms", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopWatch.getTime());
+        DiagonalFences.LOGGER.info("Constructing shapes for nodeWith {}, extensionWidth {}, nodeHeight {}, extensionBottom {}, extensionHeight {} took {} milliseconds", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopwatch.stop().elapsed().toMillis());
 
         return stateShapes;
     }
