@@ -11,8 +11,6 @@ public final class FenceBlockExtensions implements IClientBlockExtensions {
 
     @Override
     public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-        return DestroyEffectsHelper.addDestroyEffects(state, level, pos, manager, () -> {
-            return IClientBlockExtensions.super.addDestroyEffects(state, level, pos, manager);
-        });
+        return DestroyEffectsHelper.addDestroyEffects(state, level, pos, manager) || IClientBlockExtensions.super.addDestroyEffects(state, level, pos, manager);
     }
 }

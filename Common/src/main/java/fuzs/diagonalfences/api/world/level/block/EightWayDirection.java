@@ -23,8 +23,6 @@ public enum EightWayDirection implements StringRepresentable {
     NORTH_EAST(2, new Vec3i(1, 0, -1)),
     SOUTH_EAST(3, new Vec3i(1, 0, 1));
 
-    public static final EightWayDirection[] CARDINAL_DIRECTIONS = Stream.of(EightWayDirection.values()).filter(EightWayDirection::isCardinal).toArray(EightWayDirection[]::new);
-    public static final EightWayDirection[] INTERCARDINAL_DIRECTIONS = Stream.of(EightWayDirection.values()).filter(EightWayDirection::isIntercardinal).toArray(EightWayDirection[]::new);
     private static final Map<String, EightWayDirection> DIRECTIONS_BY_KEY = Stream.of(EightWayDirection.values()).collect(Collectors.toMap(EightWayDirection::getSerializedName, Function.identity()));
 
     private final int data2d;
@@ -36,11 +34,37 @@ public enum EightWayDirection implements StringRepresentable {
     }
 
     public static EightWayDirection toEightWayDirection(Direction direction) {
-        return CARDINAL_DIRECTIONS[direction.get2DDataValue()];
+        return getCardinalDirections()[direction.get2DDataValue()];
     }
 
     public static EightWayDirection byIndex(int index, boolean intercardinal) {
-        return intercardinal ? INTERCARDINAL_DIRECTIONS[index % 4] : CARDINAL_DIRECTIONS[index % 4];
+        index = ((index % 4) + 4) % 4;
+        return intercardinal ? getIntercardinalDirections()[index] : getCardinalDirections()[index];
+    }
+
+    public static EightWayDirection[] getCardinalDirections() {
+        return new EightWayDirection[]{SOUTH, WEST, NORTH, EAST};
+    }
+
+    public static EightWayDirection[] getIntercardinalDirections() {
+        return new EightWayDirection[]{SOUTH_WEST, NORTH_WEST, NORTH_EAST, SOUTH_EAST};
+    }
+
+    public int getX() {
+        return this.directionVec.getX();
+    }
+
+    public int getY() {
+        return this.directionVec.getY();
+    }
+
+    public int getZ() {
+        return this.directionVec.getZ();
+    }
+
+    public boolean compareAxis(EightWayDirection other) {
+        if (this.isCardinal() != other.isCardinal()) return false;
+        return (this.getX() + other.getX() + this.getY() + other.getY() + this.getZ() + other.getZ()) == 0;
     }
 
     @Nullable
@@ -99,8 +123,12 @@ public enum EightWayDirection implements StringRepresentable {
         throw new IllegalStateException("Cannot convert intercardinal direction to vanilla direction");
     }
 
-    public EightWayDirection rotateClockwise() {
+    public EightWayDirection rotateClockWise() {
         return byIndex(this.isIntercardinal() ? this.data2d + 1 : this.data2d, !this.isIntercardinal());
+    }
+
+    public EightWayDirection rotateCounterClockWise() {
+        return byIndex(this.isIntercardinal() ? this.data2d : this.data2d + 3, !this.isIntercardinal());
     }
 
     @Override
