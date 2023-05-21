@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v4.2.5-1.19.2] - 2023-05-21
+### Fixed
+- Fixed small animals (such as chicken and rabbits) trying to path-find through diagonal fence connections
+
 ## [v4.2.4-1.19.2] - 2023-05-12
 ### Changed
 - Overhauled internal implementation for making model parts diagonal, possibly allowing for future support of new kinds of blocks such as diagonal glass panes
