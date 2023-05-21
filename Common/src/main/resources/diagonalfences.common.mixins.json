@@ -8,6 +8,7 @@
   "mixins": [
     "FenceBlockMixin",
     "IronBarsBlockMixin",
+    "WalkNodeEvaluatorMixin",
     "accessor.VoxelShapeAccessor"
   ],
   "client": [
