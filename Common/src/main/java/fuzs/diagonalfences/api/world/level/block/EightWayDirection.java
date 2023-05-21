@@ -72,10 +72,6 @@ public enum EightWayDirection implements StringRepresentable {
         return DIRECTIONS_BY_KEY.get(name);
     }
 
-    public Vec3i directionVec() {
-        return this.directionVec;
-    }
-
     public boolean isCardinal() {
         return !this.isIntercardinal();
     }

@@ -94,8 +94,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
         BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         for (EightWayDirection direction : directions) {
 
-            Vec3i directionVec = direction.directionVec();
-            mutablePos.setWithOffset(basePos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
+            mutablePos.setWithOffset(basePos, direction.getX(), direction.getY(), direction.getZ());
             placementState = placementState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), predicate.test(mutablePos, placementState, direction));
         }
 
@@ -109,8 +108,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
             BlockPos.MutableBlockPos diagonalPos = new BlockPos.MutableBlockPos();
             for (EightWayDirection direction : EightWayDirection.toEightWayDirection(facing).getIntercardinalNeighbors()) {
 
-                Vec3i directionVec = direction.directionVec();
-                diagonalPos.setWithOffset(currentPos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
+                diagonalPos.setWithOffset(currentPos, direction.getX(), direction.getY(), direction.getZ());
                 BlockState diagonalState = level.getBlockState(diagonalPos);
                 // checks if there are vertical connections where a diagonal connection should be formed
                 boolean isBlocked = false;
@@ -137,8 +135,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
 
         for (EightWayDirection direction : EightWayDirection.getIntercardinalDirections()) {
 
-            Vec3i directionVec = direction.directionVec();
-            diagonalPos.setWithOffset(pos, directionVec.getX(), directionVec.getY(), directionVec.getZ());
+            diagonalPos.setWithOffset(pos, direction.getX(), direction.getY(), direction.getZ());
             BlockState diagonalState = level.getBlockState(diagonalPos);
             if (diagonalState.getBlock() instanceof StarCollisionBlock starCollisionBlock && starCollisionBlock.supportsDiagonalConnections()) {
 
@@ -177,12 +174,12 @@ public interface StarCollisionBlock extends DiagonalBlock {
         VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction)).toArray(VoxelShape[]::new);
         VoxelShape[] diagonalParticleShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> {
             Vec3[] edges = sideParticleShape;
-            if (direction.directionVec().getX() != 1) {
+            if (direction.getX() != 1) {
 
                 edges = VoxelUtils.flipX(edges);
             }
 
-            if (direction.directionVec().getZ() != 1) {
+            if (direction.getZ() != 1) {
 
                 edges = VoxelUtils.flipZ(edges);
             }
@@ -225,12 +222,12 @@ public interface StarCollisionBlock extends DiagonalBlock {
         final float diagonalSide = 0.7071067812F * extensionWidth;
         Vec3[] corners = VoxelUtils.createVectorArray(-diagonalSide, extensionHeight, diagonalSide, -diagonalSide + 8.0F, extensionHeight, diagonalSide + 8.0F, -diagonalSide, extensionBottom, diagonalSide, -diagonalSide + 8.0F, extensionBottom, diagonalSide + 8.0F, diagonalSide, extensionHeight, -diagonalSide, diagonalSide + 8.0F, extensionHeight, -diagonalSide + 8.0F, diagonalSide, extensionBottom, -diagonalSide, diagonalSide + 8.0F, extensionBottom, -diagonalSide + 8.0F);
         Vec3[] edges = VoxelUtils.create12Edges(corners);
-        if (direction.directionVec().getX() != 1) {
+        if (direction.getX() != 1) {
 
             edges = VoxelUtils.flipX(edges);
         }
 
-        if (direction.directionVec().getZ() != 1) {
+        if (direction.getZ() != 1) {
 
             edges = VoxelUtils.flipZ(edges);
         }
@@ -243,8 +240,8 @@ public interface StarCollisionBlock extends DiagonalBlock {
         VoxelShape collisionShape = Shapes.empty();
         for (int i = 0; i < 8; i++) {
 
-            int posX = direction.directionVec().getX() > 0 ? i : 16 - i;
-            int posZ = direction.directionVec().getZ() > 0 ? i : 16 - i;
+            int posX = direction.getX() > 0 ? i : 16 - i;
+            int posZ = direction.getZ() > 0 ? i : 16 - i;
             VoxelShape cuboidShape = Block.box(posX - extensionWidth, extensionBottom, posZ - extensionWidth, posX + extensionWidth, extensionHeight, posZ + extensionWidth);
             collisionShape = Shapes.or(collisionShape, cuboidShape);
         }
