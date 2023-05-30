@@ -93,7 +93,7 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
 
     @Override
     public boolean supportsDiagonalConnections() {
-        return this.hasProperties() && !this.builtInRegistryHolder().is(ModRegistry.NON_DIAGONAL_FENCES_TAG);
+        return this.hasProperties() && !this.builtInRegistryHolder().is(ModRegistry.NON_DIAGONAL_PANES_BLOCK_TAG);
     }
 
     @Override

@@ -7,7 +7,6 @@
   "plugin": "fuzs.diagonalfences.mixin.ModMixinConfigPlugin",
   "mixins": [
     "FenceBlockMixin",
-    "IronBarsBlockMixin",
     "WalkNodeEvaluatorMixin",
     "accessor.VoxelShapeAccessor"
   ],
