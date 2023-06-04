@@ -4,7 +4,7 @@ import fuzs.diagonalfences.client.extensions.DiagonalClientBlockExtensions;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
-import net.minecraftforge.client.extensions.common.IClientBlockExtensions;
+import net.minecraftforge.client.IBlockRenderProperties;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.function.Consumer;
@@ -17,7 +17,7 @@ abstract class CrossCollisionBlockForgeMixin extends CrossCollisionBlock {
     }
 
     @Override
-    public void initializeClient(Consumer<IClientBlockExtensions> consumer) {
+    public void initializeClient(Consumer<IBlockRenderProperties> consumer) {
         consumer.accept(new DiagonalClientBlockExtensions());
     }
 }

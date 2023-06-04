@@ -20,9 +20,8 @@ import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -36,7 +35,7 @@ public class MultipartAppender {
 
     public static void onPrepareModelBaking(ModelBakery modelBakery) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        BuiltInRegistries.BLOCK.stream()
+        Registry.BLOCK.stream()
                 .filter(block -> (block instanceof FenceBlock || block instanceof IronBarsBlock) && block instanceof DiagonalBlock diagonalBlock && diagonalBlock.hasProperties())
                 .map(block -> block.getStateDefinition().any())
                 .forEach(state -> {
@@ -181,7 +180,7 @@ public class MultipartAppender {
      */
     private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, @Nullable BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
 
-        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RandomSource.create());
+        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, new Random());
         List<BakedQuad> newQuads = Lists.newArrayList();
 
         for (BakedQuad quad : quads) {
