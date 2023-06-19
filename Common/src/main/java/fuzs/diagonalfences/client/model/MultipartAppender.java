@@ -28,6 +28,7 @@ import org.apache.logging.log4j.util.BiConsumer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class MultipartAppender {
@@ -63,7 +64,7 @@ public class MultipartAppender {
             Selector selector = iterator.next();
 
             Condition condition = ((SelectorAccessor) selector).diagonalfences$getCondition();
-            ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(condition);
+            ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(condition, keyValueCondition -> EightWayDirection.byName(((KeyValueConditionAccessor) keyValueCondition).diagonalfences$getKey()) != null);
             if (conditionFactoryPair != null) {
 
                 EightWayDirection direction = EightWayDirection.byName(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getKey());
@@ -109,14 +110,15 @@ public class MultipartAppender {
     private record ConditionFactoryPair(KeyValueCondition condition, UnaryOperator<Condition> factory) {}
 
     @Nullable
-    private static MultipartAppender.ConditionFactoryPair findKeyValueCondition(Condition condition) {
+    private static MultipartAppender.ConditionFactoryPair findKeyValueCondition(Condition condition, Predicate<KeyValueCondition> filter) {
         if (condition instanceof KeyValueCondition keyValueCondition) {
-            return new ConditionFactoryPair(keyValueCondition, UnaryOperator.identity());
+            return filter.test(keyValueCondition) ? new ConditionFactoryPair(keyValueCondition, UnaryOperator.identity()) : null;
         } else if (condition instanceof AndCondition) {
             List<Condition> conditions = Lists.newArrayList(((AndConditionAccessor) condition).diagonalfences$getConditions());
             for (int i = 0; i < conditions.size(); i++) {
-                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i));
+                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i), filter);
                 if (conditionFactoryPair != null) {
+                    conditions.remove(conditionFactoryPair.condition());
                     return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
                         conditions.add(conditionFactoryPair.factory().apply(condition1));
                         return new AndCondition(conditions);
@@ -126,8 +128,9 @@ public class MultipartAppender {
         } else if (condition instanceof OrCondition) {
             List<Condition> conditions = Lists.newArrayList(((OrConditionAccessor) condition).diagonalfences$getConditions());
             for (int i = 0; i < conditions.size(); i++) {
-                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i));
+                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i), filter);
                 if (conditionFactoryPair != null) {
+                    conditions.remove(conditionFactoryPair.condition());
                     return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
                         conditions.add(conditionFactoryPair.factory().apply(condition1));
                         return new OrCondition(conditions);
