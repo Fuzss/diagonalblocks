@@ -7,9 +7,7 @@ import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
-import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
-import fuzs.diagonalfences.mixin.client.accessor.ModelBakeryAccessor;
-import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.*;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.MultiVariant;
@@ -30,6 +28,7 @@ import org.apache.logging.log4j.util.BiConsumer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 public class MultipartAppender {
 
@@ -64,16 +63,17 @@ public class MultipartAppender {
             Selector selector = iterator.next();
 
             Condition condition = ((SelectorAccessor) selector).diagonalfences$getCondition();
-            if (condition instanceof KeyValueCondition keyValueCondition) {
+            ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(condition);
+            if (conditionFactoryPair != null) {
 
-                EightWayDirection direction = EightWayDirection.byName(((KeyValueConditionAccessor) keyValueCondition).diagonalfences$getKey());
+                EightWayDirection direction = EightWayDirection.byName(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getKey());
                 if (direction != null) {
 
-                    if (Objects.equals(((KeyValueConditionAccessor) keyValueCondition).diagonalfences$getValue(), "true")) {
+                    if (Objects.equals(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getValue(), "true")) {
 
                         // rotates vanilla cardinal direction model parts and adds them as new selectors, all that's necessary for fences
                         KeyValueCondition newCondition = new KeyValueCondition(direction.rotateClockWise().getSerializedName(), "true");
-                        appendNewSelector(modelBakery, newCondition, selector, direction, newSelectors);
+                        appendNewSelector(modelBakery, conditionFactoryPair.factory().apply(newCondition), selector, direction, newSelectors);
                     } else {
 
                         // this deals with the model part that shows on the side of the center post of glass panes when the model part corresponding to that direction is NOT being rendered
@@ -104,6 +104,38 @@ public class MultipartAppender {
         }
 
         selectors.addAll(newSelectors);
+    }
+
+    private record ConditionFactoryPair(KeyValueCondition condition, UnaryOperator<Condition> factory) {}
+
+    @Nullable
+    private static MultipartAppender.ConditionFactoryPair findKeyValueCondition(Condition condition) {
+        if (condition instanceof KeyValueCondition keyValueCondition) {
+            return new ConditionFactoryPair(keyValueCondition, UnaryOperator.identity());
+        } else if (condition instanceof AndCondition) {
+            List<Condition> conditions = Lists.newArrayList(((AndConditionAccessor) condition).diagonalfences$getConditions());
+            for (int i = 0; i < conditions.size(); i++) {
+                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i));
+                if (conditionFactoryPair != null) {
+                    return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
+                        conditions.add(conditionFactoryPair.factory().apply(condition1));
+                        return new AndCondition(conditions);
+                    });
+                }
+            }
+        } else if (condition instanceof OrCondition) {
+            List<Condition> conditions = Lists.newArrayList(((OrConditionAccessor) condition).diagonalfences$getConditions());
+            for (int i = 0; i < conditions.size(); i++) {
+                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i));
+                if (conditionFactoryPair != null) {
+                    return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
+                        conditions.add(conditionFactoryPair.factory().apply(condition1));
+                        return new OrCondition(conditions);
+                    });
+                }
+            }
+        }
+        return null;
     }
 
     private static Map<EightWayDirection, Condition> rotateCenterConditions() {
