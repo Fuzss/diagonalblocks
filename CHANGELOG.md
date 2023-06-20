@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v3.2.2-1.18.2] - 2023-06-20
+### Fixed
+- Fixed yet another unintentional breaking api change
+
 ## [v3.2.1-1.18.2] - 2023-06-20
 ### Changed
 - Diagonal Fences now supports slightly more complex block models from other mods / resource packs, so some fences that would gain diagonal connections but wouldn't render them will do so now

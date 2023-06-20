@@ -1,12 +1,13 @@
 package fuzs.diagonalfences.api.world.level.block;
 
+import fuzs.diagonalfences.api.IDiagonalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /**
  * mainly contains four new block states for diagonal directions
  */
-public interface DiagonalBlock {
+public interface DiagonalBlock extends IDiagonalBlock {
     BooleanProperty NORTH_EAST = BooleanProperty.create("north_east");
     BooleanProperty SOUTH_EAST = BooleanProperty.create("south_east");
     BooleanProperty SOUTH_WEST = BooleanProperty.create("south_west");
@@ -15,7 +16,16 @@ public interface DiagonalBlock {
     /**
      * @return have diagonal properties successfully been applied to this block
      */
+    @Override
     boolean hasProperties();
+
+    /**
+     * @return is this block not blacklisted via a block tag
+     */
+    @Override
+    default boolean canConnectDiagonally() {
+        return this.supportsDiagonalConnections();
+    }
 
     /**
      * @return is this block not blacklisted via a block tag
