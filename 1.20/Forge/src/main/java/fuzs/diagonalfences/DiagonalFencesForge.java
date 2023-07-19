@@ -24,10 +24,6 @@ public class DiagonalFencesForge {
 
     @SubscribeEvent
     public static void onGatherData(final GatherDataEvent evt) {
-        final DataGenerator dataGenerator = evt.getGenerator();
-        final PackOutput packOutput = dataGenerator.getPackOutput();
-        final CompletableFuture<HolderLookup.Provider> lookupProvider = evt.getLookupProvider();
-        final ExistingFileHelper fileHelper = evt.getExistingFileHelper();
-        dataGenerator.addProvider(true, new ModBlockTagsProvider(packOutput, lookupProvider, DiagonalFences.MOD_ID, fileHelper));
+        evt.getGenerator().addProvider(evt.includeClient(), new ModBlockTagsProvider(evt, DiagonalFences.MOD_ID));
     }
 }

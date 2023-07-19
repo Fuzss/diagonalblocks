@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v3.2.3-1.18.2] - 2023-07-19
+### Fixed
+- Fixed an occasional crash when reloading resources
+
 ## [v3.2.2-1.18.2] - 2023-06-20
 ### Fixed
 - Fixed yet another unintentional breaking api change

@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.mixin.client;
 
+import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.client.model.DestroyEffectsHelper;
-import fuzs.diagonalfences.world.level.block.EightWayBlock;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
@@ -19,8 +19,8 @@ abstract class ParticleEngineFabricMixin {
 
     @Inject(method = "destroy", at = @At("HEAD"), cancellable = true)
     public void destroy(BlockPos blockPos, BlockState blockState, CallbackInfo callback) {
-        if (!blockState.isAir() && blockState.getBlock() instanceof EightWayBlock) {
-            if (DestroyEffectsHelper.addDestroyEffects(blockState, this.level, blockPos, ParticleEngine.class.cast(this), () -> false)) {
+        if (blockState.getBlock() instanceof DiagonalBlock block && block.hasProperties()) {
+            if (DestroyEffectsHelper.addDestroyEffects(blockState, this.level, blockPos, ParticleEngine.class.cast(this))) {
                 callback.cancel();
             }
         }

@@ -1,13 +1,13 @@
 package fuzs.diagonalfences.api.world.level.block;
 
-import fuzs.diagonalfences.core.EightWayDirection;
+import fuzs.diagonalfences.api.IDiagonalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /**
  * mainly contains four new block states for diagonal directions
  */
-public interface DiagonalBlock {
+public interface DiagonalBlock extends IDiagonalBlock {
     BooleanProperty NORTH_EAST = BooleanProperty.create("north_east");
     BooleanProperty SOUTH_EAST = BooleanProperty.create("south_east");
     BooleanProperty SOUTH_WEST = BooleanProperty.create("south_west");
@@ -16,9 +16,13 @@ public interface DiagonalBlock {
     /**
      * @return have diagonal properties successfully been applied to this block
      */
+    @Override
     boolean hasProperties();
 
-    @Deprecated(forRemoval = true)
+    /**
+     * @return is this block not blacklisted via a block tag
+     */
+    @Override
     default boolean canConnectDiagonally() {
         return this.supportsDiagonalConnections();
     }
@@ -27,11 +31,6 @@ public interface DiagonalBlock {
      * @return is this block not blacklisted via a block tag
      */
     boolean supportsDiagonalConnections();
-
-    @Deprecated(forRemoval = true)
-    default boolean canConnectDiagonally(BlockState blockstate) {
-        return this.canConnectToMe(blockstate, null);
-    }
 
     /**
      * @param neighborState neighbor block state to check if it can connect to me diagonally

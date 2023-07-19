@@ -10,13 +10,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.util.function.BooleanSupplier;
-
 public class DestroyEffectsHelper {
 
-    public static boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager, BooleanSupplier altResult) {
+    public static boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
         VoxelShape voxelshape = state.getShape(level, pos);
-        if (!(voxelshape instanceof VoxelCollection voxelCollection)) return altResult.getAsBoolean();
+        if (!(voxelshape instanceof VoxelCollection voxelCollection)) return false;
         voxelCollection.forAllParticleBoxes((p_172273_, p_172274_, p_172275_, p_172276_, p_172277_, p_172278_) -> {
             double d1 = Math.min(1.0D, p_172276_ - p_172273_);
             double d2 = Math.min(1.0D, p_172277_ - p_172274_);

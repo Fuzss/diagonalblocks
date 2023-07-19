@@ -1,13 +1,16 @@
 package fuzs.diagonalfences.client.model;
 
-import com.mojang.math.*;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.Direction;
 
 public class QuadUtils {
     private static final float ROTATION_ANGLE = -45F;
     //Scale factor at a 45 degree rotation
-    private static final float SCALE_ROTATION_45 = 1.0F / (float)Math.cos(Math.PI / 4D) - 1.0F;
+    private static final float SCALE_ROTATION_45 = 1.0F / (float) Math.cos(Math.PI / 4D) - 1.0F;
     private static final Vector3f ROTATION_ORIGIN = new Vector3f(.5F, .5F, .5F);
     private static final Matrix4f ROTATION_MATRIX = new Matrix4f(new Quaternion(
             new Vector3f(0.0F, 1.0F, 0.0F),
@@ -23,24 +26,18 @@ public class QuadUtils {
         int[] vertexData = new int[quad.getVertices().length];
         System.arraycopy(quad.getVertices(), 0, vertexData, 0, vertexData.length);
 
-        return new BakedQuad(
-                vertexData,
-                quad.getTintIndex(),
-                quad.getDirection(),
-                quad.getSprite(),
-                quad.isShade()
-        );
+        return new BakedQuad(vertexData, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade());
     }
 
     /**
      * Rotate the given {@link BakedQuad quad} 45 degree clockwise and recalculate its vertex normals
+     *
      * @param quad The given BakedQuad, must be a deep-copy of the original
-     * @param dir The {@link Direction dir} in which the fence/wall arm this quad belongs to points
+     * @param dir  The {@link Direction dir} in which the fence/wall arm this quad belongs to points
      */
     public static void rotateQuad(BakedQuad quad, Direction dir) {
 
-        Vector3f scaleMult = new Vector3f(dir.getStepX(), 1, dir.getStepZ());
-        scaleMult.map(Math::abs);
+        Vector3f scaleMult = new Vector3f(Math.abs(dir.getStepX()), 1, Math.abs(dir.getStepZ()));
 
         Vector3f scaleVec = new Vector3f(1.0F, 0.0F, 1.0F);
         scaleVec.mul(SCALE_ROTATION_45);
@@ -126,8 +123,7 @@ public class QuadUtils {
         int normal = x | (y << 0x08) | (z << 0x10);
 
         int step = vertexData.length / 4; //This is needed to support the extended vertex formats used by shaders in OptiFine
-        for (int vert = 0; vert < 4; vert++)
-        {
+        for (int vert = 0; vert < 4; vert++) {
             vertexData[vert * step + 7] = normal;
         }
     }
