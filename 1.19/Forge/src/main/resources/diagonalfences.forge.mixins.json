@@ -6,7 +6,7 @@
   "refmap": "diagonalfences.refmap.json",
   "plugin": "fuzs.diagonalfences.mixin.ModMixinConfigPlugin",
   "mixins": [
-    "CrossCollisionBlockForgeMixin"
+    "IronBarsBlockForgeMixin"
   ],
   "client": [
   ],

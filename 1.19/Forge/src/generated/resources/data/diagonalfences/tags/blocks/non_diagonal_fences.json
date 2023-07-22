@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "assorteddecor:colorizer_fence",
+      "required": false
+    },
+    {
+      "id": "immersiveengineering:steel_fence",
+      "required": false
+    }
+  ]
+}

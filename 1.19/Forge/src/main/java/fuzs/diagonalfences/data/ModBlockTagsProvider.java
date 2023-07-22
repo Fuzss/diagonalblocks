@@ -16,6 +16,6 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
     @Override
     protected void addTags() {
         this.tag(ModRegistry.NON_DIAGONAL_FENCES_BLOCK_TAG).addOptional(new ResourceLocation("assorteddecor:colorizer_fence")).addOptional(new ResourceLocation("immersiveengineering:steel_fence"));
-        this.tag(ModRegistry.NON_DIAGONAL_PANES_BLOCK_TAG);
+//        this.tag(ModRegistry.NON_DIAGONAL_PANES_BLOCK_TAG);
     }
 }
