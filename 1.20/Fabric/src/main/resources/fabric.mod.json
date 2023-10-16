@@ -26,6 +26,7 @@
       "${mainEntryPoint}"
     ],
     "client": [
+      "${clientEntryPoint}"
     ]
   },
 

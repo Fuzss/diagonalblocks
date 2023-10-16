@@ -15,7 +15,6 @@ import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.*;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -185,7 +184,8 @@ public class MultipartAppender {
         List<Variant> newVariants = Lists.newArrayList();
         for (Variant variant : variants) {
 
-            ModelResourceLocation location = new ModelResourceLocation(variant.getModelLocation(), interDirection.getSerializedName());
+            // Fabric Api's Model Api does not work as we need it to when using ModelResourceLocation, so stick to normal ResourceLocation
+            ResourceLocation location = new ResourceLocation(variant.getModelLocation() + "_" + interDirection.getSerializedName());
             // this is the rotated model part, just make sure it is cached somewhere to avoid recreation multiple times since it's very expensive
             // we could also use our own cache, but unbaked models cache works fine
             modelBakery.accept(location, new RotatedVariant(variant, direction.toDirection()));

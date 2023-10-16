@@ -9,6 +9,7 @@
     "FenceBlockForgeMixin"
   ],
   "client": [
+    "client.ModelBakeryForgeMixin"
   ],
   "injectors": {
     "defaultRequire": 1
