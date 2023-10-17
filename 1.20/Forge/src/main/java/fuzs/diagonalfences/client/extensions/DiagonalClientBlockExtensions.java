@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.client.extensions;
 
-import fuzs.diagonalfences.client.model.DestroyEffectsHelper;
+import fuzs.diagonalfences.client.util.DestroyEffectsHelper;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;

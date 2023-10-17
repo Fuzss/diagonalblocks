@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.client.core;
 
-import fuzs.diagonalfences.client.model.MultipartSegmentBakedModelForge;
+import fuzs.diagonalfences.client.resources.model.MultipartSegmentBakedModelForge;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;

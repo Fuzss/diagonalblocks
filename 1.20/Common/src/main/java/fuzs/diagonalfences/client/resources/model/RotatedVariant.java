@@ -1,6 +1,7 @@
-package fuzs.diagonalfences.client.model;
+package fuzs.diagonalfences.client.resources.model;
 
 import com.google.common.collect.Sets;
+import fuzs.diagonalfences.client.util.MultipartAppender;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;

@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.client.model;
+package fuzs.diagonalfences.client.util;
 
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import net.minecraft.client.multiplayer.ClientLevel;

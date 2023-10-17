@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.client.model;
+package fuzs.diagonalfences.client.resources.model;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;

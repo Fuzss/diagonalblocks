@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.client.model;
+package fuzs.diagonalfences.client.util;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -7,6 +7,7 @@ import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
+import fuzs.diagonalfences.client.resources.model.RotatedVariant;
 import fuzs.diagonalfences.mixin.client.accessor.*;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.BakedQuad;

@@ -1,8 +1,7 @@
 package fuzs.diagonalfences.mixin.client;
 
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.client.model.DestroyEffectsHelper;
-import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
+import fuzs.diagonalfences.client.util.DestroyEffectsHelper;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;

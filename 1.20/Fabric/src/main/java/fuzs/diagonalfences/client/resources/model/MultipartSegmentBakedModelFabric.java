@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.client.model;
+package fuzs.diagonalfences.client.resources.model;
 
 import net.fabricmc.fabric.api.renderer.v1.model.ForwardingBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;

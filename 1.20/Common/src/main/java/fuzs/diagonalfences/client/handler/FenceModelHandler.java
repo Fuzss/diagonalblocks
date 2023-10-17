@@ -3,7 +3,7 @@ package fuzs.diagonalfences.client.handler;
 import com.google.common.base.Suppliers;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.client.model.MultipartAppender;
+import fuzs.diagonalfences.client.util.MultipartAppender;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
@@ -29,10 +29,11 @@ public class FenceModelHandler {
             .collect(Collectors.toUnmodifiableMap(BlockModelShaper::stateToModelLocation, BlockBehaviour.BlockStateBase::getBlock)));
 
 
-    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, Supplier<UnbakedModel> unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> additionalUnbakedModels) {
-        if (DIAGONAL_BLOCKS.get().containsKey(modelLocation)) {
-            Block block = DIAGONAL_BLOCKS.get().get(modelLocation);
-            if (unbakedModel.get() instanceof MultiPart multiPart) {
+    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, UnbakedModel unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> additionalUnbakedModels) {
+        Map<? extends ResourceLocation, Block> diagonalBlocks = DIAGONAL_BLOCKS.get();
+        if (diagonalBlocks.containsKey(modelLocation)) {
+            Block block = diagonalBlocks.get(modelLocation);
+            if (unbakedModel instanceof MultiPart multiPart) {
                 MultipartAppender.appendDiagonalSelectors(additionalUnbakedModels, multiPart, block instanceof IronBarsBlock);
                 return EventResultHolder.interrupt(multiPart);
             } else {
