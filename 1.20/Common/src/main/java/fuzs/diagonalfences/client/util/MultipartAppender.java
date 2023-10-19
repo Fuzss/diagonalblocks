@@ -1,28 +1,23 @@
 package fuzs.diagonalfences.client.util;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import fuzs.diagonalfences.DiagonalFences;
-import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
 import fuzs.diagonalfences.client.resources.model.RotatedVariant;
-import fuzs.diagonalfences.mixin.client.accessor.*;
-import net.minecraft.client.renderer.block.BlockModelShaper;
+import fuzs.diagonalfences.mixin.client.accessor.AndConditionAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.OrConditionAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.MultiVariant;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.*;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.FenceBlock;
-import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
@@ -33,23 +28,6 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class MultipartAppender {
-
-    public static void onPrepareModelBaking(ModelBakery modelBakery) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        BuiltInRegistries.BLOCK.stream()
-                .filter(block -> (block instanceof FenceBlock || block instanceof IronBarsBlock) && block instanceof DiagonalBlock diagonalBlock && diagonalBlock.hasProperties())
-                .map(block -> block.getStateDefinition().any())
-                .forEach(state -> {
-
-                    if (modelBakery.getModel(BlockModelShaper.stateToModelLocation(state)) instanceof MultiPart multiPart) {
-                        appendDiagonalSelectors(((ModelBakeryAccessor) modelBakery)::diagonalfences$callCacheAndQueueDependencies, multiPart, state.getBlock() instanceof IronBarsBlock);
-                    } else {
-                        DiagonalFences.LOGGER.warn("Block '{}' is not using multipart models, diagonal connections will not be visible!", state.getBlock());
-                    }
-                });
-
-        DiagonalFences.LOGGER.info("Constructing diagonal block models took {} milliseconds", stopwatch.stop().elapsed().toMillis());
-    }
 
     /**
      * Append the multipart variant selectors needed for the diagonal arms of the fence, wall, etc.

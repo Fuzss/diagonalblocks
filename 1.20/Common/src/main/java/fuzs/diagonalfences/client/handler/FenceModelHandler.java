@@ -29,15 +29,15 @@ public class FenceModelHandler {
             .collect(Collectors.toUnmodifiableMap(BlockModelShaper::stateToModelLocation, BlockBehaviour.BlockStateBase::getBlock)));
 
 
-    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, UnbakedModel unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> additionalUnbakedModels) {
+    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, UnbakedModel unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
         Map<? extends ResourceLocation, Block> diagonalBlocks = DIAGONAL_BLOCKS.get();
         if (diagonalBlocks.containsKey(modelLocation)) {
             Block block = diagonalBlocks.get(modelLocation);
             if (unbakedModel instanceof MultiPart multiPart) {
-                MultipartAppender.appendDiagonalSelectors(additionalUnbakedModels, multiPart, block instanceof IronBarsBlock);
+                MultipartAppender.appendDiagonalSelectors(modelAdder, multiPart, block instanceof IronBarsBlock);
                 return EventResultHolder.interrupt(multiPart);
             } else {
-                DiagonalFences.LOGGER.warn("Block '{}' is not using multipart models, diagonal connections will not be visible!", block);
+                DiagonalFences.LOGGER.warn("Block '{}' is not using multipart model, diagonal connections will not be visible!", block);
             }
         }
         return EventResultHolder.pass();

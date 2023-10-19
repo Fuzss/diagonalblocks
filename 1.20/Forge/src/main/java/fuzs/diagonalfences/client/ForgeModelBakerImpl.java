@@ -12,12 +12,19 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbakedModelGetter,
-                           Function<ResourceLocation, UnbakedModel> additionalUnbakedModelGetter,
                            Function<Material, TextureAtlasSprite> modelTextureGetter) implements ModelBaker {
     private static WeakReference<Map<ResourceLocation, AtlasSet.StitchResult>> atlasPreparationsReference = new WeakReference<>(null);
 
-    public ForgeModelBakerImpl(ResourceLocation resourceLocation, Function<ResourceLocation, UnbakedModel> unbakedModelGetter, Function<ResourceLocation, UnbakedModel> additionalUnbakedModelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
-        this(unbakedModelGetter, additionalUnbakedModelGetter, (Material material) -> {
+    public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, Function<ResourceLocation, UnbakedModel> additionalModelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
+        this(modelLocation, (ResourceLocation resourceLocation) -> {
+            UnbakedModel unbakedModel = additionalModelGetter.apply(resourceLocation);
+            if (unbakedModel != null) return unbakedModel;
+            return modelGetter.apply(resourceLocation);
+        }, missingTextureConsumer);
+    }
+
+    public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
+        this(modelGetter, (Material material) -> {
             Map<ResourceLocation, AtlasSet.StitchResult> atlasPreparations = atlasPreparationsReference.get();
             Objects.requireNonNull(atlasPreparations, "atlas preparations is null");
             AtlasSet.StitchResult stitchResult = atlasPreparations.get(material.atlasLocation());
@@ -25,7 +32,7 @@ public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbak
             if (textureatlassprite != null) {
                 return textureatlassprite;
             } else {
-                missingTextureConsumer.accept(resourceLocation, material);
+                missingTextureConsumer.accept(modelLocation, material);
                 return stitchResult.missing();
             }
         });
@@ -37,8 +44,6 @@ public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbak
 
     @Override
     public UnbakedModel getModel(ResourceLocation resourceLocation) {
-        UnbakedModel unbakedModel = this.additionalUnbakedModelGetter.apply(resourceLocation);
-        if (unbakedModel != null) return unbakedModel;
         return this.unbakedModelGetter.apply(resourceLocation);
     }
 

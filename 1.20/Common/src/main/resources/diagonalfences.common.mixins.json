@@ -11,10 +11,8 @@
     "accessor.VoxelShapeAccessor"
   ],
   "client": [
-    "client.ModelBakeryMixin",
     "client.accessor.AndConditionAccessor",
     "client.accessor.KeyValueConditionAccessor",
-    "client.accessor.ModelBakeryAccessor",
     "client.accessor.OrConditionAccessor",
     "client.accessor.SelectorAccessor"
   ],
