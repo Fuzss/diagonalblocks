@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = DiagonalFences.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -24,8 +25,8 @@ public class DiagonalFencesForgeClient {
 
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
-        ClientModConstructor.construct(DiagonalFences.MOD_ID, DiagonalFencesClient::new);
         registerEventInvokers();
+        ClientModConstructor.construct(DiagonalFences.MOD_ID, DiagonalFencesClient::new);
     }
 
     private static void registerEventInvokers() {
@@ -62,13 +63,18 @@ public class DiagonalFencesForgeClient {
             Stopwatch stopwatch = Stopwatch.createStarted();
             Map<ResourceLocation, BakedModel> additionalModels = Maps.newLinkedHashMap();
             Multimap<ResourceLocation, Material> missingTextures = HashMultimap.create();
-            for (Map.Entry<ResourceLocation, BakedModel> entry : evt.getModels().entrySet()) {
+            Map<ResourceLocation, BakedModel> models = evt.getModels();
+            BakedModel missingModel = models.get(ModelBakery.MISSING_MODEL_LOCATION);
+            Objects.requireNonNull(missingModel, "missing model is null");
+            for (Map.Entry<ResourceLocation, BakedModel> entry : models.entrySet()) {
                 EventResultHolder<BakedModel> result = callback.onModifyBakedModel(entry.getKey(), entry.getValue(), () -> {
                     return new ForgeModelBakerImpl(entry.getKey(), evt.getModelBakery()::getModel, missingTextures::put);
-                }, evt.getModels()::get, additionalModels::put);
+                }, (ResourceLocation key) -> {
+                    return models.getOrDefault(key, missingModel);
+                }, additionalModels::put);
                 result.getInterrupt().ifPresent(entry::setValue);
             }
-            evt.getModels().putAll(additionalModels);
+            models.putAll(additionalModels);
             missingTextures.asMap().forEach((resourceLocation, materials) -> {
                 DiagonalFences.LOGGER.warn("Missing textures in model {}:\n{}", resourceLocation, materials.stream().sorted(Material.COMPARATOR).map((material) -> {
                     return "    " + material.atlasLocation() + ":" + material.texture();

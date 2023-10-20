@@ -13,6 +13,7 @@
   "client": [
     "client.accessor.AndConditionAccessor",
     "client.accessor.KeyValueConditionAccessor",
+    "client.accessor.MultiPartAccessor",
     "client.accessor.OrConditionAccessor",
     "client.accessor.SelectorAccessor"
   ],
