@@ -8,6 +8,7 @@ import fuzs.diagonalfences.DiagonalFences;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.puzzleslib.api.event.v1.core.ForgeEventInvokerRegistry;
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,22 +35,23 @@ public class DiagonalFencesForgeClient {
             Stopwatch stopwatch = Stopwatch.createStarted();
             Map<ResourceLocation, UnbakedModel> additionalModels = Maps.newHashMap();
             Multimap<ResourceLocation, Material> missingTextures = HashMultimap.create();
-            Map<UnbakedModel, BakedModel> bakedModels = Maps.newIdentityHashMap();
+            Map<UnbakedModel, Pair<UnbakedModel, BakedModel>> modelCache = Maps.newIdentityHashMap();
             ModelBakery modelBakery = evt.getModelBakery();
             for (Map.Entry<ResourceLocation, BakedModel> entry : evt.getModels().entrySet()) {
                 ResourceLocation resourceLocation = entry.getKey();
-                UnbakedModel unbakedModel = modelBakery.getModel(resourceLocation);
-                BakedModel bakedModel = bakedModels.get(unbakedModel);
-                if (bakedModel == null) {
-                    EventResultHolder<UnbakedModel> result = callback.onModifyUnbakedModel(resourceLocation, unbakedModel, modelBakery::getModel, additionalModels::put);
-                    if (result.isInterrupt()) {
-                        additionalModels.put(resourceLocation, result.getInterrupt().get());
-                        bakedModel = new ForgeModelBakerImpl(resourceLocation, modelBakery::getModel, additionalModels::get, missingTextures::put).bake(resourceLocation, BlockModelRotation.X0_Y0);
-                        bakedModels.put(unbakedModel, bakedModel);
+                UnbakedModel model = modelBakery.getModel(resourceLocation);
+                UnbakedModel cachedModel = modelCache.containsKey(model) ? modelCache.get(model).left() : null;
+                EventResultHolder<UnbakedModel> result = callback.onModifyUnbakedModel(resourceLocation, model, modelBakery::getModel, additionalModels::put, cachedModel);
+                if (result.isInterrupt()) {
+                    UnbakedModel unbakedModel = result.getInterrupt().get();
+                    if (cachedModel != unbakedModel) {
+                        additionalModels.put(resourceLocation, unbakedModel);
+                        BakedModel bakedModel = new ForgeModelBakerImpl(resourceLocation, modelBakery::getModel, additionalModels::get, missingTextures::put).bake(resourceLocation, BlockModelRotation.X0_Y0);
+                        modelCache.put(model, Pair.of(unbakedModel, bakedModel));
                     }
                 }
-                if (bakedModel != null) {
-                    entry.setValue(bakedModel);
+                if (modelCache.containsKey(model)) {
+                    entry.setValue(modelCache.get(model).right());
                 }
             }
             missingTextures.asMap().forEach((resourceLocation, materials) -> {

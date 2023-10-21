@@ -1,11 +1,13 @@
 package fuzs.diagonalfences.client;
 
+import fuzs.puzzleslib.api.core.v1.ModContainerHelper;
+import fuzs.puzzleslib.impl.PuzzlesLib;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.event.ModelEvent;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -13,7 +15,7 @@ import java.util.function.Function;
 
 public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbakedModelGetter,
                            Function<Material, TextureAtlasSprite> modelTextureGetter) implements ModelBaker {
-    private static WeakReference<Map<ResourceLocation, AtlasSet.StitchResult>> atlasPreparationsReference = new WeakReference<>(null);
+    private static Map<ResourceLocation, AtlasSet.StitchResult> capturedAtlasPreparations;
 
     public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, Function<ResourceLocation, UnbakedModel> additionalModelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
         this(modelLocation, (ResourceLocation resourceLocation) -> {
@@ -25,7 +27,7 @@ public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbak
 
     public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
         this(modelGetter, (Material material) -> {
-            Map<ResourceLocation, AtlasSet.StitchResult> atlasPreparations = atlasPreparationsReference.get();
+            Map<ResourceLocation, AtlasSet.StitchResult> atlasPreparations = capturedAtlasPreparations;
             Objects.requireNonNull(atlasPreparations, "atlas preparations is null");
             AtlasSet.StitchResult stitchResult = atlasPreparations.get(material.atlasLocation());
             TextureAtlasSprite textureatlassprite = stitchResult.getSprite(material.texture());
@@ -39,7 +41,13 @@ public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbak
     }
 
     public static void setAtlasPreparations(Map<ResourceLocation, AtlasSet.StitchResult> atlasPreparations) {
-        ForgeModelBakerImpl.atlasPreparationsReference = new WeakReference<>(atlasPreparations);
+        ForgeModelBakerImpl.capturedAtlasPreparations = atlasPreparations;
+    }
+
+    static {
+        ModContainerHelper.getModEventBus(PuzzlesLib.MOD_ID).addListener((final ModelEvent.BakingCompleted evt) -> {
+            capturedAtlasPreparations = null;
+        });
     }
 
     @Override

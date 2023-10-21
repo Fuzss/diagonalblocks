@@ -6,7 +6,8 @@
   "refmap": "diagonalfences.refmap.json",
   "plugin": "fuzs.diagonalfences.mixin.ModMixinConfigPlugin",
   "mixins": [
-    "FenceBlockForgeMixin"
+    "FenceBlockForgeMixin",
+    "IronBarsBlockForgeMixin"
   ],
   "client": [
     "client.ModelManagerForgeMixin"

@@ -5,10 +5,7 @@ import com.google.common.collect.Maps;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
 import fuzs.diagonalfences.client.resources.model.RotatedVariant;
-import fuzs.diagonalfences.mixin.client.accessor.AndConditionAccessor;
-import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
-import fuzs.diagonalfences.mixin.client.accessor.OrConditionAccessor;
-import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
+import fuzs.diagonalfences.mixin.client.accessor.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.MultiVariant;
 import net.minecraft.client.renderer.block.model.Variant;
@@ -34,9 +31,9 @@ public class MultipartAppender {
      *
      * @param multiPart the original multipart unbaked variant
      */
-    public static void appendDiagonalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, MultiPart multiPart, boolean rotateCenter) {
+    public static MultiPart appendDiagonalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, MultiPart multiPart, boolean rotateCenter) {
 
-        List<Selector> selectors = multiPart.getSelectors();
+        List<Selector> selectors = Lists.newArrayList(multiPart.getSelectors());
         List<Selector> newSelectors = Lists.newArrayList();
 
         for (ListIterator<Selector> iterator = selectors.listIterator(); iterator.hasNext(); ) {
@@ -51,7 +48,7 @@ public class MultipartAppender {
 
                     // intercardinal selectors are already present, either a resource pack has dedicated support for diagonal fences or the model baking event has run multiple times
                     // either way stop any processing of selectors, no new selectors have been added as that's done at the end of the method
-                    if (direction.isIntercardinal()) return;
+                    if (direction.isIntercardinal()) return multiPart;
 
                     if (Objects.equals(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getValue(), "true")) {
 
@@ -88,6 +85,7 @@ public class MultipartAppender {
         }
 
         selectors.addAll(newSelectors);
+        return new MultiPart(((MultiPartAccessor) multiPart).diagonalfences$getDefinition(), selectors);
     }
 
     @Nullable

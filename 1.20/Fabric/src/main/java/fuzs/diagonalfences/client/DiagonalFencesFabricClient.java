@@ -29,9 +29,11 @@ public class DiagonalFencesFabricClient implements ClientModInitializer {
         FabricEventInvokerRegistry.INSTANCE.register(ModelEventsV2.ModifyUnbakedModel.class, (ModelEventsV2.ModifyUnbakedModel callback, @Nullable Object o) -> {
             ModelLoadingPlugin.register(pluginContext -> {
                 Map<ResourceLocation, UnbakedModel> additionalUnbakedModels = Maps.newHashMap();
-                pluginContext.modifyModelOnLoad().register((UnbakedModel model, ModelModifier.OnLoad.Context context) -> {
-                    EventResultHolder<UnbakedModel> result = callback.onModifyUnbakedModel(context.id(), model, context::getOrLoadModel, additionalUnbakedModels::put);
-                    return result.getInterrupt().orElse(model);
+                Map<UnbakedModel, UnbakedModel> modelCache = Maps.newIdentityHashMap();
+                pluginContext.modifyModelBeforeBake().register(ModelModifier.OVERRIDE_PHASE, (UnbakedModel model, ModelModifier.BeforeBake.Context context) -> {
+                    EventResultHolder<UnbakedModel> result = callback.onModifyUnbakedModel(context.id(), model, context.loader()::getModel, additionalUnbakedModels::put, modelCache.get(model));
+                    result.getInterrupt().ifPresent(unbakedModel -> modelCache.put(model, unbakedModel));
+                    return modelCache.getOrDefault(model, model);
                 });
                 pluginContext.resolveModel().register((ModelResolver.Context context) -> {
                     return additionalUnbakedModels.get(context.id());
@@ -40,7 +42,7 @@ public class DiagonalFencesFabricClient implements ClientModInitializer {
         });
         FabricEventInvokerRegistry.INSTANCE.register(ModelEventsV2.ModifyBakedModel.class, (ModelEventsV2.ModifyBakedModel callback, @Nullable Object o) -> {
             ModelLoadingPlugin.register(pluginContext -> {
-                pluginContext.modifyModelAfterBake().register((@Nullable BakedModel model, ModelModifier.AfterBake.Context context) -> {
+                pluginContext.modifyModelAfterBake().register(ModelModifier.OVERRIDE_PHASE, (@Nullable BakedModel model, ModelModifier.AfterBake.Context context) -> {
                     if (model != null) {
                         Map<ResourceLocation, BakedModel> models = context.loader().getBakedTopLevelModels();
                         EventResultHolder<BakedModel> result = callback.onModifyBakedModel(context.id(), model, context::baker, key -> {
