@@ -1,7 +1,6 @@
 package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
@@ -9,6 +8,8 @@ import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -34,7 +35,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
     /**
      * calculating shape unions is rather expensive, and since {@link VoxelShape} is immutable we use a cache for all diagonal blocks with the same shape
      */
-    Map<List<Float>, VoxelShape[]> DIMENSIONS_TO_SHAPE_CACHE = Maps.newHashMap();
+    Int2ObjectMap<VoxelShape[]> DIMENSIONS_TO_SHAPE_CACHE = new Int2ObjectOpenHashMap<>();
     Map<EightWayDirection, BooleanProperty> DIRECTION_TO_PROPERTY_MAP = Util.make(Maps.newEnumMap(EightWayDirection.class), (directions) -> {
         directions.put(EightWayDirection.NORTH, PipeBlock.NORTH);
         directions.put(EightWayDirection.EAST, PipeBlock.EAST);
@@ -128,7 +129,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
     /**
      * similar to {@link net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase#updateIndirectNeighbourShapes}
      */
-    default void updateIndirectNeighbourShapes2(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
+    default void _updateIndirectNeighbourShapes(BlockState state, LevelAccessor level, BlockPos pos, int flags, int recursionLeft) {
 
         BlockPos.MutableBlockPos diagonalPos = new BlockPos.MutableBlockPos();
 
@@ -153,8 +154,8 @@ public interface StarCollisionBlock extends DiagonalBlock {
 
     default VoxelShape[] getShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
 
-        List<Float> dimensions = Lists.newArrayList(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
-        return DIMENSIONS_TO_SHAPE_CACHE.computeIfAbsent(dimensions, dimension -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
+        float[] dimensions = new float[]{nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight};
+        return DIMENSIONS_TO_SHAPE_CACHE.computeIfAbsent(Arrays.hashCode(dimensions), $ -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
     }
 
     default VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
@@ -170,7 +171,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
         Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, nodeStart)};
         Vec3[] sideParticleShape = new Vec3[]{new Vec3(0.0, extensionBottom, 0.0), new Vec3(nodeStart, extensionHeight, nodeStart)};
         VoxelShape[] verticalShapes = Stream.of(EightWayDirection.getCardinalDirections()).map(direction -> direction.transform(sideShape)).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
-        VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction)).toArray(VoxelShape[]::new);
+        VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction, nodeWidth == extensionWidth)).toArray(VoxelShape[]::new);
         VoxelShape[] diagonalParticleShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> {
             Vec3[] edges = sideParticleShape;
             if (direction.getX() != 1) {
@@ -212,11 +213,13 @@ public interface StarCollisionBlock extends DiagonalBlock {
         return stateShapes;
     }
 
-    default VoxelShape getDiagonalShape(float extensionWidth, float extensionBottom, float extensionHeight, EightWayDirection direction) {
+    default VoxelShape getDiagonalShape(float extensionWidth, float extensionBottom, float extensionHeight, EightWayDirection direction, boolean stretchWidth) {
 
         VoxelShape collisionShape = this.getDiagonalCollisionShape(extensionWidth, extensionBottom, extensionHeight, direction);
-        // adept width for diagonal rotation
-        extensionWidth = (float) Math.sqrt(extensionWidth * extensionWidth * 2);
+        // are rotated extension shapes stretched in width to match the post shape
+        if (stretchWidth) {
+            extensionWidth = (float) Math.sqrt(extensionWidth * extensionWidth * 2);
+        }
         // cos(-pi/4)
         final float diagonalSide = 0.7071067812F * extensionWidth;
         Vec3[] corners = VoxelUtils.createVectorArray(-diagonalSide, extensionHeight, diagonalSide, -diagonalSide + 8.0F, extensionHeight, diagonalSide + 8.0F, -diagonalSide, extensionBottom, diagonalSide, -diagonalSide + 8.0F, extensionBottom, diagonalSide + 8.0F, diagonalSide, extensionHeight, -diagonalSide, diagonalSide + 8.0F, extensionHeight, -diagonalSide + 8.0F, diagonalSide, extensionBottom, -diagonalSide, diagonalSide + 8.0F, extensionBottom, -diagonalSide + 8.0F);

@@ -51,7 +51,7 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         return false;
     }
 
-    private boolean connectsTo(BlockState state, boolean sideSolid, Direction direction) {
+    public boolean connectsTo(BlockState state, boolean sideSolid, Direction direction) {
         Block block = state.getBlock();
         boolean bl = block instanceof FenceGateBlock && FenceGateBlock.connectsToDirection(state, direction);
         return state.is(BlockTags.WALLS) || !isExceptionForConnection(state) && sideSolid || block instanceof IronBarsBlock || bl;
@@ -60,22 +60,22 @@ public class LegacyWallBlock extends CrossCollisionBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext blockPlaceContext) {
         LevelReader levelReader = blockPlaceContext.getLevel();
-        BlockPos blockPos = blockPlaceContext.getClickedPos();
+        BlockPos clickedPos = blockPlaceContext.getClickedPos();
         FluidState fluidState = blockPlaceContext.getLevel().getFluidState(blockPlaceContext.getClickedPos());
-        BlockPos blockPos2 = blockPos.north();
-        BlockPos blockPos3 = blockPos.east();
-        BlockPos blockPos4 = blockPos.south();
-        BlockPos blockPos5 = blockPos.west();
-        BlockState blockState = levelReader.getBlockState(blockPos2);
-        BlockState blockState2 = levelReader.getBlockState(blockPos3);
-        BlockState blockState3 = levelReader.getBlockState(blockPos4);
-        BlockState blockState4 = levelReader.getBlockState(blockPos5);
-        boolean bl = this.connectsTo(blockState, blockState.isFaceSturdy(levelReader, blockPos2, Direction.SOUTH), Direction.SOUTH);
-        boolean bl2 = this.connectsTo(blockState2, blockState2.isFaceSturdy(levelReader, blockPos3, Direction.WEST), Direction.WEST);
-        boolean bl3 = this.connectsTo(blockState3, blockState3.isFaceSturdy(levelReader, blockPos4, Direction.NORTH), Direction.NORTH);
-        boolean bl4 = this.connectsTo(blockState4, blockState4.isFaceSturdy(levelReader, blockPos5, Direction.EAST), Direction.EAST);
-        boolean bl5 = (!bl || bl2 || !bl3 || bl4) && (bl || !bl2 || bl3 || !bl4);
-        return this.defaultBlockState().setValue(UP, bl5 || this.shouldRaisePost(levelReader, blockPos)).setValue(NORTH, bl).setValue(EAST, bl2).setValue(SOUTH, bl3).setValue(WEST, bl4).setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
+        BlockPos blockPosNorth = clickedPos.north();
+        BlockPos blockPosEast = clickedPos.east();
+        BlockPos blockPosSouth = clickedPos.south();
+        BlockPos blockPosWest = clickedPos.west();
+        BlockState blockStateNorth = levelReader.getBlockState(blockPosNorth);
+        BlockState blockStateEast = levelReader.getBlockState(blockPosEast);
+        BlockState blockStateSouth = levelReader.getBlockState(blockPosSouth);
+        BlockState blockStateWest = levelReader.getBlockState(blockPosWest);
+        boolean connectsToNorth = this.connectsTo(blockStateNorth, blockStateNorth.isFaceSturdy(levelReader, blockPosNorth, Direction.SOUTH), Direction.SOUTH);
+        boolean connectsToEast = this.connectsTo(blockStateEast, blockStateEast.isFaceSturdy(levelReader, blockPosEast, Direction.WEST), Direction.WEST);
+        boolean connectsToSouth = this.connectsTo(blockStateSouth, blockStateSouth.isFaceSturdy(levelReader, blockPosSouth, Direction.NORTH), Direction.NORTH);
+        boolean connectsToWest = this.connectsTo(blockStateWest, blockStateWest.isFaceSturdy(levelReader, blockPosWest, Direction.EAST), Direction.EAST);
+        boolean bl5 = (!connectsToNorth || connectsToEast || !connectsToSouth || connectsToWest) && (connectsToNorth || !connectsToEast || connectsToSouth || !connectsToWest);
+        return this.defaultBlockState().setValue(UP, bl5 || this.shouldRaisePost(levelReader, clickedPos)).setValue(NORTH, connectsToNorth).setValue(EAST, connectsToEast).setValue(SOUTH, connectsToSouth).setValue(WEST, connectsToWest).setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
     }
 
     @Override

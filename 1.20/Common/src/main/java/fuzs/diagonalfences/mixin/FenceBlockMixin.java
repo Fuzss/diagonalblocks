@@ -57,7 +57,7 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Sta
     @Override
     public void updateIndirectNeighbourShapes(BlockState state, LevelAccessor world, BlockPos pos, int flags, int recursionLeft) {
         if (this.supportsDiagonalConnections()) {
-            this.updateIndirectNeighbourShapes2(state, world, pos, flags, recursionLeft);
+            this._updateIndirectNeighbourShapes(state, world, pos, flags, recursionLeft);
         }
     }
 

@@ -34,16 +34,22 @@ public class WallBlockHandler {
 
     public static void onItemAdded(ResourceLocation id, Item entry, BiConsumer<ResourceLocation, Supplier<Item>> registrar) {
         if (entry instanceof BlockItem blockItem && blockItem.getBlock() instanceof WallBlock wallBlock) {
-            setBlockItemBlock(blockItem, WALL_BLOCKS.get(wallBlock));
+            setItemForBlock(blockItem, WALL_BLOCKS.get(wallBlock));
+            setBlockForItem(blockItem, WALL_BLOCKS.get(wallBlock));
         }
     }
 
-    private static void setBlockItemBlock(BlockItem item, Block block) {
+    public static void setItemForBlock(BlockItem item, Block block) {
         Objects.requireNonNull(item, "item is null");
         Objects.requireNonNull(block, "block is null");
         Item.BY_BLOCK.put(block, item);
-        ((BlockItemAccessor) item).diagonalwalls$setBlock(block);
         ((BlockAccessor) block).diagonalwalls$setItem(item);
+    }
+
+    public static void setBlockForItem(BlockItem item, Block block) {
+        Objects.requireNonNull(item, "item is null");
+        Objects.requireNonNull(block, "block is null");
+        ((BlockItemAccessor) item).diagonalwalls$setBlock(block);
     }
 
     public static BiMap<WallBlock, DiagonalWallBlock> getWallBlocks() {

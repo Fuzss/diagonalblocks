@@ -72,7 +72,7 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
 
         if (this.supportsDiagonalConnections()) {
 
-            this.updateIndirectNeighbourShapes2(state, world, pos, flags, recursionLeft);
+            this._updateIndirectNeighbourShapes(state, world, pos, flags, recursionLeft);
         }
     }
 
