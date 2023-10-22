@@ -34,14 +34,18 @@ public class WallBlockHandler {
 
     public static void onItemAdded(ResourceLocation id, Item entry, BiConsumer<ResourceLocation, Supplier<Item>> registrar) {
         if (entry instanceof BlockItem blockItem && blockItem.getBlock() instanceof WallBlock wallBlock) {
-            setItemForBlock(blockItem, WALL_BLOCKS.get(wallBlock));
-            setBlockForItem(blockItem, WALL_BLOCKS.get(wallBlock));
+            setBlockItemBlock(blockItem, WALL_BLOCKS.get(wallBlock));
         }
     }
 
-    public static void setItemForBlock(BlockItem item, Block block) {
-        Objects.requireNonNull(item, "item is null");
+    public static void setBlockItemBlock(BlockItem item, Block block) {
+        setItemForBlock(block, item);
+        setBlockForItem(item, block);
+    }
+
+    public static void setItemForBlock(Block block, Item item) {
         Objects.requireNonNull(block, "block is null");
+        Objects.requireNonNull(item, "item is null");
         Item.BY_BLOCK.put(block, item);
         ((BlockAccessor) block).diagonalwalls$setItem(item);
     }

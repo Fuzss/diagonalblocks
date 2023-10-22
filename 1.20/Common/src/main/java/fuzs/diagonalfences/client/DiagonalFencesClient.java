@@ -17,8 +17,8 @@ public class DiagonalFencesClient implements ClientModConstructor {
     }
 
     private static void registerHandlers() {
-        ModelEventsV2.MODIFY_UNBAKED_MODEL.register(FenceModelHandler::onModifyUnbakedModel);
-        ModelEventsV2.MODIFY_UNBAKED_MODEL.register(WallModelHandler::onModifyUnbakedModel);
+        ModelEvents.MODIFY_UNBAKED_MODEL.register(FenceModelHandler::onModifyUnbakedModel);
+        ModelEvents.MODIFY_UNBAKED_MODEL.register(WallModelHandler::onModifyUnbakedModel);
     }
 
     @Override

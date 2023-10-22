@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.client;
 
+import com.mojang.math.Transformation;
 import fuzs.puzzleslib.api.core.v1.ModContainerHelper;
 import fuzs.puzzleslib.impl.PuzzlesLib;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -13,20 +14,12 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbakedModelGetter,
-                           Function<Material, TextureAtlasSprite> modelTextureGetter) implements ModelBaker {
+public record ForgeModelBakerImpl(Map<ModelBakingKey, BakedModel> bakedCache, Function<ResourceLocation, UnbakedModel> unbakedModelGetter,
+                                  Function<Material, TextureAtlasSprite> modelTextureGetter) implements ModelBaker {
     private static Map<ResourceLocation, AtlasSet.StitchResult> capturedAtlasPreparations;
 
-    public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, Function<ResourceLocation, UnbakedModel> additionalModelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
-        this(modelLocation, (ResourceLocation resourceLocation) -> {
-            UnbakedModel unbakedModel = additionalModelGetter.apply(resourceLocation);
-            if (unbakedModel != null) return unbakedModel;
-            return modelGetter.apply(resourceLocation);
-        }, missingTextureConsumer);
-    }
-
-    public ForgeModelBakerImpl(ResourceLocation modelLocation, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
-        this(modelGetter, (Material material) -> {
+    public ForgeModelBakerImpl(ResourceLocation modelLocation, Map<ModelBakingKey, BakedModel> bakedCache, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, Material> missingTextureConsumer) {
+        this(bakedCache, modelGetter, (Material material) -> {
             Map<ResourceLocation, AtlasSet.StitchResult> atlasPreparations = capturedAtlasPreparations;
             Objects.requireNonNull(atlasPreparations, "atlas preparations is null");
             AtlasSet.StitchResult stitchResult = atlasPreparations.get(material.atlasLocation());
@@ -63,11 +56,28 @@ public record ForgeModelBakerImpl(Function<ResourceLocation, UnbakedModel> unbak
 
     @Override
     public @Nullable BakedModel bake(ResourceLocation resourceLocation, ModelState modelState, Function<Material, TextureAtlasSprite> modelTextureGetter) {
-        return this.getModel(resourceLocation).bake(this, modelTextureGetter, modelState, resourceLocation);
+        return this.bake(this.getModel(resourceLocation), resourceLocation, modelState, modelTextureGetter);
+    }
+
+    public BakedModel bake(UnbakedModel unbakedModel, ResourceLocation resourceLocation) {
+        return this.bake(unbakedModel, resourceLocation, BlockModelRotation.X0_Y0, this.modelTextureGetter);
+    }
+
+    private BakedModel bake(UnbakedModel unbakedModel, ResourceLocation resourceLocation, ModelState modelState, Function<Material, TextureAtlasSprite> modelTextureGetter) {
+        // our cache works differently from vanilla as we use the unbaked model instance and not the current resource location
+        // vanilla bakes most unbaked models many times despite the outcome being the same just because the resource location is different
+        // haven't found an issue with this approach so far so the Forge implementation will stick with it for now
+        return this.bakedCache.computeIfAbsent(new ModelBakingKey(unbakedModel, modelState.getRotation(), modelState.isUvLocked()), key -> {
+            return key.unbakedModel().bake(this, modelTextureGetter, modelState, resourceLocation);
+        });
     }
 
     @Override
     public Function<Material, TextureAtlasSprite> getModelTextureGetter() {
         return this.modelTextureGetter;
+    }
+
+    public record ModelBakingKey(UnbakedModel unbakedModel, Transformation rotation, boolean isUvLocked) {
+
     }
 }

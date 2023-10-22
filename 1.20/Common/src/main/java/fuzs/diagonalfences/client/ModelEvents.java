@@ -12,12 +12,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class ModelEventsV2 {
+public final class ModelEvents {
     public static final EventInvoker<ModifyUnbakedModel> MODIFY_UNBAKED_MODEL = EventInvoker.lookup(ModifyUnbakedModel.class);
     public static final EventInvoker<ModifyBakedModel> MODIFY_BAKED_MODEL = EventInvoker.lookup(ModifyBakedModel.class);
     public static final EventInvoker<AdditionalBakedModel> ADDITIONAL_BAKED_MODEL = EventInvoker.lookup(AdditionalBakedModel.class);
 
-    private ModelEventsV2() {
+    private ModelEvents() {
 
     }
 
@@ -36,6 +36,6 @@ public final class ModelEventsV2 {
     @FunctionalInterface
     public interface AdditionalBakedModel {
 
-        void onAdditionalBakedModel(BiConsumer<ResourceLocation, BakedModel> modelAdder, Function<ResourceLocation, BakedModel> modelGetter, Function<ResourceLocation, ModelBaker> modelBaker);
+        void onAdditionalBakedModel(BiConsumer<ResourceLocation, BakedModel> modelAdder, Function<ResourceLocation, BakedModel> modelGetter, Supplier<ModelBaker> modelBaker);
     }
 }
