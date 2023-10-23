@@ -10,7 +10,6 @@
     "IronBarsBlockForgeMixin"
   ],
   "client": [
-    "client.ModelManagerForgeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

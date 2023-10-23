@@ -10,8 +10,6 @@
     "IronBarsBlockMixin",
     "StainedGlassPaneBlockMixin",
     "WalkNodeEvaluatorMixin",
-    "accessor.BlockAccessor",
-    "accessor.BlockItemAccessor",
     "accessor.VoxelShapeAccessor"
   ],
   "client": [

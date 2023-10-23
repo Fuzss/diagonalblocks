@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.data;
 
-import fuzs.diagonalfences.handler.WallBlockHandler;
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.data.v2.AbstractLootProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 
@@ -12,6 +12,8 @@ public class DynamicBlockLootProvider extends AbstractLootProvider.Blocks {
 
     @Override
     public void addLootTables() {
-        WallBlockHandler.getWallBlocks().values().forEach(this::dropSelf);
+        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+            type.getConversions().values().forEach(this::dropSelf);
+        }
     }
 }

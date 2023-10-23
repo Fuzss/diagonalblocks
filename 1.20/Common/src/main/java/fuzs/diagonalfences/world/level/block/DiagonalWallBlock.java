@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.world.level.block;
 
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -9,7 +10,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.FluidState;
@@ -17,17 +18,17 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlockAdapter {
     private Object2IntMap<BlockState> statePaletteMap;
-    private final WallBlock wallBlock;
+    private final Block block;
 
-    public DiagonalWallBlock(WallBlock wallBlock, Properties properties) {
-        super(properties);
-        this.wallBlock = wallBlock;
+    public DiagonalWallBlock(Block block) {
+        super(BlockBehaviour.Properties.copy(block));
+        this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
     }
 
     @Override
     public String getDescriptionId() {
-        return this.wallBlock.getDescriptionId();
+        return this.block.getDescriptionId();
     }
 
     @Override
@@ -86,4 +87,8 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
         return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
     }
 
+    @Override
+    public DiagonalBlockType getType() {
+        return DiagonalBlockType.WALLS;
+    }
 }

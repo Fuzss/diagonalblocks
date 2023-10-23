@@ -19,7 +19,7 @@ abstract class ParticleEngineFabricMixin {
 
     @Inject(method = "destroy", at = @At("HEAD"), cancellable = true)
     public void destroy(BlockPos blockPos, BlockState blockState, CallbackInfo callback) {
-        if (blockState.getBlock() instanceof DiagonalBlock block && block.hasProperties()) {
+        if (blockState.getBlock() instanceof DiagonalBlock) {
             if (DestroyEffectsHelper.addDestroyEffects(blockState, this.level, blockPos, ParticleEngine.class.cast(this))) {
                 callback.cancel();
             }

@@ -190,7 +190,7 @@ public interface StarCollisionBlock extends DiagonalBlock {
 
         VoxelCollection[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
 
-        DiagonalFences.LOGGER.info("Constructing shapes for nodeWith {}, extensionWidth {}, nodeHeight {}, extensionBottom {}, extensionHeight {} took {} milliseconds", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopwatch.stop().elapsed().toMillis());
+        DiagonalFences.LOGGER.info("Constructing shapes for [NodeWith={},ExtensionWidth={},NodeHeight={},ExtensionBottom={},ExtensionHeight={}] took {}ms", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopwatch.stop().elapsed().toMillis());
 
         return stateShapes;
     }

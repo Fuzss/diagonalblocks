@@ -3,12 +3,11 @@ package fuzs.diagonalfences.client.handler;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.client.util.MultipartAppender;
-import fuzs.diagonalfences.handler.WallBlockHandler;
 import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
 import fuzs.diagonalfences.mixin.client.accessor.MultiPartAccessor;
 import fuzs.diagonalfences.mixin.client.accessor.SelectorAccessor;
-import fuzs.diagonalfences.world.level.block.DiagonalWallBlock;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.multipart.KeyValueCondition;
@@ -17,7 +16,6 @@ import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
@@ -35,7 +33,7 @@ import java.util.stream.Collectors;
 public class WallModelHandler {
     private static final Supplier<Map<? extends ResourceLocation, ? extends ResourceLocation>> WALL_MODEL_LOCATIONS = Suppliers.memoize(() -> {
         Map<BlockState, BlockState> blockStates = Maps.newHashMap();
-        for (Map.Entry<WallBlock, DiagonalWallBlock> e1 : WallBlockHandler.getWallBlocks().entrySet()) {
+        for (Map.Entry<Block, Block> e1 : DiagonalBlockType.WALLS.getConversions().entrySet()) {
             for (BlockState possibleState : e1.getValue().getStateDefinition().getPossibleStates()) {
                 StateDefinition<Block, BlockState> stateDefinition = e1.getKey().getStateDefinition();
                 BlockState blockState = stateDefinition.any();
@@ -62,8 +60,7 @@ public class WallModelHandler {
         return blockState;
     }
 
-    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, UnbakedModel unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> modelAdder, @Nullable UnbakedModel cachedModel) {
-        if (cachedModel != null) return EventResultHolder.pass();
+    public static EventResultHolder<UnbakedModel> onModifyUnbakedModel(ResourceLocation modelLocation, UnbakedModel unbakedModel, Function<ResourceLocation, UnbakedModel> modelGetter, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
         ResourceLocation resourceLocation = WALL_MODEL_LOCATIONS.get().get(modelLocation);
         if (resourceLocation != null) {
             if (modelGetter.apply(resourceLocation) instanceof MultiPart multiPart) {

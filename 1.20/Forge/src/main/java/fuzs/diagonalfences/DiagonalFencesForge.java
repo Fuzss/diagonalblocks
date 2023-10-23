@@ -2,7 +2,7 @@ package fuzs.diagonalfences;
 
 import fuzs.diagonalfences.data.ModBlockTagsProvider;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
-import net.minecraftforge.data.event.GatherDataEvent;
+import fuzs.puzzleslib.api.data.v2.core.DataProviderHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
@@ -14,10 +14,6 @@ public class DiagonalFencesForge {
     @SubscribeEvent
     public static void onConstructMod(final FMLConstructModEvent evt) {
         ModConstructor.construct(DiagonalFences.MOD_ID, DiagonalFences::new);
-    }
-
-    @SubscribeEvent
-    public static void onGatherData(final GatherDataEvent evt) {
-        evt.getGenerator().addProvider(evt.includeClient(), new ModBlockTagsProvider(evt, DiagonalFences.MOD_ID));
+        DataProviderHelper.registerDataProviders(DiagonalFences.MOD_ID, ModBlockTagsProvider::new);
     }
 }

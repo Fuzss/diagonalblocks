@@ -1,12 +1,11 @@
-package fuzs.diagonalfences.client.data;
+package fuzs.diagonalfences.data.client;
 
-import fuzs.diagonalfences.handler.WallBlockHandler;
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.puzzlesaccessapi.api.client.data.v2.BlockModelBuilder;
 import fuzs.puzzlesaccessapi.api.client.data.v2.ItemModelBuilder;
 import fuzs.puzzleslib.api.client.data.v2.AbstractModelProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.data.models.blockstates.MultiPartGenerator;
-import net.minecraft.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.data.models.blockstates.Variant;
 import net.minecraft.data.models.blockstates.VariantProperties;
 import net.minecraft.data.models.model.ModelLocationUtils;
@@ -22,10 +21,12 @@ public class DynamicModelProvider extends AbstractModelProvider {
     @Override
     public void addBlockModels(BlockModelBuilder builder) {
         ResourceLocation resourceLocation = ModelLocationUtils.getModelLocation(Blocks.STONE);
-        WallBlockHandler.getWallBlocks().values().forEach((block) -> {
-            builder.getBlockStateOutput().accept(MultiPartGenerator.multiPart(block).with(Variant.variant().with(VariantProperties.MODEL, resourceLocation)));
-            builder.skipAutoItemBlock(block);
-        });
+        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+            type.getConversions().values().forEach((block) -> {
+                builder.getBlockStateOutput().accept(MultiPartGenerator.multiPart(block).with(Variant.variant().with(VariantProperties.MODEL, resourceLocation)));
+                builder.skipAutoItemBlock(block);
+            });
+        }
     }
 
     @Override

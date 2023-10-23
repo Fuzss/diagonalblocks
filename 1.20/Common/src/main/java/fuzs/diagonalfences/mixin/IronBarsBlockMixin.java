@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.mixin;
 
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
@@ -107,6 +108,11 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
             return true;
         }
         return false;
+    }
+
+    @Override
+    public DiagonalBlockType getType() {
+        return DiagonalBlockType.WINDOWS;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.data;
 
-import fuzs.diagonalfences.handler.WallBlockHandler;
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.data.v2.AbstractTagProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.core.HolderLookup;
@@ -15,8 +15,11 @@ public class DynamicBlockTagsProvider extends AbstractTagProvider.Blocks {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        Block[] blocks = WallBlockHandler.getWallBlocks().values().toArray(Block[]::new);
-        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(blocks);
-        this.tag(BlockTags.WALLS).add(blocks);
+        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+            if (type.miningTagKey != null) {
+                this.tag(type.miningTagKey).add(type.getConversions().values().toArray(Block[]::new));
+            }
+        }
+        this.tag(BlockTags.WALLS).add(DiagonalBlockType.WALLS.getConversions().values().toArray(Block[]::new));
     }
 }
