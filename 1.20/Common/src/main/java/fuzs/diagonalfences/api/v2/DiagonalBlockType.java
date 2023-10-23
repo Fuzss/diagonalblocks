@@ -13,13 +13,31 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.WallSide;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public enum DiagonalBlockType {
-    FENCES(FenceBlock.class, null, BlockTags.MINEABLE_WITH_AXE), WINDOWS(IronBarsBlock.class, null, null), WALLS(WallBlock.class, CommonAbstractions.INSTANCE::getDiagonalWallBlock, BlockTags.MINEABLE_WITH_PICKAXE);
+    FENCES(FenceBlock.class, null, BlockTags.MINEABLE_WITH_AXE),
+    WINDOWS(IronBarsBlock.class, null, null),
+    WALLS(WallBlock.class, CommonAbstractions.INSTANCE::getDiagonalWallBlock, BlockTags.MINEABLE_WITH_PICKAXE) {
+
+        @Override
+        Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
+            if (newProperty.getValueClass() == WallSide.class) {
+                return (Boolean) oldValue ? WallSide.LOW : WallSide.NONE;
+            } else {
+                return super.getNewPropertyValue(oldProperty, newProperty, oldValue);
+            }
+        }
+    };
 
     private final BiMap<Block, Block> blocks = HashBiMap.create();
     private final Class<? extends Block> targetType;
@@ -56,5 +74,33 @@ public enum DiagonalBlockType {
 
     public BiMap<Block, Block> getConversions() {
         return Maps.unmodifiableBiMap(this.blocks);
+    }
+
+    public Map<BlockState, BlockState> getBlockStateConversions() {
+        Map<BlockState, BlockState> blockStates = Maps.newHashMap();
+        for (Map.Entry<Block, Block> e1 : this.blocks.entrySet()) {
+            for (BlockState possibleState : e1.getValue().getStateDefinition().getPossibleStates()) {
+                StateDefinition<Block, BlockState> stateDefinition = e1.getKey().getStateDefinition();
+                BlockState blockState = stateDefinition.any();
+                for (Map.Entry<Property<?>, Comparable<?>> e2 : possibleState.getValues().entrySet()) {
+                    blockState = this.setBlockStateValue(e2.getKey(), e2.getValue(), stateDefinition::getProperty, blockState);
+                }
+                blockStates.put(possibleState, blockState);
+            }
+        }
+        return blockStates;
+    }
+
+    private <T extends Comparable<T>, V extends T> BlockState setBlockStateValue(Property<?> oldProperty, Comparable<?> oldValue, Function<String, @Nullable Property<?>> propertyGetter, BlockState blockState) {
+        Property<?> newProperty = propertyGetter.apply(oldProperty.getName());
+        if (newProperty != null) {
+            Comparable<?> newValue = this.getNewPropertyValue(oldProperty, newProperty, oldValue);
+            return blockState.setValue((Property<T>) newProperty, (V) newValue);
+        }
+        return blockState;
+    }
+
+    Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
+        return oldValue;
     }
 }

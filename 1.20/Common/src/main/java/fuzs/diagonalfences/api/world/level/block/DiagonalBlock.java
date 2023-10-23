@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 /**
  * mainly contains four new block states for diagonal directions
  */
+@Deprecated
 public interface DiagonalBlock {
     BooleanProperty NORTH_EAST = BooleanProperty.create("north_east");
     BooleanProperty SOUTH_EAST = BooleanProperty.create("south_east");
@@ -16,13 +17,11 @@ public interface DiagonalBlock {
     /**
      * @return have diagonal properties successfully been applied to this block
      */
-    @Deprecated(forRemoval = true)
     boolean hasProperties();
 
     /**
      * @return is this block not blacklisted via a block tag
      */
-    @Deprecated(forRemoval = true)
     boolean supportsDiagonalConnections();
 
     /**
@@ -31,7 +30,4 @@ public interface DiagonalBlock {
      * @return is a diagonal connection between both blocks allowed
      */
     boolean canConnectToMe(BlockState neighborState, EightWayDirection neighborDirectionToMe);
-
-    DiagonalBlockType getType();
-
 }

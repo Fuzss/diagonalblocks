@@ -1,6 +1,5 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
@@ -10,7 +9,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CrossCollisionBlock;
@@ -18,7 +16,6 @@ import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -83,13 +80,7 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
 
     @Override
     public boolean hasProperties() {
-
         return this.hasProperties;
-    }
-
-    @Override
-    public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
-        return this.attachsTo(state, state.isFaceSturdy(blockGetter, position, direction));
     }
 
     @Override
@@ -108,11 +99,6 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
             return true;
         }
         return false;
-    }
-
-    @Override
-    public DiagonalBlockType getType() {
-        return DiagonalBlockType.WINDOWS;
     }
 
     @Override
@@ -144,47 +130,29 @@ abstract class IronBarsBlockMixin extends CrossCollisionBlock implements StarCol
 
     @Inject(method = "<init>", at = @At("TAIL"))
     public void init$tail(BlockBehaviour.Properties properties, CallbackInfo callback) {
-
         if (this.hasProperties()) {
-
             this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
         }
     }
 
     @Inject(method = "createBlockStateDefinition", at = @At("TAIL"))
     protected void createBlockStateDefinition$tail(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
-
         // do nothing later on when this wasn't called
         this.hasProperties = true;
-        this.createBlockStateDefinition2(builder);
+        this._createBlockStateDefinition(builder);
     }
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
     public void getStateForPlacement$head(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
-
         if (this.supportsDiagonalConnections()) {
-
-            BlockGetter iblockreader = context.getLevel();
-            BlockPos basePos = context.getClickedPos();
-            FluidState fluidState = context.getLevel().getFluidState(basePos);
-
-            BlockState placementState = super.getStateForPlacement(context);
-            placementState = this.makeStateForPlacement(placementState, iblockreader, basePos, fluidState);
-            callback.setReturnValue(placementState);
+            callback.setReturnValue(this._getStateForPlacement(context, super.getStateForPlacement(context)));
         }
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
     public void updateShape$tail(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
-
         if (this.supportsDiagonalConnections()) {
-
-            BlockState returnState = this.updateShape2(stateIn, facing, facingState, worldIn, currentPos, facingPos, callback.getReturnValue());
-            if (returnState != null) {
-
-                callback.setReturnValue(returnState);
-            }
+            callback.setReturnValue(this._updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos, callback.getReturnValue()));
         }
     }
-
 }

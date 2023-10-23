@@ -1,6 +1,5 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
@@ -9,7 +8,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CrossCollisionBlock;
@@ -17,7 +15,6 @@ import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -76,11 +73,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Sta
     }
 
     @Override
-    public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
-        return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
-    }
-
-    @Override
     public boolean supportsDiagonalConnections() {
         return this.hasProperties() && !this.builtInRegistryHolder().is(ModRegistry.NON_DIAGONAL_FENCES_BLOCK_TAG);
     }
@@ -98,11 +90,6 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Sta
         return false;
     }
 
-    @Override
-    public DiagonalBlockType getType() {
-        return DiagonalBlockType.FENCES;
-    }
-
     @Inject(method = "<init>", at = @At("TAIL"))
     public void init(BlockBehaviour.Properties properties, CallbackInfo callback) {
         if (this.hasProperties()) {
@@ -115,28 +102,20 @@ public abstract class FenceBlockMixin extends CrossCollisionBlock implements Sta
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder, CallbackInfo callback) {
         // do nothing later on when this wasn't called
         this.hasProperties = true;
-        this.createBlockStateDefinition2(builder);
+        this._createBlockStateDefinition(builder);
     }
 
     @Inject(method = "getStateForPlacement", at = @At("HEAD"), cancellable = true)
     public void getStateForPlacement(BlockPlaceContext context, CallbackInfoReturnable<BlockState> callback) {
         if (this.supportsDiagonalConnections()) {
-            BlockGetter level = context.getLevel();
-            BlockPos pos = context.getClickedPos();
-            FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
-            BlockState placementState = super.getStateForPlacement(context);
-            placementState = this.makeStateForPlacement(placementState, level, pos, fluidState);
-            callback.setReturnValue(placementState);
+            callback.setReturnValue(this._getStateForPlacement(context, super.getStateForPlacement(context)));
         }
     }
 
     @Inject(method = "updateShape", at = @At("TAIL"), cancellable = true)
     public void updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, CallbackInfoReturnable<BlockState> callback) {
         if (this.supportsDiagonalConnections()) {
-            BlockState returnState = this.updateShape2(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue());
-            if (returnState != null) {
-                callback.setReturnValue(returnState);
-            }
+            callback.setReturnValue(this._updateShape(state, facing, facingState, level, currentPos, facingPos, callback.getReturnValue()));
         }
     }
 }

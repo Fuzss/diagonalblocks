@@ -3,6 +3,7 @@ package fuzs.diagonalfences.world.level.block;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.DiagonalFences;
+import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
@@ -13,16 +14,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.PipeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -31,7 +30,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public interface StarCollisionBlock extends DiagonalBlock {
+public interface StarCollisionBlock extends DiagonalBlockV2 {
     /**
      * calculating shape unions is rather expensive, and since {@link VoxelShape} is immutable we use a cache for all diagonal blocks with the same shape
      */
@@ -47,8 +46,6 @@ public interface StarCollisionBlock extends DiagonalBlock {
         directions.put(EightWayDirection.NORTH_WEST, DiagonalBlock.NORTH_WEST);
     });
 
-    boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction);
-
     /**
      * sets default states for inter-cardinal properties
      * @param defaultState already modified default state obtained from {@link Block#defaultBlockState()}
@@ -58,72 +55,65 @@ public interface StarCollisionBlock extends DiagonalBlock {
         return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
     }
 
-    default void createBlockStateDefinition2(StateDefinition.Builder<Block, BlockState> builder) {
+    default void _createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(DiagonalBlock.NORTH_EAST, DiagonalBlock.SOUTH_EAST, DiagonalBlock.SOUTH_WEST, DiagonalBlock.NORTH_WEST);
     }
 
-    default int makeIndex(BlockState stateIn) {
-
+    default int makeIndex(BlockState blockState) {
         int index = 0;
         for (Map.Entry<EightWayDirection, BooleanProperty> entry : DIRECTION_TO_PROPERTY_MAP.entrySet()) {
-
-            if (stateIn.getValue(entry.getValue())) {
-
+            if (blockState.getValue(entry.getValue())) {
                 index |= entry.getKey().getHorizontalIndex();
             }
         }
-
         return index;
     }
 
-    default BlockState makeStateForPlacement(BlockState placementState, BlockGetter blockGetter, BlockPos basePos, FluidState fluidState) {
-
-        placementState = placementState.setValue(CrossCollisionBlock.WATERLOGGED, fluidState.getType() == Fluids.WATER);
-
-        placementState = this.withDirections(EightWayDirection.getCardinalDirections(), basePos, placementState, (mutablePos, newPlacementState, direction) ->
-                this.canConnect(blockGetter, mutablePos, blockGetter.getBlockState(mutablePos), direction.toDirection().getOpposite()));
-
-        placementState = this.withDirections(EightWayDirection.getIntercardinalDirections(), basePos, placementState, (pos, newPlacementState, direction) ->
-                this.canConnectToMe(blockGetter.getBlockState(pos), direction.opposite()) && Stream.of(direction.getCardinalNeighbors()).map(DIRECTION_TO_PROPERTY_MAP::get).noneMatch(newPlacementState::getValue));
-
-        return placementState;
-    }
-
-    default BlockState withDirections(EightWayDirection[] directions, BlockPos basePos, BlockState placementState, DirectionStatePredicate predicate) {
-
+    default BlockState _getStateForPlacement(BlockPlaceContext context, BlockState newBlockState) {
+        Level level = context.getLevel();
+        BlockPos clickedPos = context.getClickedPos();
         BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
-        for (EightWayDirection direction : directions) {
-
-            mutablePos.setWithOffset(basePos, direction.getX(), direction.getY(), direction.getZ());
-            placementState = placementState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), predicate.test(mutablePos, placementState, direction));
+        for (EightWayDirection direction : EightWayDirection.getIntercardinalDirections()) {
+            boolean value = this.isFreeForDiagonals(newBlockState, direction);
+            if (value) {
+                mutablePos.setWithOffset(clickedPos, direction.getX(), direction.getY(), direction.getZ());
+                value = this.attachesTo(newBlockState, level.getBlockState(mutablePos)) && this.isFreeForDiagonals(level.getBlockState(mutablePos), direction.opposite());
+            }
+            newBlockState = newBlockState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), value);
         }
-
-        return placementState;
+        return newBlockState;
+    }
+    
+    private boolean isFreeForDiagonals(BlockState blockState, EightWayDirection direction) {
+        for (EightWayDirection neighbor : direction.getCardinalNeighbors()) {
+            if (blockState.getValue(DIRECTION_TO_PROPERTY_MAP.get(neighbor))) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    default BlockState updateShape2(BlockState state, Direction facing, BlockState facingState, LevelAccessor level, BlockPos currentPos, BlockPos facingPos, BlockState newState) {
+    default BlockState _updateShape(BlockState blockState, Direction direction, BlockState neighboringBlockState, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos neighboringBlockPos, BlockState newBlockState) {
 
-        if (facing.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
+        if (direction.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
 
             BlockPos.MutableBlockPos diagonalPos = new BlockPos.MutableBlockPos();
-            for (EightWayDirection direction : EightWayDirection.toEightWayDirection(facing).getIntercardinalNeighbors()) {
+            for (EightWayDirection eightWayDirection : EightWayDirection.toEightWayDirection(direction).getIntercardinalNeighbors()) {
 
-                diagonalPos.setWithOffset(currentPos, direction.getX(), direction.getY(), direction.getZ());
-                BlockState diagonalState = level.getBlockState(diagonalPos);
+                diagonalPos.setWithOffset(blockPos, eightWayDirection.getX(), eightWayDirection.getY(), eightWayDirection.getZ());
+                BlockState diagonalState = levelAccessor.getBlockState(diagonalPos);
                 // checks if there are vertical connections where a diagonal connection should be formed
                 boolean isBlocked = false;
-                for (EightWayDirection cardinal : direction.getCardinalNeighbors()) {
+                for (EightWayDirection cardinal : eightWayDirection.getCardinalNeighbors()) {
 
-                    isBlocked |= newState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
+                    isBlocked |= newBlockState.getValue(DIRECTION_TO_PROPERTY_MAP.get(cardinal));
                 }
 
-                newState = newState.setValue(DIRECTION_TO_PROPERTY_MAP.get(direction), !isBlocked && this.canConnectToMe(diagonalState, direction));
+                newBlockState = newBlockState.setValue(DIRECTION_TO_PROPERTY_MAP.get(eightWayDirection), !isBlocked && this.canConnectToMe(diagonalState, eightWayDirection));
             }
-
-            return newState;
         }
         
-        return null;
+        return newBlockState;
     }
 
     /**
@@ -249,11 +239,5 @@ public interface StarCollisionBlock extends DiagonalBlock {
         }
 
         return collisionShape;
-    }
-
-    @FunctionalInterface
-    interface DirectionStatePredicate {
-
-        boolean test(BlockPos pos, BlockState placementState, EightWayDirection direction);
     }
 }

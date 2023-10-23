@@ -1,19 +1,18 @@
 package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
+import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlockAdapter {
@@ -50,23 +49,18 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        this.createBlockStateDefinition2(builder);
+        this._createBlockStateDefinition(builder);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockGetter level = context.getLevel();
-        BlockPos pos = context.getClickedPos();
-        FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
-        BlockState placementState = super.getStateForPlacement(context);
-        return this.makeStateForPlacement(placementState, level, pos, fluidState);
+        return this._getStateForPlacement(context, super.getStateForPlacement(context));
     }
 
     @Override
-    public BlockState updateShape(BlockState blockState, Direction direction, BlockState blockState2, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos blockPos2) {
-        BlockState updatedShape = super.updateShape(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2);
-        BlockState newBlockState = this.updateShape2(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2, updatedShape);
-        return newBlockState != null ? newBlockState : updatedShape;
+    public BlockState updateShape(BlockState blockState, Direction direction, BlockState neighboringBlockState, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos neighboringBlockPos) {
+        BlockState newBlockState = super.updateShape(blockState, direction, neighboringBlockState, levelAccessor, blockPos, neighboringBlockPos);
+        return this._updateShape(blockState, direction, neighboringBlockState, levelAccessor, blockPos, neighboringBlockPos, newBlockState);
     }
 
     @Override
@@ -83,12 +77,12 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     }
 
     @Override
-    public boolean canConnect(BlockGetter blockGetter, BlockPos position, BlockState state, Direction direction) {
-        return this.connectsTo(state, state.isFaceSturdy(blockGetter, position, direction), direction);
+    public DiagonalBlockType getType() {
+        return DiagonalBlockType.WALLS;
     }
 
     @Override
-    public DiagonalBlockType getType() {
-        return DiagonalBlockType.WALLS;
+    public boolean attachesTo(BlockState blockState, BlockState neighboringBlockState) {
+        return StarCollisionBlockAdapter.super.attachesTo(blockState, neighboringBlockState) || neighboringBlockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockType.WINDOWS;
     }
 }

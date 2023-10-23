@@ -83,7 +83,6 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         if (blockState.getValue(WATERLOGGED)) {
             levelAccessor.scheduleTick(blockPos, Fluids.WATER, Fluids.WATER.getTickDelay(levelAccessor));
         }
-
         if (direction == Direction.DOWN) {
             return super.updateShape(blockState, direction, blockState2, levelAccessor, blockPos, blockPos2);
         } else {

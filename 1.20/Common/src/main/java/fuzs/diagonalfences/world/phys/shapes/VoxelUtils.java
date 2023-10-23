@@ -82,5 +82,4 @@ public class VoxelUtils {
                 corners[6], corners[4]
         };
     }
-
 }
