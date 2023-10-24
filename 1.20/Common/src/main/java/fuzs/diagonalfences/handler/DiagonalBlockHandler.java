@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 public class DiagonalBlockHandler {
 
     public static void onBlockAdded(Registry<Block> registry, ResourceLocation id, Block entry, BiConsumer<ResourceLocation, Supplier<Block>> registrar) {
-        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             if (type.isTarget(entry)) {
                 ResourceLocation resourceLocation = DiagonalFences.id(id.getNamespace() + "/" + id.getPath());
                 registrar.accept(resourceLocation, () -> {
@@ -32,7 +32,7 @@ public class DiagonalBlockHandler {
 
     public static void onItemAdded(Registry<Item> registry, ResourceLocation id, Item entry, BiConsumer<ResourceLocation, Supplier<Item>> registrar) {
         if (entry instanceof BlockItem blockItem) {
-            for (DiagonalBlockType type : DiagonalBlockType.values()) {
+            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
                 Block block = blockItem.getBlock();
                 if (type.isTarget(block)) {
                     BlockConversionHelper.setBlockItemBlock(blockItem, type.getConversions().get(block));
@@ -46,7 +46,7 @@ public class DiagonalBlockHandler {
         for (Item item : BuiltInRegistries.ITEM) {
             if (item instanceof BlockItem blockItem) {
                 Block block = blockItem.getBlock();
-                for (DiagonalBlockType type : DiagonalBlockType.values()) {
+                for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
                     BiMap<Block, Block> conversions = type.getConversions();
                     Block base;
                     Block diagonal = conversions.get(block);
@@ -60,7 +60,7 @@ public class DiagonalBlockHandler {
                     } else {
                         continue;
                     }
-                    if (RegistryHelper.is(type.blacklistTagKey, base)) {
+                    if (RegistryHelper.is(type.getBlacklistTagKey(), base)) {
                         BlockConversionHelper.setBlockForItem(blockItem, base);
                     } else {
                         BlockConversionHelper.setBlockForItem(blockItem, diagonal);
@@ -69,7 +69,7 @@ public class DiagonalBlockHandler {
                 }
             }
         }
-        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             type.getConversions().forEach(BlockConversionHelper::copyBoundTags);
         }
     }

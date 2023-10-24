@@ -1,6 +1,7 @@
 package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
+import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -67,7 +68,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
 
     @Override
     public DiagonalBlockType getType() {
-        return DiagonalBlockType.WINDOWS;
+        return DiagonalBlockTypes.WINDOW;
     }
 
     @Override
@@ -77,7 +78,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockType.WALLS;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WALL;
     }
 
     @Override

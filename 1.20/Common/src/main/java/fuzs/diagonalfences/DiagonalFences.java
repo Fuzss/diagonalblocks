@@ -1,7 +1,8 @@
 package fuzs.diagonalfences;
 
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
+import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.handler.DiagonalBlockHandler;
-import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
@@ -18,7 +19,9 @@ public class DiagonalFences implements ModConstructor {
 
     @Override
     public void onConstructMod() {
-        ModRegistry.touch();
+        DiagonalBlockType.register(DiagonalBlockTypes.FENCE);
+        DiagonalBlockType.register(DiagonalBlockTypes.WINDOW);
+        DiagonalBlockType.register(DiagonalBlockTypes.WALL);
         registerHandlers();
     }
 

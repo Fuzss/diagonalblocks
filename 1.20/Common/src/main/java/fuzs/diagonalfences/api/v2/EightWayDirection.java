@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.api.world.level.block;
+package fuzs.diagonalfences.api.v2;
 
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
 import net.minecraft.core.Direction;

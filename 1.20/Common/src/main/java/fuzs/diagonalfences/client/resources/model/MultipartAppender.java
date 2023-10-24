@@ -2,7 +2,7 @@ package fuzs.diagonalfences.client.resources.model;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
 import fuzs.diagonalfences.mixin.client.accessor.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -30,7 +30,7 @@ public class MultipartAppender {
      *
      * @param multiPart the original multipart unbaked variant
      */
-    public static MultiPart appendDiagonalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, MultiPart multiPart, boolean rotateCenter) {
+    public static MultiPart appendDiagonalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart multiPart, boolean rotateCenter) {
 
         List<Selector> selectors = Lists.newArrayList(multiPart.getSelectors());
         List<Selector> newSelectors = Lists.newArrayList();
@@ -53,7 +53,7 @@ public class MultipartAppender {
 
                         // rotates vanilla cardinal direction model parts and adds them as new selectors, all that's necessary for fences
                         KeyValueCondition newCondition = new KeyValueCondition(direction.rotateClockWise().getSerializedName(), "true");
-                        appendNewSelector(modelBakery, conditionFactoryPair.factory().apply(newCondition), selector, direction, newSelectors);
+                        appendNewSelector(modelAdder, conditionFactoryPair.factory().apply(newCondition), selector, direction, newSelectors);
                     } else {
 
                         // this deals with the model part that shows on the side of the center post of glass panes when the model part corresponding to that direction is NOT being rendered
@@ -64,7 +64,7 @@ public class MultipartAppender {
 
                         // the model parts used when only two opposite intercardinal directions are present
                         Condition otherNewCondition = getAndCondition(direction.rotateCounterClockWise(), direction.rotateCounterClockWise().getOpposite());
-                        appendNewSelector(modelBakery, otherNewCondition, selector, direction.rotateClockWise().rotateClockWise(), newSelectors);
+                        appendNewSelector(modelAdder, otherNewCondition, selector, direction.rotateClockWise().rotateClockWise(), newSelectors);
                     }
                 }
             } else if (rotateCenter && condition == Condition.TRUE) {
@@ -75,7 +75,7 @@ public class MultipartAppender {
                 Map<EightWayDirection, Condition> conditions = rotateCenterConditions();
                 for (Map.Entry<EightWayDirection, Condition> entry : conditions.entrySet()) {
 
-                    appendNewSelector(modelBakery, entry.getValue(), selector, entry.getKey(), newSelectors);
+                    appendNewSelector(modelAdder, entry.getValue(), selector, entry.getKey(), newSelectors);
                 }
 
                 Selector newSelector = new Selector(negateCondition(new OrCondition(conditions.values())), selector.getVariant());
@@ -153,7 +153,7 @@ public class MultipartAppender {
         return new AndCondition(conditions);
     }
 
-    private static void appendNewSelector(BiConsumer<ResourceLocation, UnbakedModel> modelBakery, Condition newCondition, Selector selector, EightWayDirection direction, List<Selector> newSelectors) {
+    private static void appendNewSelector(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, Condition newCondition, Selector selector, EightWayDirection direction, List<Selector> newSelectors) {
 
         EightWayDirection interDirection = direction.rotateClockWise();
         List<Variant> variants = selector.getVariant().getVariants();
@@ -164,7 +164,7 @@ public class MultipartAppender {
             ResourceLocation location = new ResourceLocation(variant.getModelLocation() + "_" + interDirection.getSerializedName());
             // this is the rotated model part, just make sure it is cached somewhere to avoid recreation multiple times since it's very expensive
             // we could also use our own cache, but unbaked models cache works fine
-            modelBakery.accept(location, new RotatedVariant(variant, direction.toDirection()));
+            modelAdder.accept(location, new RotatedVariant(variant, direction.toDirection()));
             // copy old variant which is now backed by the rotated model part, besides that only the weight value should really matter
             newVariants.add(new Variant(location, variant.getRotation(), variant.isUvLocked(), variant.getWeight()));
         }

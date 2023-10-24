@@ -1,8 +1,9 @@
 package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
+import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -87,7 +88,7 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
 
     @Override
     public DiagonalBlockType getType() {
-        return DiagonalBlockType.WALLS;
+        return DiagonalBlockTypes.WALL;
     }
 
     @Override
@@ -97,7 +98,7 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockType.WINDOWS;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WINDOW;
     }
 
     @Override
@@ -114,11 +115,15 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
                 .filter(entry -> blockState.getValue(entry.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toCollection(Stack::new));
-        while (stack.size() >= 2) {
-            if (stack.pop().getOpposite() != stack.pop()) {
-                return true;
+        if (!stack.isEmpty()) {
+            while (stack.size() >= 2) {
+                if (stack.pop().getOpposite() != stack.pop()) {
+                    return true;
+                }
             }
+            return !stack.isEmpty() || this.shouldRaisePost(level, blockPos);
+        } else {
+            return true;
         }
-        return !stack.isEmpty() || this.shouldRaisePost(level, blockPos);
     }
 }

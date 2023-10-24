@@ -2,7 +2,7 @@ package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;

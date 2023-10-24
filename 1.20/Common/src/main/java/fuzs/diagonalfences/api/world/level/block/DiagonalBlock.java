@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.api.world.level.block;
 
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 

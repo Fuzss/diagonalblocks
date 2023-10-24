@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.mixin;
 
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import fuzs.diagonalfences.world.level.block.StarCollisionBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;

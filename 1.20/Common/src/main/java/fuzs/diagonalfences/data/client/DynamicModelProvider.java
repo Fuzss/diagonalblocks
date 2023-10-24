@@ -21,7 +21,7 @@ public class DynamicModelProvider extends AbstractModelProvider {
     @Override
     public void addBlockModels(BlockModelBuilder builder) {
         ResourceLocation resourceLocation = ModelLocationUtils.getModelLocation(Blocks.STONE);
-        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             type.getConversions().values().forEach((block) -> {
                 builder.getBlockStateOutput().accept(MultiPartGenerator.multiPart(block).with(Variant.variant().with(VariantProperties.MODEL, resourceLocation)));
                 builder.skipAutoItemBlock(block);

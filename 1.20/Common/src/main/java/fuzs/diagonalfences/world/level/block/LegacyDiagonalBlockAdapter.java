@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**

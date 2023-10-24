@@ -8,7 +8,7 @@ public class ForgeAbstractions implements CommonAbstractions {
 
     @Override
     public DiagonalFenceBlock getDiagonalFenceBlock(Block block) {
-        return new DiagonalFenceBlock(block);
+        return new ForgeDiagonalFenceBlock(block);
     }
 
     @Override

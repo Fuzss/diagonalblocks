@@ -13,8 +13,8 @@ public class ModBlockTagsProvider extends AbstractTagProvider.Blocks {
 
     @Override
     protected void addTags(HolderLookup.Provider provider) {
-        for (DiagonalBlockType type : DiagonalBlockType.values()) {
-            this.tag(type.blacklistTagKey);
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+            this.tag(type.getBlacklistTagKey());
         }
     }
 }

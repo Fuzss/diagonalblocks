@@ -2,7 +2,7 @@ package fuzs.diagonalfences.world.level.block;
 
 import com.google.common.base.Stopwatch;
 import fuzs.diagonalfences.DiagonalFences;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.api.v2.EightWayDirection;
 import fuzs.diagonalfences.world.phys.shapes.NoneVoxelShape;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;

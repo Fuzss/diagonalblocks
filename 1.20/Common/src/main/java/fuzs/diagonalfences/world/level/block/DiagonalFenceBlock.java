@@ -1,6 +1,7 @@
 package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
+import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -65,7 +66,7 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
 
     @Override
     public DiagonalBlockType getType() {
-        return DiagonalBlockType.FENCES;
+        return DiagonalBlockTypes.FENCE;
     }
 
     @Override
