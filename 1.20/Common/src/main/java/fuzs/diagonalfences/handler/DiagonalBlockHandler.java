@@ -23,7 +23,7 @@ public class DiagonalBlockHandler {
             if (type.isTarget(entry)) {
                 ResourceLocation resourceLocation = DiagonalFences.id(id.getNamespace() + "/" + id.getPath());
                 registrar.accept(resourceLocation, () -> {
-                    return type.makeDiagonalBlock(entry);
+                    return type.makeDiagonalBlock(id, entry);
                 });
                 break;
             }
