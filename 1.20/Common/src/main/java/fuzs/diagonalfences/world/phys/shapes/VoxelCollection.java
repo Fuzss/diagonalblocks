@@ -28,12 +28,12 @@ public class VoxelCollection extends ExtensibleVoxelShape {
 
     @Override
     protected DoubleList getCoords(Direction.Axis axis) {
-        return ((VoxelShapeAccessor) this.collisionShape).callGetCoords(axis);
+        return ((VoxelShapeAccessor) this.collisionShape).diagonalfences$callGetCoords(axis);
     }
 
     private void setCollisionShape(VoxelShape voxelShape) {
         this.collisionShape = voxelShape;
-        ((VoxelShapeAccessor) this).setShape(((VoxelShapeAccessor) this.collisionShape).getShape());
+        ((VoxelShapeAccessor) this).diagonalfences$setShape(((VoxelShapeAccessor) this.collisionShape).diagonalfences$getShape());
     }
 
     public void addVoxelShape(VoxelShape voxelShape) {

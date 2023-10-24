@@ -96,7 +96,7 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         }
     }
 
-    private boolean shouldRaisePost(LevelReader level, BlockPos blockPos) {
+    public boolean shouldRaisePost(LevelReader level, BlockPos blockPos) {
         blockPos = blockPos.above();
         BlockState blockState = level.getBlockState(blockPos);
         if (blockState.is(BlockTags.WALL_POST_OVERRIDE)) {

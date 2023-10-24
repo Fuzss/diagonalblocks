@@ -94,7 +94,7 @@ public enum EightWayDirection implements StringRepresentable {
         return vectors;
     }
 
-    public EightWayDirection opposite() {
+    public EightWayDirection getOpposite() {
         return EightWayDirection.byIndex((this.data2d + 2), this.isIntercardinal());
     }
 

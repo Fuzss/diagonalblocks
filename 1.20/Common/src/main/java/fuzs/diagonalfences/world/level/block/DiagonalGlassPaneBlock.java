@@ -2,25 +2,25 @@ package fuzs.diagonalfences.world.level.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
-import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
+import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlock {
+public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisionBlock {
     private Object2IntMap<BlockState> statePaletteMap;
     private final Block block;
 
-    public DiagonalWallBlock(Block block) {
+    public DiagonalGlassPaneBlock(Block block) {
         super(BlockBehaviour.Properties.copy(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
@@ -66,35 +66,35 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
 
     @Override
     public DiagonalBlockType getType() {
-        return DiagonalBlockType.WALLS;
+        return DiagonalBlockType.WINDOWS;
     }
 
     @Override
     public boolean attachesDirectlyTo(BlockState blockState, boolean isSideSolid, Direction direction) {
-        return this.connectsTo(blockState, isSideSolid, direction);
+        return this.attachsTo(blockState, isSideSolid);
     }
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockType.WINDOWS;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockType.WALLS;
     }
 
     @Override
-    public BlockState updateIntercardinalDirections(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection... eightWayDirections) {
-        blockState = StarCollisionBlock.super.updateIntercardinalDirections(blockState, levelAccessor, blockPos, eightWayDirections);
-        return this.shouldNotRaisePost(levelAccessor, blockPos, blockState) ? blockState.setValue(LegacyWallBlock.UP, false) : blockState;
-    }
-
-    private boolean shouldNotRaisePost(LevelReader level, BlockPos blockPos, BlockState blockState) {
-        if (blockState.hasProperty(LegacyWallBlock.UP) && blockState.getValue(LegacyWallBlock.UP)) {
-            if (!this.shouldRaisePost(level, blockPos)) {
-                boolean northEast = blockState.getValue(NORTH_EAST);
-                boolean southEast = blockState.getValue(SOUTH_EAST);
-                boolean southWest = blockState.getValue(SOUTH_WEST);
-                boolean northWest = blockState.getValue(NORTH_WEST);
-                return northEast && southWest && !southEast && !northWest || !northEast && !southWest && southEast && northWest;
+    public VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
+        VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
+        for (int i = 0; i < stateShapes.length; i++) {
+            // don't render outline for node as the texture is transparent making it feel out of place
+            if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
+                stateShapes[i] = new VoxelCollection();
+            } else {
+                stateShapes[i] = new VoxelCollection(nodeShape);
+            }
+            for (int j = 0; j < directionalShapes.length; j++) {
+                if ((i & (1 << j)) != 0) {
+                    stateShapes[i].addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
+                }
             }
         }
-        return false;
+        return stateShapes;
     }
 }

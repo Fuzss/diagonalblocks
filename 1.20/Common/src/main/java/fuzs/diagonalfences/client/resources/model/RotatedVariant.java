@@ -1,6 +1,5 @@
 package fuzs.diagonalfences.client.resources.model;
 
-import fuzs.diagonalfences.client.util.MultipartAppender;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.*;

@@ -12,13 +12,13 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(VoxelShape.class)
 public interface VoxelShapeAccessor {
 
-    @Accessor
-    DiscreteVoxelShape getShape();
+    @Accessor("shape")
+    DiscreteVoxelShape diagonalfences$getShape();
 
-    @Accessor
+    @Accessor("shape")
     @Mutable
-    void setShape(DiscreteVoxelShape shape);
+    void diagonalfences$setShape(DiscreteVoxelShape shape);
 
-    @Invoker
-    DoubleList callGetCoords(Direction.Axis axis);
+    @Invoker("getCoords")
+    DoubleList diagonalfences$callGetCoords(Direction.Axis axis);
 }

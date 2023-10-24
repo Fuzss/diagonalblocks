@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.client.util;
+package fuzs.diagonalfences.client.resources.model;
 
 import com.google.common.collect.Lists;
 import fuzs.diagonalfences.mixin.client.accessor.KeyValueConditionAccessor;
@@ -16,7 +16,8 @@ import java.util.ListIterator;
 
 public interface MultiPartTranslator {
     MultiPartTranslator IDENTITY = (ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel) -> {
-        return baseBlockModel;
+        List<Selector> selectors = Lists.newArrayList(baseBlockModel.getSelectors());
+        return makeMultiPart(modelLocation, diagonalBlockModel, selectors);
     };
     MultiPartTranslator WALLS = (ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel) -> {
         List<Selector> selectors = Lists.newArrayList(baseBlockModel.getSelectors());
@@ -42,11 +43,17 @@ public interface MultiPartTranslator {
                 }
             }
         }
-        // we use a placeholder model that provided via a runtime data generator, so the model bakery doesn't log a missing model
-        // also the generated placeholder purposefully uses multipart, so we can reuse the stored state definition
-        if (!(diagonalBlockModel instanceof MultiPart)) throw new IllegalArgumentException("invalid model for diagonal block: " + modelLocation);
-        return new MultiPart(((MultiPartAccessor) diagonalBlockModel).diagonalfences$getDefinition(), selectors);
+        return makeMultiPart(modelLocation, diagonalBlockModel, selectors);
     };
+
+    private static MultiPart makeMultiPart(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, List<Selector> selectors) {
+        // we use a placeholder model that is provided via a runtime data generator, so the model bakery doesn't log a missing model
+        // also the generated placeholder purposefully uses multipart, so we can reuse the stored state definition
+        if (!(diagonalBlockModel instanceof MultiPart)) {
+            throw new IllegalArgumentException("invalid model for diagonal block: " + modelLocation);
+        }
+        return new MultiPart(((MultiPartAccessor) diagonalBlockModel).diagonalfences$getDefinition(), selectors);
+    }
 
     MultiPart apply(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel);
 }

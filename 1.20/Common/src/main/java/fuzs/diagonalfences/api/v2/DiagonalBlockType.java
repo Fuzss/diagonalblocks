@@ -25,8 +25,8 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public enum DiagonalBlockType {
-    FENCES(FenceBlock.class, null, BlockTags.MINEABLE_WITH_AXE),
-    WINDOWS(IronBarsBlock.class, null, null),
+    FENCES(FenceBlock.class, CommonAbstractions.INSTANCE::getDiagonalFenceBlock, BlockTags.MINEABLE_WITH_AXE),
+    WINDOWS(IronBarsBlock.class, CommonAbstractions.INSTANCE::getDiagonalGlassPaneBlock, null),
     WALLS(WallBlock.class, CommonAbstractions.INSTANCE::getDiagonalWallBlock, BlockTags.MINEABLE_WITH_PICKAXE) {
 
         @Override

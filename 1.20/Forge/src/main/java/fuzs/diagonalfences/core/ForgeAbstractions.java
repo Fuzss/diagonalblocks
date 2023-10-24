@@ -1,10 +1,20 @@
 package fuzs.diagonalfences.core;
 
-import fuzs.diagonalfences.world.level.block.DiagonalWallBlock;
-import fuzs.diagonalfences.world.level.block.ForgeDiagonalWallBlock;
+import fuzs.diagonalfences.world.level.block.*;
+import net.minecraft.world.level.block.BeaconBeamBlock;
 import net.minecraft.world.level.block.Block;
 
 public class ForgeAbstractions implements CommonAbstractions {
+
+    @Override
+    public DiagonalFenceBlock getDiagonalFenceBlock(Block block) {
+        return new DiagonalFenceBlock(block);
+    }
+
+    @Override
+    public DiagonalGlassPaneBlock getDiagonalGlassPaneBlock(Block block) {
+        return block instanceof BeaconBeamBlock beaconBeamBlock ? new ForgeDiagonalStainedGlassPaneBlock(block, beaconBeamBlock.getColor()) : new ForgeDiagonalGlassPaneBlock(block);
+    }
 
     @Override
     public DiagonalWallBlock getDiagonalWallBlock(Block block) {

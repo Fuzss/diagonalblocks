@@ -1,10 +1,9 @@
-package fuzs.diagonalfences.client.util;
+package fuzs.diagonalfences.client.resources.model;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import fuzs.diagonalfences.client.core.ClientAbstractions;
-import fuzs.diagonalfences.client.resources.model.RotatedVariant;
 import fuzs.diagonalfences.mixin.client.accessor.*;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.MultiVariant;
@@ -64,7 +63,7 @@ public class MultipartAppender {
                         iterator.set(newSelector);
 
                         // the model parts used when only two opposite intercardinal directions are present
-                        Condition otherNewCondition = getAndCondition(direction.rotateCounterClockWise(), direction.rotateCounterClockWise().opposite());
+                        Condition otherNewCondition = getAndCondition(direction.rotateCounterClockWise(), direction.rotateCounterClockWise().getOpposite());
                         appendNewSelector(modelBakery, otherNewCondition, selector, direction.rotateClockWise().rotateClockWise(), newSelectors);
                     }
                 }
@@ -129,7 +128,7 @@ public class MultipartAppender {
             if (direction.getX() == 1 || direction.getZ() == 1) {
 
                 EightWayDirection interDirection = direction.rotateClockWise();
-                Condition newCondition = getAndCondition(interDirection, interDirection.opposite());
+                Condition newCondition = getAndCondition(interDirection, interDirection.getOpposite());
                 conditions.put(direction, newCondition);
             }
         }

@@ -37,7 +37,7 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
 
     @Override
     protected DoubleList getCoords(Direction.Axis axis) {
-        return ((VoxelShapeAccessor) this.collisionShape).callGetCoords(axis);
+        return ((VoxelShapeAccessor) this.collisionShape).diagonalfences$callGetCoords(axis);
     }
 
     @Override

@@ -5,8 +5,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
-import fuzs.diagonalfences.client.util.MultiPartTranslator;
-import fuzs.diagonalfences.client.util.MultipartAppender;
+import fuzs.diagonalfences.client.resources.model.MultiPartTranslator;
+import fuzs.diagonalfences.client.resources.model.MultipartAppender;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class WallModelHandler {
+public class DiagonalModelHandler {
     private static final Map<DiagonalBlockType, MultiPartTranslator> MULTI_PART_TRANSLATORS;
     private static final Supplier<Map<DiagonalBlockType, Map<ResourceLocation, ResourceLocation>>> MODEL_LOCATION_CONVERSIONS;
     private static final Set<ResourceLocation> REPORTED_BLOCKS = Sets.newHashSet();

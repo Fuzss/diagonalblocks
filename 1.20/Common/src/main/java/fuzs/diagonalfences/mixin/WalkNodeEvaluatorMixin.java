@@ -24,10 +24,10 @@ abstract class WalkNodeEvaluatorMixin extends NodeEvaluator {
             for (EightWayDirection direction : EightWayDirection.getIntercardinalDirections()) {
                 if (direction.getX() == node2.x - node3.x && direction.getZ() == node2.z - node3.z) {
                     BlockState state = this.level.getBlockState(new BlockPos(node3.x, node3.y, node3.z));
-                    BooleanProperty property = StarCollisionBlock.DIRECTION_TO_PROPERTY_MAP.get(direction);
+                    BooleanProperty property = StarCollisionBlock.PROPERTY_BY_DIRECTION.get(direction);
                     if (state.hasProperty(property) && state.getValue(property)) {
                         state = this.level.getBlockState(new BlockPos(node2.x, node2.y, node2.z));
-                        property = StarCollisionBlock.DIRECTION_TO_PROPERTY_MAP.get(direction.opposite());
+                        property = StarCollisionBlock.PROPERTY_BY_DIRECTION.get(direction.getOpposite());
                         if (state.hasProperty(property) && state.getValue(property)) {
                             return false;
                         }

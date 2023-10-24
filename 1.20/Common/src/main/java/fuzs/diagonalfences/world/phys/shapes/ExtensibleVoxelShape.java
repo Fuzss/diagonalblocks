@@ -10,7 +10,7 @@ public abstract class ExtensibleVoxelShape extends SliceShape {
 
     public ExtensibleVoxelShape(VoxelShape voxelProvider) {
         super(voxelProvider, Direction.Axis.X, 0);
-        ((VoxelShapeAccessor) this).setShape(((VoxelShapeAccessor) voxelProvider).getShape());
+        ((VoxelShapeAccessor) this).diagonalfences$setShape(((VoxelShapeAccessor) voxelProvider).diagonalfences$getShape());
     }
 
     @Override
