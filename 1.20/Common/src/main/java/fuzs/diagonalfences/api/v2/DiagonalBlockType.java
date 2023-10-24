@@ -7,7 +7,6 @@ import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.core.CommonAbstractions;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FenceBlock;
@@ -25,9 +24,9 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public enum DiagonalBlockType {
-    FENCES(FenceBlock.class, CommonAbstractions.INSTANCE::getDiagonalFenceBlock, BlockTags.MINEABLE_WITH_AXE),
-    WINDOWS(IronBarsBlock.class, CommonAbstractions.INSTANCE::getDiagonalGlassPaneBlock, null),
-    WALLS(WallBlock.class, CommonAbstractions.INSTANCE::getDiagonalWallBlock, BlockTags.MINEABLE_WITH_PICKAXE) {
+    FENCES(FenceBlock.class, CommonAbstractions.INSTANCE::getDiagonalFenceBlock),
+    WINDOWS(IronBarsBlock.class, CommonAbstractions.INSTANCE::getDiagonalGlassPaneBlock),
+    WALLS(WallBlock.class, CommonAbstractions.INSTANCE::getDiagonalWallBlock) {
 
         @Override
         Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
@@ -43,14 +42,11 @@ public enum DiagonalBlockType {
     private final Class<? extends Block> targetType;
     private final UnaryOperator<Block> factory;
     public final TagKey<Block> blacklistTagKey;
-    @Nullable
-    public final TagKey<Block> miningTagKey;
 
-    DiagonalBlockType(Class<? extends Block> targetType, UnaryOperator<Block> factory, TagKey<Block> miningTagKey) {
+    DiagonalBlockType(Class<? extends Block> targetType, UnaryOperator<Block> factory) {
         this.targetType = targetType;
         this.factory = factory;
         this.blacklistTagKey = TagKey.create(Registries.BLOCK, DiagonalFences.id("non_diagonal_" + this));
-        this.miningTagKey = miningTagKey;
     }
 
     @Override

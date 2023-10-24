@@ -23,6 +23,17 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+/**
+ * The wall block implementation from Minecraft 1.15.2 before walls received additional block states by splitting the
+ * directional boolean properties into enum properties with three possible values (see {@link net.minecraft.world.level.block.state.properties.WallSide}).
+ *
+ * <p>Since this mod already adds a good chunk of new properties, combined with the amount of properties
+ * present in vanilla since Minecraft 1.16 there would simply be too many block states for the game to sufficiently handle
+ * (3^4*2^2=324 possible states in vanilla, 3^8*2^2=26,244 possible states with diagonal block state properties).
+ *
+ * <p>By simplifying the four directional states to boolean properties once again the addition of diagonal connections becomes manageable once more
+ * (2^4*2^2=64 possible states in vanilla, 2^8*2^2=1,024 possible states with diagonal block state properties).
+ */
 public class LegacyWallBlock extends CrossCollisionBlock {
     private static final VoxelShape POST_TEST = Block.box(7.0, 0.0, 7.0, 9.0, 16.0, 9.0);
     public static final BooleanProperty UP = BlockStateProperties.UP;

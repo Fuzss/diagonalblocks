@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisionBlock {
@@ -21,7 +22,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
     private final Block block;
 
     public DiagonalGlassPaneBlock(Block block) {
-        super(BlockBehaviour.Properties.copy(block));
+        super(BlockBehaviour.Properties.copy(block).dropsLike(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
     }
@@ -85,7 +86,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
         for (int i = 0; i < stateShapes.length; i++) {
             // don't render outline for node as the texture is transparent making it feel out of place
             if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
-                stateShapes[i] = new VoxelCollection();
+                stateShapes[i] = new VoxelCollection(nodeShape, Shapes.empty());
             } else {
                 stateShapes[i] = new VoxelCollection(nodeShape);
             }

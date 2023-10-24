@@ -3,7 +3,8 @@ package fuzs.diagonalfences.handler;
 import com.google.common.collect.BiMap;
 import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
-import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
+import fuzs.puzzleslib.api.init.v3.RegistryHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -34,7 +35,7 @@ public class DiagonalBlockHandler {
             for (DiagonalBlockType type : DiagonalBlockType.values()) {
                 Block block = blockItem.getBlock();
                 if (type.isTarget(block)) {
-                    RegistryEntryAddedCallback.setBlockItemBlock(blockItem, type.getConversions().get(block));
+                    BlockConversionHelper.setBlockItemBlock(blockItem, type.getConversions().get(block));
                     break;
                 }
             }
@@ -59,14 +60,17 @@ public class DiagonalBlockHandler {
                     } else {
                         continue;
                     }
-                    if (base.builtInRegistryHolder().is(type.blacklistTagKey)) {
-                        RegistryEntryAddedCallback.setBlockForItem(blockItem, base);
+                    if (RegistryHelper.is(type.blacklistTagKey, base)) {
+                        BlockConversionHelper.setBlockForItem(blockItem, base);
                     } else {
-                        RegistryEntryAddedCallback.setBlockForItem(blockItem, diagonal);
+                        BlockConversionHelper.setBlockForItem(blockItem, diagonal);
                     }
                     break;
                 }
             }
+        }
+        for (DiagonalBlockType type : DiagonalBlockType.values()) {
+            type.getConversions().forEach(BlockConversionHelper::copyBoundTags);
         }
     }
 }

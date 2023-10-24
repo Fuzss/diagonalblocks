@@ -6,7 +6,6 @@ import fuzs.diagonalfences.api.world.level.block.EightWayDirection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
@@ -24,11 +23,6 @@ public interface StarCollisionBlock extends DiagonalBlockV2, StarShapeProvider {
         return blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == this.getType();
     }
 
-    /**
-     * sets default states for inter-cardinal properties
-     * @param defaultState already modified default state obtained from {@link Block#defaultBlockState()}
-     * @return state after setting inter-cardinal block states
-     */
     default BlockState addDefaultStates(BlockState defaultState) {
         return defaultState.setValue(DiagonalBlockV2.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlockV2.SOUTH_EAST, Boolean.FALSE).setValue(DiagonalBlockV2.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlockV2.NORTH_WEST, Boolean.FALSE);
     }
@@ -41,26 +35,35 @@ public interface StarCollisionBlock extends DiagonalBlockV2, StarShapeProvider {
         Level level = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
         EightWayDirection[] eightWayDirections = EightWayDirection.getIntercardinalDirections();
-        return this.updateIntercardinalDirections(blockState, level, clickedPos, eightWayDirections);
+        return updateDiagonalProperties(this, blockState, level, clickedPos, eightWayDirections);
     }
 
-    default BlockState updateIntercardinalDirections(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection... eightWayDirections) {
+    static BlockState updateDiagonalProperties(DiagonalBlockV2 diagonalBlock, BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection... eightWayDirections) {
         for (EightWayDirection eightWayDirection : eightWayDirections) {
             BlockPos neighborBlockPos = blockPos.offset(eightWayDirection.getX(), eightWayDirection.getY(), eightWayDirection.getZ());
-            boolean value = this.attachesDiagonallyTo(levelAccessor.getBlockState(neighborBlockPos));
-            value = value && this.isFreeForDiagonals(levelAccessor, blockPos, eightWayDirection);
-            value = value && this.isFreeForDiagonals(levelAccessor, neighborBlockPos, eightWayDirection.getOpposite());
+            BlockState neighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
+            boolean value = allowsDiagonalProperty(diagonalBlock, levelAccessor, blockPos, neighborBlockState, eightWayDirection);
+            if (value) {
+                DiagonalBlockV2 neighborDiagonalBlock = (DiagonalBlockV2) neighborBlockState.getBlock();
+                value = allowsDiagonalProperty(neighborDiagonalBlock, levelAccessor, neighborBlockPos, blockState, eightWayDirection.getOpposite());
+            }
             blockState = blockState.setValue(PROPERTY_BY_DIRECTION.get(eightWayDirection), value);
         }
         return blockState;
     }
 
-    private boolean isFreeForDiagonals(BlockGetter blockGetter, BlockPos blockPos, EightWayDirection eightWayDirection) {
+    static boolean allowsDiagonalProperty(DiagonalBlockV2 diagonalBlock, LevelAccessor levelAccessor, BlockPos blockPos, BlockState neighborBlockState, EightWayDirection eightWayDirection) {
+        return diagonalBlock.attachesDiagonallyTo(neighborBlockState) && isFreeForDiagonalProperty(diagonalBlock, levelAccessor, blockPos, eightWayDirection);
+    }
+
+    static boolean isFreeForDiagonalProperty(DiagonalBlockV2 diagonalBlock, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection eightWayDirection) {
         for (EightWayDirection neighbor : eightWayDirection.getCardinalNeighbors()) {
             Direction direction = neighbor.toDirection();
             BlockPos neighborBlockPos = blockPos.relative(direction);
-            BlockState neighborBlockState = blockGetter.getBlockState(neighborBlockPos);
-            if (this.attachesDirectlyTo(neighborBlockState, neighborBlockState.isFaceSturdy(blockGetter, neighborBlockPos, direction.getOpposite()), direction.getOpposite())) {
+            BlockState neighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
+            boolean isSideSolid = neighborBlockState.isFaceSturdy(levelAccessor, neighborBlockPos, direction.getOpposite());
+            // do not use block state values, they might not have been updated yet on the other block
+            if (diagonalBlock.attachesDirectlyTo(neighborBlockState, isSideSolid, direction.getOpposite())) {
                 return false;
             }
         }
@@ -70,7 +73,7 @@ public interface StarCollisionBlock extends DiagonalBlockV2, StarShapeProvider {
     default BlockState _updateShape(BlockState blockState, Direction direction, BlockState neighboringBlockState, LevelAccessor levelAccessor, BlockPos blockPos, BlockPos neighboringBlockPos) {
         if (direction.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
             EightWayDirection[] eightWayDirections = EightWayDirection.toEightWayDirection(direction).getIntercardinalNeighbors();
-            return this.updateIntercardinalDirections(blockState, levelAccessor, blockPos, eightWayDirections);
+            return updateDiagonalProperties(this, blockState, levelAccessor, blockPos, eightWayDirections);
         }
         return blockState;
     }
@@ -80,11 +83,22 @@ public interface StarCollisionBlock extends DiagonalBlockV2, StarShapeProvider {
             if (blockState.getValue(PROPERTY_BY_DIRECTION.get(eightWayDirection))) {
                 BlockPos neighborBlockPos = blockPos.offset(eightWayDirection.getX(), eightWayDirection.getY(), eightWayDirection.getZ());
                 BlockState neighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
-                if (neighborBlockState.getBlock() instanceof DiagonalBlockV2) {
-                    BlockState newNeighborBlockState = this.updateIntercardinalDirections(neighborBlockState, levelAccessor, neighborBlockPos, eightWayDirection.getOpposite());
+                BlockState newNeighborBlockState;
+                if (neighborBlockState.getBlock() instanceof StarCollisionBlock starCollisionBlock) {
+                    newNeighborBlockState = starCollisionBlock.updateIndirectNeighborDiagonalProperty(neighborBlockState, levelAccessor, neighborBlockPos, eightWayDirection.getOpposite());
+                } else if (neighborBlockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock) {
+                    newNeighborBlockState = updateDiagonalProperties(diagonalBlock, neighborBlockState, levelAccessor, neighborBlockPos, eightWayDirection.getOpposite());
+                } else {
+                    newNeighborBlockState = null;
+                }
+                if (newNeighborBlockState != null) {
                     Block.updateOrDestroy(neighborBlockState, newNeighborBlockState, levelAccessor, neighborBlockPos, flags, recursionLeft);
                 }
             }
         }
+    }
+
+    default BlockState updateIndirectNeighborDiagonalProperty(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection eightWayDirection) {
+        return updateDiagonalProperties(this, blockState, levelAccessor, blockPos, eightWayDirection);
     }
 }

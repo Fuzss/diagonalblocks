@@ -1,15 +1,11 @@
 package fuzs.diagonalfences;
 
-import fuzs.diagonalfences.data.DynamicBlockLootProvider;
-import fuzs.diagonalfences.data.DynamicBlockTagsProvider;
 import fuzs.diagonalfences.handler.DiagonalBlockHandler;
 import fuzs.diagonalfences.init.ModRegistry;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.api.core.v1.context.PackRepositorySourcesContext;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
-import fuzs.puzzleslib.api.resources.v1.DynamicPackResources;
-import fuzs.puzzleslib.api.resources.v1.PackResourcesHelper;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -29,12 +25,7 @@ public class DiagonalFences implements ModConstructor {
     private static void registerHandlers() {
         RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(DiagonalBlockHandler::onBlockAdded);
         RegistryEntryAddedCallback.registryEntryAdded(Registries.ITEM).register(DiagonalBlockHandler::onItemAdded);
-        TagsUpdatedCallback.EVENT.register(DiagonalBlockHandler::onTagsUpdated);
-    }
-
-    @Override
-    public void onAddDataPackFinders(PackRepositorySourcesContext context) {
-        context.addRepositorySource(PackResourcesHelper.buildServerPack(id("dynamic_walls"), DynamicPackResources.create(DynamicBlockLootProvider::new, DynamicBlockTagsProvider::new), false));
+        TagsUpdatedCallback.EVENT.register(EventPhase.FIRST, DiagonalBlockHandler::onTagsUpdated);
     }
 
     public static ResourceLocation id(String path) {

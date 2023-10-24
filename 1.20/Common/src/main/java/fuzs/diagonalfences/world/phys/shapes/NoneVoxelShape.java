@@ -4,25 +4,19 @@ import com.google.common.collect.Lists;
 import fuzs.diagonalfences.mixin.accessor.VoxelShapeAccessor;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Direction;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 
 public class NoneVoxelShape extends ExtensibleVoxelShape {
     private final VoxelShape collisionShape;
-    private final VoxelShape outlineShapeBase;
     private final List<Vec3[]> outlineShapeEdges;
 
     public NoneVoxelShape(VoxelShape collisionShape, Vec3... outlineShapeEdges) {
-        this(collisionShape, Shapes.empty(), outlineShapeEdges);
-    }
-
-    public NoneVoxelShape(VoxelShape collisionShape, VoxelShape outlineShapeBase, Vec3... outlineShapeEdges) {
         super(collisionShape);
         this.collisionShape = collisionShape;
-        this.outlineShapeBase = outlineShapeBase;
         this.outlineShapeEdges = this.createOutlineList(outlineShapeEdges);
     }
 
@@ -42,7 +36,6 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
 
     @Override
     public void forAllEdges(Shapes.DoubleLineConsumer boxConsumer) {
-        this.outlineShapeBase.forAllEdges(boxConsumer);
         for (Vec3[] edge : this.outlineShapeEdges) {
             boxConsumer.consume(edge[0].x, edge[0].y, edge[0].z, edge[1].x, edge[1].y, edge[1].z);
         }

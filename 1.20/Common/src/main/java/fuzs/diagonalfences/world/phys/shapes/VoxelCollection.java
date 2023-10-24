@@ -15,14 +15,14 @@ public class VoxelCollection extends ExtensibleVoxelShape {
     private VoxelShape particleShape;
     private final List<NoneVoxelShape> noneVoxels = Lists.newArrayList();
 
-    public VoxelCollection() {
-        this(Shapes.empty());
+    public VoxelCollection(VoxelShape baseShape) {
+        this(baseShape, baseShape);
     }
 
-    public VoxelCollection(VoxelShape baseShape) {
+    public VoxelCollection(VoxelShape baseShape, VoxelShape outlineBaseShape) {
         super(baseShape);
         this.collisionShape = baseShape;
-        this.outlineShape = baseShape;
+        this.outlineShape = outlineBaseShape;
         this.particleShape = baseShape;
     }
 
