@@ -8,11 +8,13 @@ import fuzs.puzzleslib.api.init.v3.RegistryHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -30,46 +32,52 @@ public class DiagonalBlockHandler {
         }
     }
 
-    public static void onItemAdded(Registry<Item> registry, ResourceLocation id, Item entry, BiConsumer<ResourceLocation, Supplier<Item>> registrar) {
-        if (entry instanceof BlockItem blockItem) {
-            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+    public static void onTagsUpdated(RegistryAccess registryAccess, boolean client) {
+        for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
+            if (entry.getValue() instanceof BlockItem blockItem) {
                 Block block = blockItem.getBlock();
-                // item id should be fine to use for block items
-                if (type.isTarget(id, block)) {
-                    BlockConversionHelper.setBlockItemBlock(blockItem, type.getBlockConversions().get(block));
-                    break;
-                }
+                setItemForBlock(entry.getKey().location(), blockItem, block);
+                setBlockForItem(blockItem, block);
+            }
+        }
+        copyBoundTags();
+    }
+
+    private static void setItemForBlock(ResourceLocation resourceLocation, BlockItem blockItem, Block block) {
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+            // item id should be fine to use for block items
+            if (type.isTarget(resourceLocation, block)) {
+                BlockConversionHelper.setItemForBlock(type.getBlockConversions().get(block), blockItem);
+                break;
             }
         }
     }
 
-    public static void onTagsUpdated(RegistryAccess registryAccess, boolean client) {
-        for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof BlockItem blockItem) {
-                Block block = blockItem.getBlock();
-                for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                    BiMap<Block, Block> conversions = type.getBlockConversions();
-                    Block base;
-                    Block diagonal = conversions.get(block);
-                    if (diagonal != null) {
-                        base = block;
-                    } else {
-                        base = conversions.inverse().get(block);
-                    }
-                    if (base != null) {
-                        diagonal = block;
-                    } else {
-                        continue;
-                    }
-                    if (RegistryHelper.is(type.getBlacklistTagKey(), base)) {
-                        BlockConversionHelper.setBlockForItem(blockItem, base);
-                    } else {
-                        BlockConversionHelper.setBlockForItem(blockItem, diagonal);
-                    }
-                    break;
+    private static void setBlockForItem(BlockItem blockItem, Block block) {
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+            BiMap<Block, Block> conversions = type.getBlockConversions();
+            Block base;
+            Block diagonal = conversions.get(block);
+            if (diagonal != null) {
+                base = block;
+            } else {
+                base = conversions.inverse().get(block);
+                if (base != null) {
+                    diagonal = block;
+                } else {
+                    continue;
                 }
             }
+            if (RegistryHelper.is(type.getBlacklistTagKey(), base)) {
+                BlockConversionHelper.setBlockForItem(blockItem, base);
+            } else {
+                BlockConversionHelper.setBlockForItem(blockItem, diagonal);
+            }
+            break;
         }
+    }
+
+    private static void copyBoundTags() {
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             type.getBlockConversions().forEach(BlockConversionHelper::copyBoundTags);
         }

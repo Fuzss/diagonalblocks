@@ -27,7 +27,6 @@ public class DiagonalFences implements ModConstructor {
 
     private static void registerHandlers() {
         RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(DiagonalBlockHandler::onBlockAdded);
-        RegistryEntryAddedCallback.registryEntryAdded(Registries.ITEM).register(DiagonalBlockHandler::onItemAdded);
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST, DiagonalBlockHandler::onTagsUpdated);
     }
 
