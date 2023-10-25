@@ -1,6 +1,7 @@
 package fuzs.diagonalfences;
 
 import fuzs.diagonalfences.data.ModBlockTagsProvider;
+import fuzs.diagonalfences.integration.cfm.MrCrayfishFurnitureMod;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,5 +16,10 @@ public class DiagonalFencesForge {
     public static void onConstructMod(final FMLConstructModEvent evt) {
         ModConstructor.construct(DiagonalFences.MOD_ID, DiagonalFences::new);
         DataProviderHelper.registerDataProviders(DiagonalFences.MOD_ID, ModBlockTagsProvider::new);
+        registerIntegration();
+    }
+
+    private static void registerIntegration() {
+        MrCrayfishFurnitureMod.init();
     }
 }

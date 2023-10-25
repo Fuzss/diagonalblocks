@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

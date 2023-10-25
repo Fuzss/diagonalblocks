@@ -1,6 +1,6 @@
 package fuzs.diagonalfences.world.phys.shapes;
 
-import net.minecraft.world.level.block.Block;
+import fuzs.puzzleslib.api.shapes.v1.ShapesHelper;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -32,16 +32,8 @@ public class VoxelUtils {
         return Stream.of(edges).map(edge -> new Vec3(edge.z, edge.y, edge.x)).toArray(Vec3[]::new);
     }
 
-    public static VoxelShape makeCuboidShape(Vec3[] outline) {
-        Vec3 start = outline[0];
-        Vec3 end = outline[1];
-        double startX = Math.min(start.x, end.x);
-        double startY = Math.min(start.y, end.y);
-        double startZ = Math.min(start.z, end.z);
-        double endX = Math.max(start.x, end.x);
-        double endY = Math.max(start.y, end.y);
-        double endZ = Math.max(start.z, end.z);
-        return Block.box(startX, startY, startZ, endX, endY, endZ);
+    public static VoxelShape box(Vec3[] outline) {
+        return ShapesHelper.box(outline[0].x, outline[0].y, outline[0].z, outline[1].x, outline[1].y, outline[1].z);
     }
 
     public static Vec3[] createVectorArray(Float... values) {

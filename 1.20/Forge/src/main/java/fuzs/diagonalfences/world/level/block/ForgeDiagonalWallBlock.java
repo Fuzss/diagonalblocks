@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.world.level.block;
 
+import fuzs.diagonalfences.api.v2.block.DiagonalWallBlock;
 import fuzs.diagonalfences.client.extensions.DiagonalClientBlockExtensions;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.extensions.common.IClientBlockExtensions;

@@ -1,11 +1,9 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
 import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -19,7 +17,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisionBlock {
-    private Object2IntMap<BlockState> statePaletteMap;
     private final Block block;
 
     public DiagonalGlassPaneBlock(Block block) {
@@ -35,13 +32,12 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
 
     @Override
     protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-        return this.getShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        return this._makeShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
     }
 
     @Override
-    protected int getAABBIndex(BlockState state) {
-        if (this.statePaletteMap == null) this.statePaletteMap = new Object2IntOpenHashMap<>();
-        return this.statePaletteMap.computeIfAbsent(state, this::makeIndex);
+    protected int getAABBIndex(BlockState blockState) {
+        return this._getAABBIndex(blockState);
     }
 
     @Override
@@ -82,20 +78,22 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
     }
 
     @Override
-    public VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
+    public VoxelShape[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
         VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
         for (int i = 0; i < stateShapes.length; i++) {
-            // don't render outline for node as the texture is transparent making it feel out of place
+            VoxelCollection voxelCollection;
+            // don't render outline for node as the texture is not visible making it feel out of place
             if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
-                stateShapes[i] = new VoxelCollection(nodeShape, Shapes.empty());
+                voxelCollection = new VoxelCollection(nodeShape, Shapes.empty());
             } else {
-                stateShapes[i] = new VoxelCollection(nodeShape);
+                voxelCollection = new VoxelCollection(nodeShape);
             }
             for (int j = 0; j < directionalShapes.length; j++) {
                 if ((i & (1 << j)) != 0) {
-                    stateShapes[i].addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
+                    voxelCollection.addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
                 }
             }
+            stateShapes[i] = voxelCollection.optimize();
         }
         return stateShapes;
     }

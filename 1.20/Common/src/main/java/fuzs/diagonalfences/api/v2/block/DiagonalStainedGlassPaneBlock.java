@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.block;
 
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.BeaconBeamBlock;

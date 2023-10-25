@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import fuzs.diagonalfences.mixin.accessor.VoxelShapeAccessor;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Direction;
+import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -36,24 +37,27 @@ public class VoxelCollection extends ExtensibleVoxelShape {
         ((VoxelShapeAccessor) this).diagonalfences$setShape(((VoxelShapeAccessor) this.collisionShape).diagonalfences$getShape());
     }
 
-    public void addVoxelShape(VoxelShape voxelShape) {
-        this.addVoxelShape(voxelShape, voxelShape);
-    }
-
     public void addVoxelShape(VoxelShape voxelShape, VoxelShape particleShape) {
         if (voxelShape instanceof NoneVoxelShape) {
             this.addNoneVoxelShape((NoneVoxelShape) voxelShape);
         } else {
-            this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
-            this.outlineShape = Shapes.or(this.outlineShape, voxelShape);
+            this.setCollisionShape(Shapes.joinUnoptimized(this.collisionShape, voxelShape, BooleanOp.OR));
+            this.outlineShape = Shapes.joinUnoptimized(this.outlineShape, voxelShape, BooleanOp.OR);
         }
-        this.particleShape = Shapes.or(this.particleShape, particleShape);
+        this.particleShape = Shapes.joinUnoptimized(this.particleShape, particleShape, BooleanOp.OR);
     }
 
     private void addNoneVoxelShape(NoneVoxelShape voxelShape) {
         this.noneVoxels.add(voxelShape);
-        // combine collision shapes
-        this.setCollisionShape(Shapes.or(this.collisionShape, voxelShape));
+        this.setCollisionShape(Shapes.joinUnoptimized(this.collisionShape, voxelShape, BooleanOp.OR));
+    }
+
+    @Override
+    public VoxelCollection optimize() {
+        this.setCollisionShape(this.collisionShape.optimize());
+        this.outlineShape = this.outlineShape.optimize();
+        this.particleShape = this.particleShape.optimize();
+        return this;
     }
 
     public void forAllParticleBoxes(Shapes.DoubleLineConsumer doubleLineConsumer) {

@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.WallSide;
 
 import java.util.List;
@@ -43,7 +44,7 @@ public class DiagonalFencesClient implements ClientModConstructor {
         LoadCompleteCallback.EVENT.register(() -> {
             // run a custom implementation here, the appropriate method in client mod constructor runs together with other mods, so we might miss some entries
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                for (Map.Entry<Block, Block> entry : type.getConversions().entrySet()) {
+                for (Map.Entry<Block, Block> entry : type.getBlockConversions().entrySet()) {
                     RenderType renderType = fuzs.puzzleslib.api.client.core.v1.ClientAbstractions.INSTANCE.getRenderType(entry.getKey());
                     ClientAbstractions.INSTANCE.registerRenderType(entry.getValue(), renderType);
                 }
@@ -53,14 +54,23 @@ public class DiagonalFencesClient implements ClientModConstructor {
 
     @Override
     public void onClientSetup() {
-        MultiPartTranslator.register(DiagonalBlockTypes.WINDOW, new MultiPartTranslator() {
+        MultiPartTranslator.register(DiagonalBlockTypes.WINDOW, new MultiPartTranslator(DiagonalBlockTypes.WINDOW) {
 
             @Override
             protected MultiPart applyAdditionalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart multiPart) {
                 return MultipartAppender.appendDiagonalSelectors(modelAdder, multiPart, true);
             }
         });
-        MultiPartTranslator.register(DiagonalBlockTypes.WALL, new MultiPartTranslator() {
+        MultiPartTranslator.register(DiagonalBlockTypes.WALL, new MultiPartTranslator(DiagonalBlockTypes.WALL) {
+
+            @Override
+            protected Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
+                if (newProperty.getValueClass() == WallSide.class) {
+                    return (Boolean) oldValue ? WallSide.LOW : WallSide.NONE;
+                } else {
+                    return super.getNewPropertyValue(oldProperty, newProperty, oldValue);
+                }
+            }
 
             @Override
             protected MultiPart getModelFromBase(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel) {

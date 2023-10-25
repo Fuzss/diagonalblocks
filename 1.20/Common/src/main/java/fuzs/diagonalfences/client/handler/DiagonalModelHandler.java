@@ -25,7 +25,9 @@ public class DiagonalModelHandler {
 
     static {
         MODEL_LOCATION_CONVERSIONS = Suppliers.memoize(() -> DiagonalBlockType.TYPES.stream().collect(ImmutableMap.toImmutableMap(Function.identity(), type -> {
-            return type.getBlockStateConversions().entrySet().stream().map(entry -> Map.entry(BlockModelShaper.stateToModelLocation(entry.getKey()), BlockModelShaper.stateToModelLocation(entry.getValue()))).collect(Util.toMap());
+            return MultiPartTranslator.get(type).getBlockStateConversions().entrySet().stream()
+                    .map(entry -> Map.entry(BlockModelShaper.stateToModelLocation(entry.getKey()), BlockModelShaper.stateToModelLocation(entry.getValue())))
+                    .collect(Util.toMap());
         })));
     }
 

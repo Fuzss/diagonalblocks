@@ -1,11 +1,9 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.block;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
 import fuzs.diagonalfences.api.v2.EightWayDirection;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -22,7 +20,6 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlock {
-    private Object2IntMap<BlockState> statePaletteMap;
     private final Block block;
 
     public DiagonalWallBlock(Block block) {
@@ -38,13 +35,12 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
 
     @Override
     protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-        return this.getShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
+        return this._makeShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
     }
 
     @Override
-    protected int getAABBIndex(BlockState state) {
-        if (this.statePaletteMap == null) this.statePaletteMap = new Object2IntOpenHashMap<>();
-        return this.statePaletteMap.computeIfAbsent(state, this::makeIndex);
+    protected int getAABBIndex(BlockState blockState) {
+        return this._getAABBIndex(blockState);
     }
 
     @Override

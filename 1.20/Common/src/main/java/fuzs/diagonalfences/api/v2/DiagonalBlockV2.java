@@ -1,5 +1,7 @@
 package fuzs.diagonalfences.api.v2;
 
+import fuzs.diagonalfences.api.v2.block.StarCollisionBlock;
+import fuzs.diagonalfences.api.v2.block.StarShapeProvider;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.world.level.block.LegacyDiagonalBlockAdapter;
 import net.minecraft.core.Direction;
@@ -9,7 +11,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /**
  * The very basic implementation for a block with diagonal block state properties.
- * <p>Most of the actual implementation is found in {@link fuzs.diagonalfences.world.level.block.StarCollisionBlock} and {@link fuzs.diagonalfences.world.level.block.StarShapeProvider}.
+ * <p>Most of the actual implementation is found in {@link StarCollisionBlock} and {@link StarShapeProvider}.
  */
 public interface DiagonalBlockV2 extends LegacyDiagonalBlockAdapter {
     BooleanProperty NORTH = CrossCollisionBlock.NORTH;

@@ -9,18 +9,15 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.Property;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public class DiagonalBlockTypeImpl implements DiagonalBlockType {
+    private static final UnaryOperator<Block> NULL_FACTORY = UnaryOperator.identity();
+
     private final BiMap<Block, Block> blocks = HashBiMap.create();
     private final BiMap<Block, Block> blocksView = Maps.unmodifiableBiMap(this.blocks);
     private final String name;
@@ -47,13 +44,13 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
     }
 
     @Override
-    public boolean isTarget(Block block) {
-        return !(block instanceof DiagonalBlock) && this.targetType.isInstance(block);
+    public boolean isTarget(ResourceLocation resourceLocation, Block block) {
+        return !(block instanceof DiagonalBlock) && this.factoryOverrides.get(resourceLocation) != NULL_FACTORY && (this.targetType.isInstance(block) || this.factoryOverrides.containsKey(resourceLocation));
     }
 
     @Override
     public Block makeDiagonalBlock(ResourceLocation resourceLocation, Block block) {
-        if (this.isTarget(block)) {
+        if (this.isTarget(resourceLocation, block)) {
             Block diagonalBlock = this.factoryOverrides.getOrDefault(resourceLocation, this.factory).apply(block);
             Objects.requireNonNull(diagonalBlock, "diagonal block for '%s' is null".formatted(resourceLocation));
             this.blocks.put(block, diagonalBlock);
@@ -64,24 +61,8 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
     }
 
     @Override
-    public BiMap<Block, Block> getConversions() {
+    public BiMap<Block, Block> getBlockConversions() {
         return this.blocksView;
-    }
-
-    @Override
-    public Map<BlockState, BlockState> getBlockStateConversions() {
-        Map<BlockState, BlockState> blockStates = Maps.newHashMap();
-        for (Map.Entry<Block, Block> e1 : this.blocksView.entrySet()) {
-            for (BlockState possibleState : e1.getValue().getStateDefinition().getPossibleStates()) {
-                StateDefinition<Block, BlockState> stateDefinition = e1.getKey().getStateDefinition();
-                BlockState blockState = stateDefinition.any();
-                for (Map.Entry<Property<?>, Comparable<?>> e2 : possibleState.getValues().entrySet()) {
-                    blockState = this.setBlockStateValue(e2.getKey(), e2.getValue(), stateDefinition::getProperty, blockState);
-                }
-                blockStates.put(possibleState, blockState);
-            }
-        }
-        return blockStates;
     }
 
     @Override
@@ -91,16 +72,15 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
         this.factoryOverrides.put(resourceLocation, factory);
     }
 
-    private <T extends Comparable<T>, V extends T> BlockState setBlockStateValue(Property<?> oldProperty, Comparable<?> oldValue, Function<String, @Nullable Property<?>> propertyGetter, BlockState blockState) {
-        Property<?> newProperty = propertyGetter.apply(oldProperty.getName());
-        if (newProperty != null) {
-            Comparable<?> newValue = this.getNewPropertyValue(oldProperty, newProperty, oldValue);
-            return blockState.setValue((Property<T>) newProperty, (V) newValue);
-        }
-        return blockState;
+    @Override
+    public void registerDefaultBlockFactory(ResourceLocation resourceLocation) {
+        Objects.requireNonNull(resourceLocation, "resource location is null");
+        this.factoryOverrides.put(resourceLocation, this.factory);
     }
 
-    protected Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
-        return oldValue;
+    @Override
+    public void disableBlockFactory(ResourceLocation resourceLocation) {
+        Objects.requireNonNull(resourceLocation, "resource location is null");
+        this.factoryOverrides.put(resourceLocation, NULL_FACTORY);
     }
 }

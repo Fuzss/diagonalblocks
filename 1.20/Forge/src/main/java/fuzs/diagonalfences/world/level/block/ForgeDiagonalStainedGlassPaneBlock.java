@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.world.level.block;
 
+import fuzs.diagonalfences.api.v2.block.DiagonalStainedGlassPaneBlock;
 import fuzs.diagonalfences.client.extensions.DiagonalClientBlockExtensions;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;

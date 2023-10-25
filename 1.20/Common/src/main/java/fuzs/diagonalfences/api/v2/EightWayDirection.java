@@ -25,7 +25,7 @@ public enum EightWayDirection implements StringRepresentable {
 
     private static final Map<String, EightWayDirection> DIRECTIONS_BY_KEY = Stream.of(EightWayDirection.values()).collect(Collectors.toMap(EightWayDirection::getSerializedName, Function.identity()));
 
-    private final int data2d;
+    public final int data2d;
     private final Vec3i directionVec;
 
     EightWayDirection(int data2d, Vec3i directionVec) {
@@ -119,8 +119,24 @@ public enum EightWayDirection implements StringRepresentable {
         throw new IllegalStateException("Cannot convert intercardinal direction to vanilla direction");
     }
 
+    public EightWayDirection rotateClockWise(int times) {
+        EightWayDirection eightWayDirection = this;
+        for (int i = 0; i < times; i++) {
+            eightWayDirection = eightWayDirection.rotateClockWise();
+        }
+        return eightWayDirection;
+    }
+
     public EightWayDirection rotateClockWise() {
         return byIndex(this.isIntercardinal() ? this.data2d + 1 : this.data2d, !this.isIntercardinal());
+    }
+
+    public EightWayDirection rotateCounterClockWise(int times) {
+        EightWayDirection eightWayDirection = this;
+        for (int i = 0; i < times; i++) {
+            eightWayDirection = eightWayDirection.rotateCounterClockWise();
+        }
+        return eightWayDirection;
     }
 
     public EightWayDirection rotateCounterClockWise() {

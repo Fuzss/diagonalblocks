@@ -20,7 +20,7 @@ public class DiagonalBlockHandler {
 
     public static void onBlockAdded(Registry<Block> registry, ResourceLocation id, Block entry, BiConsumer<ResourceLocation, Supplier<Block>> registrar) {
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-            if (type.isTarget(entry)) {
+            if (type.isTarget(id, entry)) {
                 ResourceLocation resourceLocation = DiagonalFences.id(id.getNamespace() + "/" + id.getPath());
                 registrar.accept(resourceLocation, () -> {
                     return type.makeDiagonalBlock(id, entry);
@@ -34,8 +34,9 @@ public class DiagonalBlockHandler {
         if (entry instanceof BlockItem blockItem) {
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
                 Block block = blockItem.getBlock();
-                if (type.isTarget(block)) {
-                    BlockConversionHelper.setBlockItemBlock(blockItem, type.getConversions().get(block));
+                // item id should be fine to use for block items
+                if (type.isTarget(id, block)) {
+                    BlockConversionHelper.setBlockItemBlock(blockItem, type.getBlockConversions().get(block));
                     break;
                 }
             }
@@ -47,7 +48,7 @@ public class DiagonalBlockHandler {
             if (item instanceof BlockItem blockItem) {
                 Block block = blockItem.getBlock();
                 for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                    BiMap<Block, Block> conversions = type.getConversions();
+                    BiMap<Block, Block> conversions = type.getBlockConversions();
                     Block base;
                     Block diagonal = conversions.get(block);
                     if (diagonal != null) {
@@ -70,7 +71,7 @@ public class DiagonalBlockHandler {
             }
         }
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-            type.getConversions().forEach(BlockConversionHelper::copyBoundTags);
+            type.getBlockConversions().forEach(BlockConversionHelper::copyBoundTags);
         }
     }
 }

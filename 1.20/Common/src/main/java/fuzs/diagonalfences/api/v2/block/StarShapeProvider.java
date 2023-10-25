@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.block;
 
 import com.google.common.base.Stopwatch;
 import fuzs.diagonalfences.DiagonalFences;
@@ -8,10 +8,13 @@ import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import fuzs.diagonalfences.world.phys.shapes.VoxelUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -20,10 +23,12 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public interface StarShapeProvider {
-    /**
-     * calculating shape unions is rather expensive, and since {@link VoxelShape} is immutable we use a cache for all diagonal blocks with the same shape
-     */
+    Object2IntMap<BlockState> STATE_INDEX_CACHE = new Object2IntOpenHashMap<>();
     Int2ObjectMap<VoxelShape[]> SHAPES_CACHE = new Int2ObjectOpenHashMap<>();
+
+    default int _getAABBIndex(BlockState state) {
+        return STATE_INDEX_CACHE.computeIfAbsent(state, this::makeIndex);
+    }
 
     default int makeIndex(BlockState blockState) {
         int index = 0;
@@ -35,13 +40,13 @@ public interface StarShapeProvider {
         return index;
     }
 
-    default VoxelShape[] getShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-
-        float[] dimensions = new float[]{nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight};
-        return SHAPES_CACHE.computeIfAbsent(Arrays.hashCode(dimensions), $ -> this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight));
+    default VoxelShape[] _makeShapes(float nodeWidth, float extensionWidth, float nodeTop, float extensionBottom, float extensionTop) {
+        return SHAPES_CACHE.computeIfAbsent(Arrays.hashCode(new float[]{nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop}), $ -> {
+            return this.makeDiagonalShapes(nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop);
+        });
     }
 
-    default VoxelCollection[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
+    default VoxelShape[] makeDiagonalShapes(float nodeWidth, float extensionWidth, float nodeTop, float extensionBottom, float extensionTop) {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -50,11 +55,11 @@ public interface StarShapeProvider {
         float extensionStart = 8.0F - extensionWidth;
         float extensionEnd = 8.0F + extensionWidth;
 
-        VoxelShape nodeShape = Block.box(nodeStart, 0.0, nodeStart, nodeEnd, nodeHeight, nodeEnd);
-        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionHeight, nodeStart)};
-        Vec3[] sideParticleShape = new Vec3[]{new Vec3(0.0, extensionBottom, 0.0), new Vec3(nodeStart, extensionHeight, nodeStart)};
-        VoxelShape[] verticalShapes = Stream.of(EightWayDirection.getCardinalDirections()).map(direction -> direction.transform(sideShape)).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
-        VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionHeight, direction, nodeWidth == extensionWidth)).toArray(VoxelShape[]::new);
+        VoxelShape nodeShape = Block.box(nodeStart, 0.0, nodeStart, nodeEnd, nodeTop, nodeEnd);
+        Vec3[] sideShape = new Vec3[]{new Vec3(extensionStart, extensionBottom, 0.0), new Vec3(extensionEnd, extensionTop, nodeStart)};
+        Vec3[] sideParticleShape = new Vec3[]{new Vec3(0.0, extensionBottom, 0.0), new Vec3(nodeStart, extensionTop, nodeStart)};
+        VoxelShape[] verticalShapes = Stream.of(EightWayDirection.getCardinalDirections()).map(direction -> direction.transform(sideShape)).map(VoxelUtils::scaleDown).map(VoxelUtils::box).toArray(VoxelShape[]::new);
+        VoxelShape[] diagonalShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> this.getDiagonalShape(extensionWidth, extensionBottom, extensionTop, direction, nodeWidth == extensionWidth)).toArray(VoxelShape[]::new);
         VoxelShape[] diagonalParticleShapes = Stream.of(EightWayDirection.getIntercardinalDirections()).map(direction -> {
 
             Vec3[] edges = sideParticleShape;
@@ -68,30 +73,32 @@ public interface StarShapeProvider {
                 edges = VoxelUtils.flipZ(edges);
             }
             return edges;
-        }).map(VoxelUtils::makeCuboidShape).toArray(VoxelShape[]::new);
+        }).map(VoxelUtils::scaleDown).map(VoxelUtils::box).toArray(VoxelShape[]::new);
         VoxelShape[] sideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalShapes[2], diagonalShapes[3], diagonalShapes[0], diagonalShapes[1]};
         VoxelShape[] particleSideShapes = new VoxelShape[]{verticalShapes[2], verticalShapes[3], verticalShapes[0], verticalShapes[1], diagonalParticleShapes[2], diagonalParticleShapes[3], diagonalParticleShapes[0], diagonalParticleShapes[1]};
 
-        VoxelCollection[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
+        VoxelShape[] stateShapes = this.constructStateShapes(nodeShape, sideShapes, particleSideShapes);
 
-        DiagonalFences.LOGGER.info("Constructing shapes for [NodeWith={},ExtensionWidth={},NodeHeight={},ExtensionBottom={},ExtensionHeight={}] took {}ms", nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight, stopwatch.stop().elapsed().toMillis());
+        DiagonalFences.LOGGER.info("Constructing shapes for {}[NodeWidth={},ExtensionWidth={},NodeTop={},ExtensionBottom={},ExtensionTop={}] took {}ms", this.getClass().getSimpleName(), nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop, stopwatch.stop().elapsed().toMillis());
 
         return stateShapes;
     }
 
-    default VoxelCollection[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
+    default VoxelShape[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
 
         VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
         for (int i = 0; i < stateShapes.length; i++) {
 
-            stateShapes[i] = new VoxelCollection(nodeShape);
+            VoxelCollection voxelCollection = new VoxelCollection(nodeShape);
             for (int j = 0; j < directionalShapes.length; j++) {
 
                 if ((i & (1 << j)) != 0) {
 
-                    stateShapes[i].addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
+                    voxelCollection.addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
                 }
             }
+
+            stateShapes[i] = voxelCollection.optimize();
         }
 
         return stateShapes;
@@ -124,17 +131,17 @@ public interface StarShapeProvider {
         return new NoneVoxelShape(collisionShape, VoxelUtils.scaleDown(edges));
     }
 
-    default VoxelShape getDiagonalCollisionShape(float extensionWidth, float extensionBottom, float extensionHeight, EightWayDirection direction) {
+    default VoxelShape getDiagonalCollisionShape(float extensionWidth, float extensionBottom, float extensionTop, EightWayDirection direction) {
 
         VoxelShape collisionShape = Shapes.empty();
         for (int i = 0; i < 8; i++) {
 
             int posX = direction.getX() > 0 ? i : 16 - i;
             int posZ = direction.getZ() > 0 ? i : 16 - i;
-            VoxelShape cuboidShape = Block.box(posX - extensionWidth, extensionBottom, posZ - extensionWidth, posX + extensionWidth, extensionHeight, posZ + extensionWidth);
-            collisionShape = Shapes.or(collisionShape, cuboidShape);
+            VoxelShape cuboidShape = Block.box(posX - extensionWidth, extensionBottom, posZ - extensionWidth, posX + extensionWidth, extensionTop, posZ + extensionWidth);
+            collisionShape = Shapes.joinUnoptimized(collisionShape, cuboidShape, BooleanOp.OR);
         }
 
-        return collisionShape;
+        return collisionShape.optimize();
     }
 }
