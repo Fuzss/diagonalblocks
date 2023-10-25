@@ -1,4 +1,4 @@
-// 1.20.1	2023-10-24T23:29:08.267076	Tags for minecraft:block mod id vanilla
-35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/diagonalfences/tags/blocks/non_diagonal_fences.json
-35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/diagonalfences/tags/blocks/non_diagonal_walls.json
-35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/diagonalfences/tags/blocks/non_diagonal_windows.json
+// 1.20.1	2023-10-26T00:19:24.041669	Tags for minecraft:block mod id vanilla
+86d767f857465f3ff17e74e24861a2516a04fc2a data/diagonalfences/tags/blocks/non_diagonal_fences.json
+06e3cbbc8ebcfc98a162edd5c6b97c10e4b9487c data/diagonalwalls/tags/blocks/non_diagonal_walls.json
+35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/diagonalwindows/tags/blocks/non_diagonal_windows.json
