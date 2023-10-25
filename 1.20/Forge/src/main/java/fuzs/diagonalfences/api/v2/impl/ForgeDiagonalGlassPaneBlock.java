@@ -1,15 +1,15 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.impl;
 
-import fuzs.diagonalfences.api.v2.block.DiagonalFenceBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalGlassPaneBlock;
 import fuzs.diagonalfences.client.extensions.DiagonalClientBlockExtensions;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.extensions.common.IClientBlockExtensions;
 
 import java.util.function.Consumer;
 
-public class ForgeDiagonalFenceBlock extends DiagonalFenceBlock {
+public class ForgeDiagonalGlassPaneBlock extends DiagonalGlassPaneBlock {
 
-    public ForgeDiagonalFenceBlock(Block block) {
+    public ForgeDiagonalGlassPaneBlock(Block block) {
         super(block);
     }
 

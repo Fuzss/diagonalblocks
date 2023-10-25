@@ -30,9 +30,7 @@ public class MultiPartTranslator {
     }
 
     public static void register(DiagonalBlockType diagonalBlockType, MultiPartTranslator translator) {
-        if (TRANSLATORS.putIfAbsent(diagonalBlockType, translator) != null) {
-            throw new IllegalStateException("duplicate multi part translator for diagonal block type '%s'".formatted(diagonalBlockType));
-        }
+        TRANSLATORS.put(diagonalBlockType, translator);
     }
 
     public static MultiPartTranslator get(DiagonalBlockType diagonalBlockType) {

@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.mixin;
 
 import fuzs.diagonalfences.api.v2.EightWayDirection;
-import fuzs.diagonalfences.api.v2.block.StarCollisionBlock;
+import fuzs.diagonalfences.api.v2.impl.StarCollisionBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;

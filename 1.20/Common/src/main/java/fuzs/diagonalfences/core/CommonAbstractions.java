@@ -1,8 +1,8 @@
 package fuzs.diagonalfences.core;
 
-import fuzs.diagonalfences.api.v2.block.DiagonalFenceBlock;
-import fuzs.diagonalfences.api.v2.block.DiagonalGlassPaneBlock;
-import fuzs.diagonalfences.api.v2.block.DiagonalWallBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalFenceBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalGlassPaneBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalWallBlock;
 import fuzs.puzzleslib.api.core.v1.ServiceProviderHelper;
 import net.minecraft.world.level.block.Block;
 

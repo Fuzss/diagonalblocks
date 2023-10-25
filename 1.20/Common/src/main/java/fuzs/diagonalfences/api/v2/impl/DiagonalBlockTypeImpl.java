@@ -1,9 +1,9 @@
-package fuzs.diagonalfences.api.v2;
+package fuzs.diagonalfences.api.v2.impl;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
-import fuzs.diagonalfences.DiagonalFences;
+import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -20,17 +20,22 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
 
     private final BiMap<Block, Block> blocks = HashBiMap.create();
     private final BiMap<Block, Block> blocksView = Maps.unmodifiableBiMap(this.blocks);
-    private final String name;
+    private final ResourceLocation name;
     private final Class<? extends Block> targetType;
     private final UnaryOperator<Block> factory;
     private final TagKey<Block> blacklistTagKey;
     private final Map<ResourceLocation, UnaryOperator<Block>> factoryOverrides = Maps.newConcurrentMap();
-
     public DiagonalBlockTypeImpl(String name, Class<? extends Block> targetType, UnaryOperator<Block> factory) {
-        this.name = name;
+        name = name.toLowerCase(Locale.ROOT);
+        this.name = new ResourceLocation("diagonal" + name, name);
         this.targetType = targetType;
         this.factory = factory;
-        this.blacklistTagKey = TagKey.create(Registries.BLOCK, DiagonalFences.id("non_diagonal_" + this));
+        this.blacklistTagKey = TagKey.create(Registries.BLOCK, this.id("non_diagonal_" + name));
+    }
+
+    @Override
+    public ResourceLocation id(String path) {
+        return new ResourceLocation(this.name.getNamespace(), path);
     }
 
     @Override
@@ -40,7 +45,7 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
 
     @Override
     public String toString() {
-        return this.name.toLowerCase(Locale.ROOT);
+        return this.name.toString();
     }
 
     @Override

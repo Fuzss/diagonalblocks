@@ -1,9 +1,9 @@
 package fuzs.diagonalfences.core;
 
-import fuzs.diagonalfences.api.v2.block.DiagonalFenceBlock;
-import fuzs.diagonalfences.api.v2.block.DiagonalGlassPaneBlock;
-import fuzs.diagonalfences.api.v2.block.DiagonalStainedGlassPaneBlock;
-import fuzs.diagonalfences.api.v2.block.DiagonalWallBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalFenceBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalGlassPaneBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalStainedGlassPaneBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalWallBlock;
 import net.minecraft.world.level.block.BeaconBeamBlock;
 import net.minecraft.world.level.block.Block;
 

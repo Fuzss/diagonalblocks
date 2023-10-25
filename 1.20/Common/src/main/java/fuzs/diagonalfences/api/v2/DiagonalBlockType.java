@@ -2,6 +2,9 @@ package fuzs.diagonalfences.api.v2;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.Sets;
+import fuzs.diagonalfences.handler.DiagonalBlockHandler;
+import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
@@ -26,8 +29,19 @@ public interface DiagonalBlockType {
     static void register(DiagonalBlockType type) {
         if (TYPES.contains(type) || !TYPES.add(type)) {
             throw new IllegalStateException("duplicate diagonal block type '%s'".formatted(type));
+        } else {
+            // due to how this event is implemented on Fabric it's registration must be triggered by the mod registering the new diagonal block type
+            RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(DiagonalBlockHandler.onBlockAdded(type));
         }
     }
+
+    /**
+     * Creates a new {@link ResourceLocation} for this type with the type's namespace.
+     *
+     * @param path path for the identifier
+     * @return the new identifier for the type
+     */
+    ResourceLocation id(String path);
 
     /**
      * A block blacklist for preventing the diagonal block from being set to the corresponding {@link net.minecraft.world.item.BlockItem}.

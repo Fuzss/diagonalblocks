@@ -1,17 +1,16 @@
-package fuzs.diagonalfences.world.level.block;
+package fuzs.diagonalfences.api.v2.impl;
 
-import fuzs.diagonalfences.api.v2.block.DiagonalStainedGlassPaneBlock;
+import fuzs.diagonalfences.api.v2.impl.DiagonalFenceBlock;
 import fuzs.diagonalfences.client.extensions.DiagonalClientBlockExtensions;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.extensions.common.IClientBlockExtensions;
 
 import java.util.function.Consumer;
 
-public class ForgeDiagonalStainedGlassPaneBlock extends DiagonalStainedGlassPaneBlock {
+public class ForgeDiagonalFenceBlock extends DiagonalFenceBlock {
 
-    public ForgeDiagonalStainedGlassPaneBlock(Block block, DyeColor color) {
-        super(block, color);
+    public ForgeDiagonalFenceBlock(Block block) {
+        super(block);
     }
 
     @Override

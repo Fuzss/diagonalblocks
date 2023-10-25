@@ -1,5 +1,6 @@
 package fuzs.diagonalfences.api.v2;
 
+import fuzs.diagonalfences.api.v2.impl.DiagonalBlockTypeImpl;
 import fuzs.diagonalfences.core.CommonAbstractions;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.IronBarsBlock;

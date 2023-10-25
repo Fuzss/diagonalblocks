@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.api.v2.block;
+package fuzs.diagonalfences.api.v2.impl;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;

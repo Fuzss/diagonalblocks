@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.api.v2.block;
+package fuzs.diagonalfences.api.v2.impl;
 
 import com.google.common.base.Stopwatch;
 import fuzs.diagonalfences.DiagonalFences;

@@ -4,10 +4,8 @@ import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalfences.handler.DiagonalBlockHandler;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
-import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +24,6 @@ public class DiagonalFences implements ModConstructor {
     }
 
     private static void registerHandlers() {
-        RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(DiagonalBlockHandler::onBlockAdded);
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST, DiagonalBlockHandler::onTagsUpdated);
     }
 

@@ -1,25 +1,23 @@
-package fuzs.diagonalfences.api.v2.block;
+package fuzs.diagonalfences.api.v2.impl;
 
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.diagonalfences.api.v2.DiagonalBlockTypes;
-import fuzs.diagonalfences.api.v2.DiagonalBlockV2;
-import fuzs.diagonalfences.world.phys.shapes.VoxelCollection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisionBlock {
+public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock {
     private final Block block;
 
-    public DiagonalGlassPaneBlock(Block block) {
+    public DiagonalFenceBlock(Block block) {
         super(BlockBehaviour.Properties.copy(block).dropsLike(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
@@ -64,37 +62,16 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
 
     @Override
     public DiagonalBlockType getType() {
-        return DiagonalBlockTypes.WINDOW;
+        return DiagonalBlockTypes.FENCE;
     }
 
     @Override
     public boolean attachesDirectlyTo(BlockState blockState, boolean isSideSolid, Direction direction) {
-        return this.attachsTo(blockState, isSideSolid);
+        return this.connectsTo(blockState, isSideSolid, direction);
     }
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlockV2 diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WALL;
-    }
-
-    @Override
-    public VoxelShape[] constructStateShapes(VoxelShape nodeShape, VoxelShape[] directionalShapes, VoxelShape[] particleDirectionalShapes) {
-        VoxelCollection[] stateShapes = new VoxelCollection[(int) Math.pow(2, directionalShapes.length)];
-        for (int i = 0; i < stateShapes.length; i++) {
-            VoxelCollection voxelCollection;
-            // don't render outline for node as the texture is not visible making it feel out of place
-            if (((i & (1 << 4)) != 0 && (i & (1 << 6)) != 0) || ((i & (1 << 5)) != 0 && (i & (1 << 7)) != 0)) {
-                voxelCollection = new VoxelCollection(nodeShape, Shapes.empty());
-            } else {
-                voxelCollection = new VoxelCollection(nodeShape);
-            }
-            for (int j = 0; j < directionalShapes.length; j++) {
-                if ((i & (1 << j)) != 0) {
-                    voxelCollection.addVoxelShape(directionalShapes[j], particleDirectionalShapes[j]);
-                }
-            }
-            stateShapes[i] = voxelCollection.optimize();
-        }
-        return stateShapes;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) && blockState.is(BlockTags.FENCES) && blockState.is(BlockTags.WOODEN_FENCES) == this.defaultBlockState().is(BlockTags.WOODEN_FENCES);
     }
 }

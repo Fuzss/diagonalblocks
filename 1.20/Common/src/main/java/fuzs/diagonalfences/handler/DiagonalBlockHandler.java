@@ -1,9 +1,9 @@
 package fuzs.diagonalfences.handler;
 
 import com.google.common.collect.BiMap;
-import fuzs.diagonalfences.DiagonalFences;
 import fuzs.diagonalfences.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
+import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.init.v3.RegistryHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -20,16 +20,15 @@ import java.util.function.Supplier;
 
 public class DiagonalBlockHandler {
 
-    public static void onBlockAdded(Registry<Block> registry, ResourceLocation id, Block entry, BiConsumer<ResourceLocation, Supplier<Block>> registrar) {
-        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+    public static RegistryEntryAddedCallback<Block> onBlockAdded(DiagonalBlockType type) {
+        return (Registry<Block> registry, ResourceLocation id, Block entry, BiConsumer<ResourceLocation, Supplier<Block>> registrar) -> {
             if (type.isTarget(id, entry)) {
-                ResourceLocation resourceLocation = DiagonalFences.id(id.getNamespace() + "/" + id.getPath());
+                ResourceLocation resourceLocation = type.id(id.getNamespace() + "/" + id.getPath());
                 registrar.accept(resourceLocation, () -> {
                     return type.makeDiagonalBlock(id, entry);
                 });
-                break;
             }
-        }
+        };
     }
 
     public static void onTagsUpdated(RegistryAccess registryAccess, boolean client) {

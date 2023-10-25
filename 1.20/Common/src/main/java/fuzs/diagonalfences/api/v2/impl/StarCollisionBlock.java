@@ -1,4 +1,4 @@
-package fuzs.diagonalfences.api.v2.block;
+package fuzs.diagonalfences.api.v2.impl;
 
 import com.google.common.collect.Maps;
 import fuzs.diagonalfences.api.v2.DiagonalBlockV2;

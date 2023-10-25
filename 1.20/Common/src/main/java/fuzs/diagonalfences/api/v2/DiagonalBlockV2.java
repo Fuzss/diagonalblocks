@@ -1,7 +1,7 @@
 package fuzs.diagonalfences.api.v2;
 
-import fuzs.diagonalfences.api.v2.block.StarCollisionBlock;
-import fuzs.diagonalfences.api.v2.block.StarShapeProvider;
+import fuzs.diagonalfences.api.v2.impl.StarCollisionBlock;
+import fuzs.diagonalfences.api.v2.impl.StarShapeProvider;
 import fuzs.diagonalfences.api.world.level.block.DiagonalBlock;
 import fuzs.diagonalfences.world.level.block.LegacyDiagonalBlockAdapter;
 import net.minecraft.core.Direction;
