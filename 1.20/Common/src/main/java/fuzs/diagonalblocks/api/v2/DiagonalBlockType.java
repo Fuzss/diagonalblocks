@@ -22,14 +22,13 @@ public interface DiagonalBlockType {
     Set<DiagonalBlockType> TYPES = Sets.newConcurrentHashSet();
 
     /**
-     * Registers a new diagonal block type, checking for duplicates in the process.
+     * Registers a new diagonal block type.
      *
      * @param type the new diagonal block type
      */
     static void register(DiagonalBlockType type) {
-        if (TYPES.contains(type) || !TYPES.add(type)) {
-            throw new IllegalStateException("duplicate diagonal block type '%s'".formatted(type));
-        } else {
+        // single line haha
+        if (!TYPES.contains(type) && TYPES.add(type)) {
             // due to how this event is implemented on Fabric it's registration must be triggered by the mod registering the new diagonal block type
             RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(DiagonalBlockHandler.onBlockAdded(type));
         }
