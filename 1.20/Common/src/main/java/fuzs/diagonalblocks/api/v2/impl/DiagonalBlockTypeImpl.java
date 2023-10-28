@@ -3,8 +3,8 @@ package fuzs.diagonalblocks.api.v2.impl;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
-import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.DiagonalBlock;
+import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.Block;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class DiagonalBlockTypeImpl implements DiagonalBlockType {
@@ -24,13 +26,20 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
     private final Class<? extends Block> targetType;
     private final UnaryOperator<Block> factory;
     private final TagKey<Block> blacklistTagKey;
+    private final IntSupplier blockStateProperties;
     private final Map<ResourceLocation, UnaryOperator<Block>> factoryOverrides = Maps.newConcurrentMap();
-    public DiagonalBlockTypeImpl(String name, Class<? extends Block> targetType, UnaryOperator<Block> factory) {
+
+    public DiagonalBlockTypeImpl(String name, Class<? extends Block> targetType, UnaryOperator<Block> factory, Supplier<Block> referenceBlock) {
+        this(name, targetType, factory, () -> referenceBlock.get().getStateDefinition().getProperties().size());
+    }
+
+    public DiagonalBlockTypeImpl(String name, Class<? extends Block> targetType, UnaryOperator<Block> factory, IntSupplier blockStateProperties) {
         name = name.toLowerCase(Locale.ROOT);
         this.name = new ResourceLocation("diagonal" + name, name);
         this.targetType = targetType;
         this.factory = factory;
         this.blacklistTagKey = TagKey.create(Registries.BLOCK, this.id("non_diagonal_" + name));
+        this.blockStateProperties = blockStateProperties;
     }
 
     @Override
@@ -50,7 +59,18 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
 
     @Override
     public boolean isTarget(ResourceLocation resourceLocation, Block block) {
-        return !(block instanceof DiagonalBlock) && this.factoryOverrides.get(resourceLocation) != NULL_FACTORY && (this.targetType.isInstance(block) || this.factoryOverrides.containsKey(resourceLocation));
+        if (!(block instanceof DiagonalBlock) && this.factoryOverrides.get(resourceLocation) != NULL_FACTORY) {
+            // check that block state properties count matches, we might otherwise run into issues with blocks that extend the base class and expect certain properties to be present
+            // especially an issue when running BlockBehaviour.Properties::copy with behavior properties that depend on block state properties, such as BlockBehaviour.Properties::lightLevel
+            // checking the count is enough, no need to compare actual properties
+            boolean isTarget = this.targetType.isInstance(block) && this.blockStateProperties.getAsInt() == block.getStateDefinition().getProperties().size();
+            return isTarget || this.factoryOverrides.containsKey(resourceLocation);
+        }
+        return false;
+    }
+
+    private static int getBlockStateProperties(Block block) {
+        return block.getStateDefinition().getProperties().size();
     }
 
     @Override

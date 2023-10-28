@@ -77,7 +77,7 @@ public class MultiPartTranslator {
         // we use a placeholder model that is provided via a runtime data generator, so the model bakery doesn't log a missing model
         // also the generated placeholder purposefully uses multipart, so we can reuse the stored state definition
         if (!(diagonalBlockModel instanceof MultiPart)) {
-            throw new IllegalArgumentException("invalid model for diagonal block: " + modelLocation);
+            throw new IllegalArgumentException("invalid model for diagonal block '%s': '%s'".formatted(new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath()), diagonalBlockModel));
         }
         return new MultiPart(((MultiPartAccessor) diagonalBlockModel).diagonalfences$getDefinition(), selectors);
     }
