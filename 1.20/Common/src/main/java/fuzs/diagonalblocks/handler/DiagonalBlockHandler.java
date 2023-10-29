@@ -55,22 +55,22 @@ public class DiagonalBlockHandler {
     private static void setBlockForItem(BlockItem blockItem, Block block) {
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             BiMap<Block, Block> conversions = type.getBlockConversions();
-            Block base;
-            Block diagonal = conversions.get(block);
-            if (diagonal != null) {
-                base = block;
+            Block baseBlock;
+            Block diagonalBlock = conversions.get(block);
+            if (diagonalBlock != null) {
+                baseBlock = block;
             } else {
-                base = conversions.inverse().get(block);
-                if (base != null) {
-                    diagonal = block;
+                baseBlock = conversions.inverse().get(block);
+                if (baseBlock != null) {
+                    diagonalBlock = block;
                 } else {
                     continue;
                 }
             }
-            if (RegistryHelper.is(type.getBlacklistTagKey(), base)) {
-                BlockConversionHelper.setBlockForItem(blockItem, base);
+            if (RegistryHelper.is(type.getBlacklistTagKey(), baseBlock)) {
+                BlockConversionHelper.setBlockForItem(blockItem, baseBlock);
             } else {
-                BlockConversionHelper.setBlockForItem(blockItem, diagonal);
+                BlockConversionHelper.setBlockForItem(blockItem, diagonalBlock);
             }
             break;
         }

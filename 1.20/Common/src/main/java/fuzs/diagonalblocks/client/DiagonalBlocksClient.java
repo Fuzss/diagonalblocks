@@ -41,6 +41,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
 
     private static void registerHandlers() {
         ModelEvents.MODIFY_UNBAKED_MODEL.register(DiagonalModelHandler::onModifyUnbakedModel);
+        ModelEvents.AFTER_MODEL_LOADING.register(DiagonalModelHandler::onAfterModelLoading);
         LoadCompleteCallback.EVENT.register(() -> {
             // run a custom implementation here, the appropriate method in client mod constructor runs together with other mods, so we might miss some entries
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
@@ -73,7 +74,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
             }
 
             @Override
-            protected MultiPart getModelFromBase(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel) {
+            protected MultiPart getModelFromBase(Block diagonalBlock, MultiPart baseBlockModel) {
                 List<Selector> selectors = Lists.newArrayList(baseBlockModel.getSelectors());
                 ListIterator<Selector> iterator = selectors.listIterator();
                 while (iterator.hasNext()) {
@@ -97,7 +98,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                         }
                     }
                 }
-                return this.makeMultiPart(modelLocation, diagonalBlockModel, selectors);
+                return new MultiPart(diagonalBlock.getStateDefinition(), selectors);
             }
         });
     }

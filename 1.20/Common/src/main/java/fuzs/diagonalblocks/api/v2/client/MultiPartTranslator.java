@@ -4,9 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.client.resources.model.MultipartAppender;
-import fuzs.diagonalblocks.mixin.client.accessor.MultiPartAccessor;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -23,7 +24,7 @@ import java.util.function.Function;
 public class MultiPartTranslator {
     private static final Map<DiagonalBlockType, MultiPartTranslator> TRANSLATORS = Maps.newConcurrentMap();
 
-    private final DiagonalBlockType type;
+    protected final DiagonalBlockType type;
 
     protected MultiPartTranslator(DiagonalBlockType type) {
         this.type = type;
@@ -37,19 +38,18 @@ public class MultiPartTranslator {
         return TRANSLATORS.computeIfAbsent(diagonalBlockType, MultiPartTranslator::new);
     }
 
-    public Map<BlockState, BlockState> getBlockStateConversions() {
-        Map<BlockState, BlockState> blockStates = Maps.newHashMap();
-        for (Map.Entry<Block, Block> e1 : this.type.getBlockConversions().entrySet()) {
-            for (BlockState possibleState : e1.getValue().getStateDefinition().getPossibleStates()) {
-                StateDefinition<Block, BlockState> stateDefinition = e1.getKey().getStateDefinition();
-                BlockState blockState = stateDefinition.any();
-                for (Map.Entry<Property<?>, Comparable<?>> e2 : possibleState.getValues().entrySet()) {
-                    blockState = this.setBlockStateValue(e2.getKey(), e2.getValue(), stateDefinition::getProperty, blockState);
-                }
-                blockStates.put(possibleState, blockState);
-            }
+    public ModelResourceLocation convertAnyBlockState(Block oldBlock, Block newBlock) {
+        StateDefinition<Block, BlockState> stateDefinition = oldBlock.getStateDefinition();
+        BlockState blockState = this.convertBlockState(newBlock.getStateDefinition(), stateDefinition.any());
+        return BlockModelShaper.stateToModelLocation(blockState);
+    }
+
+    private BlockState convertBlockState(StateDefinition<Block, BlockState> newStateDefinition, BlockState oldBlockState) {
+        BlockState newBlockState = newStateDefinition.any();
+        for (Map.Entry<Property<?>, Comparable<?>> entry : oldBlockState.getValues().entrySet()) {
+            newBlockState = this.setBlockStateValue(entry.getKey(), entry.getValue(), newStateDefinition::getProperty, newBlockState);
         }
-        return blockStates;
+        return newBlockState;
     }
 
     private <T extends Comparable<T>, V extends T> BlockState setBlockStateValue(Property<?> oldProperty, Comparable<?> oldValue, Function<String, @Nullable Property<?>> propertyGetter, BlockState blockState) {
@@ -65,21 +65,13 @@ public class MultiPartTranslator {
         return oldValue;
     }
 
-    public MultiPart apply(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
-        return this.applyAdditionalSelectors(modelAdder, this.getModelFromBase(modelLocation, diagonalBlockModel, baseBlockModel));
+    public MultiPart apply(Block diagonalBlock, MultiPart baseBlockModel, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
+        return this.applyAdditionalSelectors(modelAdder, this.getModelFromBase(diagonalBlock, baseBlockModel));
     }
 
-    protected MultiPart getModelFromBase(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, MultiPart baseBlockModel) {
-        return this.makeMultiPart(modelLocation, diagonalBlockModel, Lists.newArrayList(baseBlockModel.getSelectors()));
-    }
-
-    protected MultiPart makeMultiPart(ResourceLocation modelLocation, UnbakedModel diagonalBlockModel, List<Selector> selectors) {
-        // we use a placeholder model that is provided via a runtime data generator, so the model bakery doesn't log a missing model
-        // also the generated placeholder purposefully uses multipart, so we can reuse the stored state definition
-        if (!(diagonalBlockModel instanceof MultiPart)) {
-            throw new IllegalArgumentException("invalid model for diagonal block '%s': '%s'".formatted(new ResourceLocation(modelLocation.getNamespace(), modelLocation.getPath()), diagonalBlockModel));
-        }
-        return new MultiPart(((MultiPartAccessor) diagonalBlockModel).diagonalfences$getDefinition(), selectors);
+    protected MultiPart getModelFromBase(Block diagonalBlock, MultiPart baseBlockModel) {
+        List<Selector> selectors = Lists.newArrayList(baseBlockModel.getSelectors());
+        return new MultiPart(diagonalBlock.getStateDefinition(), selectors);
     }
 
     protected MultiPart applyAdditionalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart multiPart) {
