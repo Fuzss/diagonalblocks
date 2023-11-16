@@ -49,15 +49,20 @@ public class DiagonalModelHandler {
                 MultiPartTranslator translator = MultiPartTranslator.get(entry.getKey());
                 // the unbaked model is the same for every possible block state for a block, so it's good enough to just pick out the 'any' base state
                 ModelResourceLocation modelResourceLocation = translator.convertAnyBlockState(diagonalBlock, baseBlock);
-                if (modelGetter.apply(modelResourceLocation) instanceof MultiPart multiPart) {
+                UnbakedModel baseModel = modelGetter.apply(modelResourceLocation);
+                if (baseModel instanceof MultiPart multiPart) {
                     UnbakedModel newModel = translator.apply(diagonalBlock, multiPart, modelAdder);
                     UNBAKED_MODEL_CACHE.put(resourceLocation, newModel);
                     return EventResultHolder.interrupt(newModel);
                 }
                 if (REPORTED_BLOCKS.add(resourceLocation)) {
-                    DiagonalBlocks.LOGGER.warn("Block '{}' is not using multipart model, diagonal connections will not be visible!", resourceLocation);
+                    DiagonalBlocks.LOGGER.warn("Block '{}' is using incompatible model '{}' and should be added to the '{}' block tag. The model will not appear correctly under some circumstances!", BuiltInRegistries.BLOCK.getKey(baseBlock), baseModel.getClass().getName(), entry.getKey().getBlacklistTagKey().location());
                 }
-                break;
+                if (translator.allowBaseModelAsFallback()) {
+                    return EventResultHolder.interrupt(baseModel);
+                } else {
+                    break;
+                }
             }
         }
         return EventResultHolder.pass();

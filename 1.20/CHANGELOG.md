@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v8.0.3-1.20.1] - 2023-11-13
+### Changed
+- Use base block model as fallback if model transformation fails instead of defaulting to stone block model
+
 ## [v8.0.2-1.20.1] - 2023-10-29
 ### Changed
 - Updated to Puzzles Lib v8.1.5

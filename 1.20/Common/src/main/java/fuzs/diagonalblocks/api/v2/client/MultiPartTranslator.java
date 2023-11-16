@@ -77,4 +77,8 @@ public class MultiPartTranslator {
     protected MultiPart applyAdditionalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart multiPart) {
         return MultipartAppender.appendDiagonalSelectors(modelAdder, multiPart, false);
     }
+
+    public boolean allowBaseModelAsFallback() {
+        return true;
+    }
 }

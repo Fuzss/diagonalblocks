@@ -25,8 +25,8 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
     private final ResourceLocation name;
     private final Class<? extends Block> targetType;
     private final UnaryOperator<Block> factory;
-    private final TagKey<Block> blacklistTagKey;
     private final IntSupplier blockStateProperties;
+    private final TagKey<Block> blacklistTagKey;
     private final Map<ResourceLocation, UnaryOperator<Block>> factoryOverrides = Maps.newConcurrentMap();
 
     public DiagonalBlockTypeImpl(String name, Class<? extends Block> targetType, UnaryOperator<Block> factory, Supplier<Block> referenceBlock) {
@@ -38,8 +38,8 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
         this.name = new ResourceLocation("diagonal" + name, name);
         this.targetType = targetType;
         this.factory = factory;
-        this.blacklistTagKey = TagKey.create(Registries.BLOCK, this.id("non_diagonal_" + name));
         this.blockStateProperties = blockStateProperties;
+        this.blacklistTagKey = TagKey.create(Registries.BLOCK, this.id("non_diagonal_" + name));
     }
 
     @Override
@@ -67,10 +67,6 @@ public class DiagonalBlockTypeImpl implements DiagonalBlockType {
             return isTarget || this.factoryOverrides.containsKey(resourceLocation);
         }
         return false;
-    }
-
-    private static int getBlockStateProperties(Block block) {
-        return block.getStateDefinition().getProperties().size();
     }
 
     @Override

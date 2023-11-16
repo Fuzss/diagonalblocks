@@ -100,6 +100,12 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                 }
                 return new MultiPart(diagonalBlock.getStateDefinition(), selectors);
             }
+
+            @Override
+            public boolean allowBaseModelAsFallback() {
+                // since we change the block states on our wall block implementation from vanilla it is not safe to use the model of the vanilla wall base block
+                return false;
+            }
         });
     }
 
