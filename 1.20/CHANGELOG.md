@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v8.0.4-1.20.1] - 2023-12-08
+### Fixed
+- Fences from [Immersive Engineering](https://www.curseforge.com/minecraft/mc-mods/immersive-engineering) are now blacklisted by default to prevent issues with multi-blocks not forming
+
 ## [v8.0.3-1.20.1] - 2023-11-13
 ### Changed
 - Use base block model as fallback if model transformation fails instead of defaulting to stone block model

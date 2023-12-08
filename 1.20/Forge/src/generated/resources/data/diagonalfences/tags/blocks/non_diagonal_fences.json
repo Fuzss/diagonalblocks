@@ -1,6 +1,14 @@
 {
   "values": [
     {
+      "id": "immersiveengineering:treated_fence",
+      "required": false
+    },
+    {
+      "id": "immersiveengineering:steel_fence",
+      "required": false
+    },
+    {
       "id": "betternether:nether_reed_fence",
       "required": false
     },
