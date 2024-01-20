@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "fuzs.diagonalblocks.mixin",
+  "refmap": "diagonalblocks.refmap.json",
+  "plugin": "fuzs.diagonalblocks.mixin.ModMixinConfigPlugin",
+  "mixins": [
+  ],
+  "client": [
+    "client.ParticleEngineFabricMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

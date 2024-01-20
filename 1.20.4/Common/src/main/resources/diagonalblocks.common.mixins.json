@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "package": "fuzs.diagonalblocks.mixin",
+  "refmap": "diagonalblocks.refmap.json",
+  "plugin": "fuzs.diagonalblocks.mixin.ModMixinConfigPlugin",
+  "mixins": [
+    "WalkNodeEvaluatorMixin",
+    "accessor.VoxelShapeAccessor"
+  ],
+  "client": [
+    "client.accessor.AndConditionAccessor",
+    "client.accessor.KeyValueConditionAccessor",
+    "client.accessor.MultiPartAccessor",
+    "client.accessor.OrConditionAccessor",
+    "client.accessor.SelectorAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
