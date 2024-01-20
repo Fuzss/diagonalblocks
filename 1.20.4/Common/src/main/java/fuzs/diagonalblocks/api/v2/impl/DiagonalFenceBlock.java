@@ -18,7 +18,7 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
     private final Block block;
 
     public DiagonalFenceBlock(Block block) {
-        super(BlockBehaviour.Properties.copy(block).dropsLike(block));
+        super(BlockBehaviour.Properties.ofFullCopy(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
     }

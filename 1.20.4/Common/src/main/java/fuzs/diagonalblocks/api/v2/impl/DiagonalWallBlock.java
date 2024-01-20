@@ -23,7 +23,7 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     private final Block block;
 
     public DiagonalWallBlock(Block block) {
-        super(BlockBehaviour.Properties.copy(block).dropsLike(block));
+        super(BlockBehaviour.Properties.ofFullCopy(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
     }

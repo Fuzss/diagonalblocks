@@ -20,7 +20,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
     private final Block block;
 
     public DiagonalGlassPaneBlock(Block block) {
-        super(BlockBehaviour.Properties.copy(block).dropsLike(block));
+        super(BlockBehaviour.Properties.ofFullCopy(block));
         this.block = block;
         this.registerDefaultState(this.addDefaultStates(this.defaultBlockState()));
     }

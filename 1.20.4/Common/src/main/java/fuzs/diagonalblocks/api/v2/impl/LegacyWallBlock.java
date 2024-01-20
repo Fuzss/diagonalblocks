@@ -1,5 +1,6 @@
 package fuzs.diagonalblocks.api.v2.impl;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
@@ -35,6 +36,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * (2^4*2^2=64 possible states in vanilla, 2^8*2^2=1,024 possible states with diagonal block state properties).
  */
 public class LegacyWallBlock extends CrossCollisionBlock {
+    public static final MapCodec<LegacyWallBlock> CODEC = simpleCodec(LegacyWallBlock::new);
     private static final VoxelShape POST_TEST = Block.box(7.0, 0.0, 7.0, 9.0, 16.0, 9.0);
     public static final BooleanProperty UP = BlockStateProperties.UP;
     private final VoxelShape[] shapeWithPostByIndex;
@@ -45,6 +47,11 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(UP, Boolean.TRUE).setValue(NORTH, Boolean.FALSE).setValue(EAST, Boolean.FALSE).setValue(SOUTH, Boolean.FALSE).setValue(WEST, Boolean.FALSE).setValue(WATERLOGGED, Boolean.FALSE));
         this.shapeWithPostByIndex = this.makeShapes(4.0F, 3.0F, 16.0F, 0.0F, 14.0F);
         this.collisionShapeWithPostByIndex = this.makeShapes(4.0F, 3.0F, 24.0F, 0.0F, 24.0F);
+    }
+
+    @Override
+    protected MapCodec<? extends CrossCollisionBlock> codec() {
+        return CODEC;
     }
 
     @Override

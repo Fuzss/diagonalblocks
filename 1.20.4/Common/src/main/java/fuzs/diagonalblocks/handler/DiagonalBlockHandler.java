@@ -4,7 +4,7 @@ import com.google.common.collect.BiMap;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
-import fuzs.puzzleslib.api.init.v3.RegistryHelper;
+import fuzs.puzzleslib.api.init.v3.registry.RegistryHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;

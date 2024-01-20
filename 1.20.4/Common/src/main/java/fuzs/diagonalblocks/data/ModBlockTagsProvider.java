@@ -23,7 +23,7 @@ public class ModBlockTagsProvider extends AbstractTagProvider.Blocks {
     }
 
     @Override
-    protected void addTags(HolderLookup.Provider provider) {
+    public void addTags(HolderLookup.Provider provider) {
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             IntrinsicTagAppender<Block> tagAppender = this.tag(type.getBlacklistTagKey());
             BLACKLISTED_TYPES.getOrDefault(type, Collections.emptyList()).stream().map(ResourceLocation::new).forEach(tagAppender::addOptional);

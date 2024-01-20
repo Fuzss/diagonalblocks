@@ -2,9 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_17",
-  "package": "fuzs.diagonalblocks.mixin",
-  "refmap": "diagonalblocks.refmap.json",
-  "plugin": "fuzs.diagonalblocks.mixin.ModMixinConfigPlugin",
+  "package": "${modGroup}.fabric.mixin",
   "mixins": [
   ],
   "client": [
