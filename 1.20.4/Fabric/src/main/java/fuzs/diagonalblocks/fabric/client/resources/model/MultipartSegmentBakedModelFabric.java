@@ -29,11 +29,13 @@ public class MultipartSegmentBakedModelFabric<T extends BakedModel> extends Forw
         return this.quadMap.get(side);
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
         context.fallbackConsumer().accept(this);
     }
 
+    @SuppressWarnings("removal")
     @Override
     public void emitItemQuads(ItemStack stack, Supplier<RandomSource> randomSupplier, RenderContext context) {
         context.fallbackConsumer().accept(this);
