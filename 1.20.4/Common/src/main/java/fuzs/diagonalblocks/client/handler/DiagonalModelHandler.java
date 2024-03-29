@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import fuzs.diagonalblocks.DiagonalBlocks;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.client.MultiPartTranslator;
+import fuzs.diagonalblocks.data.ModBlockTagsProvider;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
@@ -17,6 +18,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -56,7 +58,12 @@ public class DiagonalModelHandler {
                     return EventResultHolder.interrupt(newModel);
                 }
                 if (REPORTED_BLOCKS.add(resourceLocation)) {
-                    DiagonalBlocks.LOGGER.warn("Block '{}' is using incompatible model '{}' and should be added to the '{}' block tag. The model will not appear correctly under some circumstances!", BuiltInRegistries.BLOCK.getKey(baseBlock), baseModel.getClass().getName(), entry.getKey().getBlacklistTagKey().location());
+                    ResourceLocation blockLocation = BuiltInRegistries.BLOCK.getKey(baseBlock);
+                    // don't report built-in blacklisted blocks
+                    if (!ModBlockTagsProvider.TAG_BLACKLISTED_TYPES.getOrDefault(entry.getKey(), Collections.emptyList()).contains(blockLocation.toString())) {
+                        DiagonalBlocks.LOGGER.warn("Block '{}' is using incompatible model '{}' and should be added to the '{}' block tag. The model will not appear correctly under some circumstances!",
+                                blockLocation, baseModel.getClass().getName(), entry.getKey().getBlacklistTagKey().location());
+                    }
                 }
                 if (translator.allowBaseModelAsFallback()) {
                     return EventResultHolder.interrupt(baseModel);
@@ -65,6 +72,7 @@ public class DiagonalModelHandler {
                 }
             }
         }
+
         return EventResultHolder.pass();
     }
 

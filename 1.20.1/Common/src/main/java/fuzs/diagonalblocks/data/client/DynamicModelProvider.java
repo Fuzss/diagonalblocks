@@ -33,6 +33,6 @@ public class DynamicModelProvider extends AbstractModelProvider {
 
     @Override
     public void addItemModels(ItemModelBuilder builder) {
-
+        // NO-OP
     }
 }

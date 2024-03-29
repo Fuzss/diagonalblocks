@@ -4,7 +4,6 @@ import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.client.data.v2.AbstractModelProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.data.models.BlockModelGenerators;
-import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.data.models.blockstates.Variant;
 import net.minecraft.data.models.blockstates.VariantProperties;
@@ -29,10 +28,5 @@ public class DynamicModelProvider extends AbstractModelProvider {
                 builder.skipAutoItemBlock(block);
             });
         }
-    }
-
-    @Override
-    public void addItemModels(ItemModelGenerators builder) {
-
     }
 }

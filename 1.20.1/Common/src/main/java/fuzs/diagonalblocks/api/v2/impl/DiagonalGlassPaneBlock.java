@@ -95,6 +95,7 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
             }
             stateShapes[i] = voxelCollection.optimize();
         }
+
         return stateShapes;
     }
 }
