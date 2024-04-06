@@ -29,9 +29,12 @@ public interface DiagonalBlock {
     DiagonalBlockType getType();
 
     /**
-     * Checks if this block can connect to a direct neighbor in the horizontal plane.
-     * Used for checking cardinal directions (north, east, south and east).
-     * <p>This serves as a generified pass-through for a method usually already implemented on instances of {@link CrossCollisionBlock}, like {@link net.minecraft.world.level.block.FenceBlock#connectsTo(BlockState, boolean, Direction)}.
+     * Checks if this block can connect to a direct neighbor in the horizontal plane. Used for checking cardinal
+     * directions (north, east, south and east).
+     * <p>
+     * This serves as a generified pass-through for a method usually already implemented on instances of
+     * {@link CrossCollisionBlock}, like
+     * {@link net.minecraft.world.level.block.FenceBlock#connectsTo(BlockState, boolean, Direction)}.
      *
      * @param blockState  the directly neighboring block state
      * @param isSideSolid is the neighbors side at <code>direction</code> solid
@@ -41,13 +44,15 @@ public interface DiagonalBlock {
     boolean attachesDirectlyTo(BlockState blockState, boolean isSideSolid, Direction direction);
 
     /**
-     * Checks if this block can connect to an indirect neighbor (another diagonal block) in the horizontal plane.
-     * Use for checking intercardinal directions (north-east, south-east, south-west and north-west).
-     * <p>The implementation is intended to check compatibility for connection purely on a block based evaluation, independently of the direction and block state properties.
-     * <p>This is usually implemented to merely compare the result of {@link DiagonalBlock#getType()}.
+     * Checks if this block can connect to an indirect neighbor (another diagonal block) in the horizontal plane. Use
+     * for checking intercardinal directions (north-east, south-east, south-west and north-west).
+     * <p>
+     * The implementation is mainly intended to check compatibility for connection on a purely block based evaluation,
+     * such as comparing the result of {@link DiagonalBlock#getType()}.
      *
-     * @param blockState the neighboring block state
+     * @param blockState        the neighboring block state
+     * @param eightWayDirection the neighbors side this block is trying to attach to
      * @return can this block connect to the indirect neighbor
      */
-    boolean attachesDiagonallyTo(BlockState blockState);
+    boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection);
 }

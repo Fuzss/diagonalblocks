@@ -23,10 +23,10 @@ public class DiagonalBlocks implements ModConstructor {
             DiagonalBlockType.register(DiagonalBlockTypes.WINDOW);
             DiagonalBlockType.register(DiagonalBlockTypes.WALL);
         }
-        registerHandlers();
+        registerEventHandlers();
     }
 
-    private static void registerHandlers() {
+    private static void registerEventHandlers() {
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST, DiagonalBlockHandler::onTagsUpdated);
     }
 

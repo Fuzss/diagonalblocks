@@ -46,7 +46,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
     }
 
     static boolean allowsDiagonalProperty(DiagonalBlock diagonalBlock, LevelAccessor levelAccessor, BlockPos blockPos, BlockState neighborBlockState, EightWayDirection eightWayDirection) {
-        return diagonalBlock.attachesDiagonallyTo(neighborBlockState) && isFreeForDiagonalProperty(diagonalBlock, levelAccessor, blockPos, eightWayDirection) && isNotCollidingWithNeighbors(diagonalBlock, levelAccessor, blockPos, eightWayDirection);
+        return diagonalBlock.attachesDiagonallyTo(neighborBlockState, eightWayDirection.getOpposite()) && isFreeForDiagonalProperty(diagonalBlock, levelAccessor, blockPos, eightWayDirection) && isNotCollidingWithNeighbors(diagonalBlock, levelAccessor, blockPos, eightWayDirection);
     }
 
     static boolean isFreeForDiagonalProperty(DiagonalBlock diagonalBlock, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection eightWayDirection) {
@@ -99,7 +99,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
     }
 
     @Override
-    default boolean attachesDiagonallyTo(BlockState blockState) {
+    default boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
         return blockState.getBlock() instanceof DiagonalBlock diagonalBlock && diagonalBlock.getType() == this.getType();
     }
 

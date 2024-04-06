@@ -3,6 +3,7 @@ package fuzs.diagonalblocks.api.v2.impl;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalblocks.api.v2.DiagonalBlock;
+import fuzs.diagonalblocks.api.v2.EightWayDirection;
 import fuzs.diagonalblocks.world.phys.shapes.VoxelCollection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -73,8 +74,8 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
     }
 
     @Override
-    public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlock diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WALL;
+    public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) || blockState.getBlock() instanceof DiagonalBlock diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WALL;
     }
 
     @Override

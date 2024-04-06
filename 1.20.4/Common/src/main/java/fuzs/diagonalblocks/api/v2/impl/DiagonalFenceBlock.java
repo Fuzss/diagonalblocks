@@ -2,6 +2,7 @@ package fuzs.diagonalblocks.api.v2.impl;
 
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
+import fuzs.diagonalblocks.api.v2.EightWayDirection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
@@ -71,7 +72,7 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
     }
 
     @Override
-    public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) && blockState.is(BlockTags.FENCES) && blockState.is(BlockTags.WOODEN_FENCES) == this.defaultBlockState().is(BlockTags.WOODEN_FENCES);
+    public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) && blockState.is(BlockTags.FENCES) && blockState.is(BlockTags.WOODEN_FENCES) == this.defaultBlockState().is(BlockTags.WOODEN_FENCES);
     }
 }

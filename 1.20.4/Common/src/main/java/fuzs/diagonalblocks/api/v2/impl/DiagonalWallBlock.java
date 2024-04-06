@@ -93,8 +93,8 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     }
 
     @Override
-    public boolean attachesDiagonallyTo(BlockState blockState) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState) || blockState.getBlock() instanceof DiagonalBlock diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WINDOW;
+    public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) || blockState.getBlock() instanceof DiagonalBlock diagonalBlock && diagonalBlock.getType() == DiagonalBlockTypes.WINDOW;
     }
 
     @Override
