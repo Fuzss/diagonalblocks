@@ -3,6 +3,7 @@ package fuzs.diagonalblocks.api.v2.impl;
 import com.google.common.collect.Maps;
 import fuzs.diagonalblocks.api.v2.DiagonalBlock;
 import fuzs.diagonalblocks.api.v2.EightWayDirection;
+import fuzs.diagonalblocks.init.ModRegistry;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -70,9 +71,11 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
                 VoxelShape cornerShape = shapes.get(eightWayDirection.data2d != neighbor.data2d ? eightWayDirection.rotateClockWise(2) : eightWayDirection.rotateCounterClockWise(2));
                 BlockPos neighborBlockPos = blockPos.relative(neighbor.toDirection());
                 BlockState neighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
-                VoxelShape voxelShape = neighborBlockState.getCollisionShape(levelAccessor, neighborBlockPos);
-                if (Shapes.joinIsNotEmpty(cornerShape, voxelShape, BooleanOp.AND)) {
-                    return false;
+                if (!neighborBlockState.is(ModRegistry.NEVER_BLOCKS_DIAGONAL_CONNECTIONS_BLOCK_TAG)) {
+                    VoxelShape voxelShape = neighborBlockState.getCollisionShape(levelAccessor, neighborBlockPos);
+                    if (Shapes.joinIsNotEmpty(cornerShape, voxelShape, BooleanOp.AND)) {
+                        return false;
+                    }
                 }
             }
         }

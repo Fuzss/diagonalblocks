@@ -3,6 +3,7 @@ package fuzs.diagonalblocks;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalblocks.handler.DiagonalBlockHandler;
+import fuzs.diagonalblocks.init.ModRegistry;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.core.v1.utility.ResourceLocationHelper;
@@ -25,6 +26,7 @@ public class DiagonalBlocks implements ModConstructor {
             DiagonalBlockType.register(DiagonalBlockTypes.WINDOW);
             DiagonalBlockType.register(DiagonalBlockTypes.WALL);
         }
+        ModRegistry.touch();
         registerEventHandlers();
     }
 
