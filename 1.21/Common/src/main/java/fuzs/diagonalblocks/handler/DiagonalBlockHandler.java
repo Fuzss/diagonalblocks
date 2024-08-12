@@ -4,15 +4,25 @@ import com.google.common.collect.BiMap;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
+import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import fuzs.puzzleslib.api.init.v3.registry.RegistryHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -31,6 +41,36 @@ public class DiagonalBlockHandler {
         };
     }
 
+    public static EventResultHolder<InteractionResult> onUseBlock(Player player, Level level, InteractionHand interactionHand, BlockHitResult hitResult) {
+        // allow for toggling between diagonal and non-diagonal block variants via shift+right-clicking with empty hand
+        if (player.isSecondaryUseActive() && player.getItemInHand(interactionHand).isEmpty()) {
+            BlockPos blockPos = hitResult.getBlockPos();
+            BlockState blockState = level.getBlockState(blockPos);
+            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+                Block newBlock;
+                Block block = blockState.getBlock();
+                if (type.getBlockConversions().containsKey(block)) {
+                    newBlock = type.getBlockConversions().get(block);
+                } else if (type.getBlockConversions().containsValue(block)) {
+                    newBlock = type.getBlockConversions().inverse().get(block);
+                } else {
+                    newBlock = null;
+                }
+                if (newBlock != null) {
+                    BlockState newBlockState = newBlock.withPropertiesOf(blockState);
+                    newBlockState = Block.updateFromNeighbourShapes(newBlockState, level, blockPos);
+                    level.setBlock(blockPos, newBlockState, 3);
+                    level.neighborChanged(blockPos, newBlock, blockPos);
+                    level.gameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Context.of(player, newBlockState));
+                    level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, blockPos, 0);
+                    return EventResultHolder.interrupt(InteractionResult.sidedSuccess(level.isClientSide));
+                }
+            }
+        }
+
+        return EventResultHolder.pass();
+    }
+
     public static void onTagsUpdated(RegistryAccess registryAccess, boolean client) {
         for (Map.Entry<ResourceKey<Item>, Item> entry : BuiltInRegistries.ITEM.entrySet()) {
             if (entry.getValue() instanceof BlockItem blockItem) {
@@ -39,10 +79,8 @@ public class DiagonalBlockHandler {
                 setBlockForItem(blockItem, block);
             }
         }
-        if (!client) {
-            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                type.getBlockConversions().forEach(BlockConversionHelper::copyBoundTags);
-            }
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+            type.getBlockConversions().forEach(BlockConversionHelper::copyBoundTags);
         }
     }
 
