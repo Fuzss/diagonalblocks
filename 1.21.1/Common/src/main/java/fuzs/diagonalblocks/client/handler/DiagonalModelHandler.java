@@ -11,6 +11,7 @@ import fuzs.diagonalblocks.data.ModBlockTagsProvider;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
@@ -76,7 +77,7 @@ public class DiagonalModelHandler {
         return EventResultHolder.pass();
     }
 
-    public static void onAfterModelLoading(Supplier<ModelManager> modelManager) {
+    public static void onCompleteModelLoading(Supplier<ModelManager> modelManager, Supplier<ModelBakery> modelBakery) {
         UNBAKED_MODEL_CACHE.clear();
     }
 }

@@ -36,12 +36,12 @@ public class DiagonalBlocksClient implements ClientModConstructor {
 
     @Override
     public void onConstructMod() {
-        registerHandlers();
+        registerEventHandlers();
     }
 
-    private static void registerHandlers() {
+    private static void registerEventHandlers() {
         ModelEvents.MODIFY_UNBAKED_MODEL.register(DiagonalModelHandler::onModifyUnbakedModel);
-        ModelEvents.AFTER_MODEL_LOADING.register(DiagonalModelHandler::onAfterModelLoading);
+        ModelEvents.COMPLETE_MODEL_LOADING.register(DiagonalModelHandler::onCompleteModelLoading);
         LoadCompleteCallback.EVENT.register(() -> {
             // run a custom implementation here, the appropriate method in client mod constructor runs together with other mods, so we might miss some entries
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
@@ -66,7 +66,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
 
             @Override
             protected Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
-                if (newProperty.getValueClass() == WallSide.class) {
+                if (newProperty.getValueClass() == WallSide.class && oldValue instanceof Boolean) {
                     return (Boolean) oldValue ? WallSide.LOW : WallSide.NONE;
                 } else {
                     return super.getNewPropertyValue(oldProperty, newProperty, oldValue);
