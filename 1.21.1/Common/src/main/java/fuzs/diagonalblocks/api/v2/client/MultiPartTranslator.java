@@ -56,14 +56,10 @@ public class MultiPartTranslator {
         Property<?> newProperty = propertyGetter.apply(oldProperty.getName());
         if (newProperty != null) {
             Comparable<?> newValue = this.getNewPropertyValue(oldProperty, newProperty, oldValue);
-            // additional check to hopefully stop some crashes here where this is apparently still a boolean for walls,
-            // when it should be the wall side enum
-            if (newProperty.getValueClass().isInstance(newValue)) {
-                return blockState.setValue((Property<T>) newProperty, (V) newValue);
-            }
+            return blockState.setValue((Property<T>) newProperty, (V) newValue);
+        } else {
+            return blockState;
         }
-
-        return blockState;
     }
 
     protected Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {

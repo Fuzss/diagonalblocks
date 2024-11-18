@@ -16,7 +16,7 @@ public class FabricClientAbstractions implements ClientAbstractions {
 
     @Override
     public BakedModel createWrappedBakedModel(BakedModel baseModel, Map<Direction, List<BakedQuad>> quadMap) {
-        return new MultipartSegmentBakedModelFabric<>(baseModel, quadMap);
+        return new MultipartSegmentBakedModelFabric(baseModel, quadMap);
     }
 
     @Override

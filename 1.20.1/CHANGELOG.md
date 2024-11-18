@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog].
 
+## [v8.0.6-1.20.1] - 2024-11-18
+### Added
+- Add `diagonalblocks:never_blocks_diagonal_connections` for allowing diagonal connections even when another block intersects the connection
+### Changed
+- Sneak + right-clicking with an empty hand now allows for toggling between diagonal and non-diagonal blocks
+- Register specialized `MultiPartTranslator` instances during mod construction instead of setup phase to avoid issues with some optimization mods beginning to load models much earlier than expected
+
 ## [v8.0.5-1.20.1] - 2024-03-29
 ### Changed
 - A few minor improvements towards better mod compatibility:

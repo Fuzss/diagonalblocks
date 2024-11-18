@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public class MultipartSegmentBakedModelForge extends BakedModelWrapper<BakedModel> {
+public final class MultipartSegmentBakedModelForge extends BakedModelWrapper<BakedModel> {
     private final Map<Direction, List<BakedQuad>> quadMap;
 
     public MultipartSegmentBakedModelForge(BakedModel originalModel, Map<Direction, List<BakedQuad>> quadMap) {

@@ -6,6 +6,7 @@ import fuzs.diagonalblocks.handler.DiagonalBlockHandler;
 import fuzs.puzzleslib.api.core.v1.ModConstructor;
 import fuzs.puzzleslib.api.core.v1.ModLoaderEnvironment;
 import fuzs.puzzleslib.api.event.v1.core.EventPhase;
+import fuzs.puzzleslib.api.event.v1.entity.player.PlayerInteractEvents;
 import fuzs.puzzleslib.api.event.v1.server.TagsUpdatedCallback;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -23,11 +24,12 @@ public class DiagonalBlocks implements ModConstructor {
             DiagonalBlockType.register(DiagonalBlockTypes.WINDOW);
             DiagonalBlockType.register(DiagonalBlockTypes.WALL);
         }
-        registerHandlers();
+        registerEventHandlers();
     }
 
-    private static void registerHandlers() {
+    private static void registerEventHandlers() {
         TagsUpdatedCallback.EVENT.register(EventPhase.FIRST, DiagonalBlockHandler::onTagsUpdated);
+        PlayerInteractEvents.USE_BLOCK.register(DiagonalBlockHandler::onUseBlock);
     }
 
     public static ResourceLocation id(String path) {

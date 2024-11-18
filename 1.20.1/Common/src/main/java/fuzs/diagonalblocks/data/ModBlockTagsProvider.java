@@ -2,11 +2,13 @@ package fuzs.diagonalblocks.data;
 
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
+import fuzs.diagonalblocks.init.ModRegistry;
 import fuzs.puzzleslib.api.data.v2.AbstractTagProvider;
 import fuzs.puzzleslib.api.data.v2.core.DataProviderContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.Collections;
 import java.util.List;
@@ -215,6 +217,7 @@ public class ModBlockTagsProvider extends AbstractTagProvider.Blocks {
 
     @Override
     public void addTags(HolderLookup.Provider provider) {
+        this.tag(ModRegistry.NEVER_BLOCKS_DIAGONAL_CONNECTIONS_BLOCK_TAG).add(Blocks.SNOW);
         for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
             IntrinsicTagAppender<Block> tagAppender = this.tag(type.getBlacklistTagKey());
             TAG_BLACKLISTED_TYPES.getOrDefault(type, Collections.emptyList())
