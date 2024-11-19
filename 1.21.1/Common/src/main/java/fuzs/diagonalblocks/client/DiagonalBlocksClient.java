@@ -28,7 +28,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
         // this cannot happen later during client setup,
         // as model loading will already have begun by then in the background with some optimization mods installed
         MultiPartTranslator.register(DiagonalBlockTypes.WINDOW, new WindowMultiPartTranslator());
-//        MultiPartTranslator.register(DiagonalBlockTypes.WALL, new WallMultiPartTranslator());
+        MultiPartTranslator.register(DiagonalBlockTypes.WALL, new WallMultiPartTranslator());
     }
 
     private static void registerEventHandlers() {
