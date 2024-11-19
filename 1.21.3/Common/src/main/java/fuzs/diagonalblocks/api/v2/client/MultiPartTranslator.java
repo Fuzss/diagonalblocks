@@ -4,10 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.client.resources.model.MultipartAppender;
-import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -36,12 +34,6 @@ public class MultiPartTranslator {
 
     public static MultiPartTranslator get(DiagonalBlockType diagonalBlockType) {
         return TRANSLATORS.computeIfAbsent(diagonalBlockType, MultiPartTranslator::new);
-    }
-
-    public ModelResourceLocation convertAnyBlockState(Block oldBlock, Block newBlock) {
-        StateDefinition<Block, BlockState> stateDefinition = oldBlock.getStateDefinition();
-        BlockState blockState = this.convertBlockState(newBlock.getStateDefinition(), stateDefinition.any());
-        return BlockModelShaper.stateToModelLocation(blockState);
     }
 
     private BlockState convertBlockState(StateDefinition<Block, BlockState> newStateDefinition, BlockState oldBlockState) {
