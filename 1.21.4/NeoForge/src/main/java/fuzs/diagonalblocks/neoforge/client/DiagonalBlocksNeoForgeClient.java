@@ -1,0 +1,35 @@
+package fuzs.diagonalblocks.neoforge.client;
+
+import fuzs.diagonalblocks.DiagonalBlocks;
+import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
+import fuzs.diagonalblocks.client.DiagonalBlocksClient;
+import fuzs.diagonalblocks.neoforge.client.extensions.DiagonalClientBlockExtensions;
+import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+
+@Mod(value = DiagonalBlocks.MOD_ID, dist = Dist.CLIENT)
+public class DiagonalBlocksNeoForgeClient {
+
+    public DiagonalBlocksNeoForgeClient(ModContainer modContainer) {
+        ClientModConstructor.construct(DiagonalBlocks.MOD_ID, DiagonalBlocksClient::new);
+        registerLoadingHandlers(modContainer.getEventBus());
+    }
+
+    private static void registerLoadingHandlers(IEventBus eventBus) {
+        eventBus.addListener(EventPriority.LOW, (final RegisterClientExtensionsEvent evt) -> {
+            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+                for (Block block : type.getBlockConversions().values()) {
+                    if (!evt.isBlockRegistered(block)) {
+                        evt.registerBlock(new DiagonalClientBlockExtensions(), block);
+                    }
+                }
+            }
+        });
+    }
+}
