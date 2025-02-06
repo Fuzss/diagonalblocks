@@ -35,11 +35,9 @@ public class ModBlockTagsProvider extends AbstractTagProvider<Block> {
             "betterend:end_lotus_fence",
             "betternether:anchor_tree_fence",
             "betternether:willow_fence",
-            "domum_ornamentum:vanilla_fence_compat"
-    );
+            "domum_ornamentum:vanilla_fence_compat");
     private static final List<String> TAG_BLACKLISTED_FENCES = List.of("immersiveengineering:treated_fence",
-            "immersiveengineering:steel_fence"
-    );
+            "immersiveengineering:steel_fence");
     private static final List<String> BUILT_IN_BLACKLISTED_WINDOWS = List.of("domum_ornamentum:blockpaperwall");
     private static final List<String> TAG_BLACKLISTED_WINDOWS = List.of("chipped:arched_lime_stained_glass_pane_pillar",
             "chipped:small_light_blue_stained_glass_pane",
@@ -150,8 +148,7 @@ public class ModBlockTagsProvider extends AbstractTagProvider<Block> {
             "chipped:fancy_purple_stained_glass_pane",
             "chipped:oak_ornate_bared_glass_pane",
             "chipped:tiled_light_gray_stained_glass_pane",
-            "chipped:arched_green_stained_glass_pane_pillar"
-    );
+            "chipped:arched_green_stained_glass_pane_pillar");
     private static final List<String> BUILT_IN_BLACKLISTED_WALLS = List.of("betterend:end_lotus_wall",
             "betterend:sulphuric_rock_wall",
             "betterend:smaragdant_crystal_wall",
@@ -194,23 +191,20 @@ public class ModBlockTagsProvider extends AbstractTagProvider<Block> {
             "betternether:mushroom_fir_wall",
             "betterend:sulphuric_rock_bricks_wall",
             "betternether:soul_sandstone_wall",
-            "domum_ornamentum:vanilla_wall_compat"
-    );
+            "domum_ornamentum:vanilla_wall_compat");
     private static final List<String> TAG_BLACKLISTED_WALLS = List.of();
     public static final Map<DiagonalBlockType, List<String>> BUILT_IN_BLACKLISTED_TYPES = Map.of(DiagonalBlockTypes.FENCE,
             BUILT_IN_BLACKLISTED_FENCES,
             DiagonalBlockTypes.WINDOW,
             BUILT_IN_BLACKLISTED_WINDOWS,
             DiagonalBlockTypes.WALL,
-            BUILT_IN_BLACKLISTED_WALLS
-    );
+            BUILT_IN_BLACKLISTED_WALLS);
     public static final Map<DiagonalBlockType, List<String>> TAG_BLACKLISTED_TYPES = Map.of(DiagonalBlockTypes.FENCE,
             TAG_BLACKLISTED_FENCES,
             DiagonalBlockTypes.WINDOW,
             TAG_BLACKLISTED_WINDOWS,
             DiagonalBlockTypes.WALL,
-            TAG_BLACKLISTED_WALLS
-    );
+            TAG_BLACKLISTED_WALLS);
 
     public ModBlockTagsProvider(DataProviderContext context) {
         super(Registries.BLOCK, context);
@@ -218,10 +212,11 @@ public class ModBlockTagsProvider extends AbstractTagProvider<Block> {
 
     @Override
     public void addTags(HolderLookup.Provider provider) {
-        this.add(ModRegistry.NEVER_BLOCKS_DIAGONAL_CONNECTIONS_BLOCK_TAG).add(Blocks.SNOW);
-        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-            AbstractTagAppender<Block> tagAppender = this.add(type.getBlacklistTagKey());
-            TAG_BLACKLISTED_TYPES.getOrDefault(type, Collections.emptyList()).forEach(tagAppender::addOptional);
+        this.tag(ModRegistry.NEVER_BLOCKS_DIAGONAL_CONNECTIONS_BLOCK_TAG).add(Blocks.SNOW);
+        for (DiagonalBlockType diagonalBlockType : DiagonalBlockType.TYPES) {
+            AbstractTagAppender<Block> tagAppender = this.tag(diagonalBlockType.getBlacklistTagKey());
+            TAG_BLACKLISTED_TYPES.getOrDefault(diagonalBlockType, Collections.emptyList())
+                    .forEach(tagAppender::addOptional);
         }
     }
 }

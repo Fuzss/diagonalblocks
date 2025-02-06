@@ -10,7 +10,8 @@ import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
 public final class DiagonalClientBlockExtensions implements IClientBlockExtensions {
 
     @Override
-    public boolean addDestroyEffects(BlockState state, Level level, BlockPos pos, ParticleEngine manager) {
-        return DestroyEffectsHelper.addDestroyEffects(state, level, pos, manager) || IClientBlockExtensions.super.addDestroyEffects(state, level, pos, manager);
+    public boolean addDestroyEffects(BlockState blockState, Level level, BlockPos blockPos, ParticleEngine particleEngine) {
+        return DestroyEffectsHelper.addDestroyEffects(blockState, level, blockPos, particleEngine) ||
+                IClientBlockExtensions.super.addDestroyEffects(blockState, level, blockPos, particleEngine);
     }
 }

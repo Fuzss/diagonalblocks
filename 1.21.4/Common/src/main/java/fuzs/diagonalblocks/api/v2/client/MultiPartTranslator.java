@@ -8,9 +8,7 @@ import net.minecraft.client.renderer.block.model.multipart.MultiPart;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,28 +20,18 @@ import java.util.function.Function;
 public class MultiPartTranslator {
     private static final Map<DiagonalBlockType, MultiPartTranslator> TRANSLATORS = Maps.newConcurrentMap();
 
-    protected final DiagonalBlockType type;
+    protected final DiagonalBlockType diagonalBlockType;
 
-    protected MultiPartTranslator(DiagonalBlockType type) {
-        this.type = type;
+    protected MultiPartTranslator(DiagonalBlockType diagonalBlockType) {
+        this.diagonalBlockType = diagonalBlockType;
     }
 
-    public static void register(DiagonalBlockType diagonalBlockType, MultiPartTranslator translator) {
-        TRANSLATORS.put(diagonalBlockType, translator);
+    public static void register(DiagonalBlockType diagonalBlockType, MultiPartTranslator multiPartTranslator) {
+        TRANSLATORS.put(diagonalBlockType, multiPartTranslator);
     }
 
     public static MultiPartTranslator get(DiagonalBlockType diagonalBlockType) {
         return TRANSLATORS.computeIfAbsent(diagonalBlockType, MultiPartTranslator::new);
-    }
-
-    private BlockState convertBlockState(StateDefinition<Block, BlockState> newStateDefinition, BlockState oldBlockState) {
-        BlockState newBlockState = newStateDefinition.any();
-        for (Map.Entry<Property<?>, Comparable<?>> entry : oldBlockState.getValues().entrySet()) {
-            newBlockState = this.setBlockStateValue(entry.getKey(), entry.getValue(), newStateDefinition::getProperty,
-                    newBlockState
-            );
-        }
-        return newBlockState;
     }
 
     private <T extends Comparable<T>, V extends T> BlockState setBlockStateValue(Property<?> oldProperty, Comparable<?> oldValue, Function<String, @Nullable Property<?>> propertyGetter, BlockState blockState) {
@@ -79,6 +67,6 @@ public class MultiPartTranslator {
 
     @Override
     public String toString() {
-        return "MultiPartTranslator[" + this.type + "]";
+        return "MultiPartTranslator[" + this.diagonalBlockType + "]";
     }
 }

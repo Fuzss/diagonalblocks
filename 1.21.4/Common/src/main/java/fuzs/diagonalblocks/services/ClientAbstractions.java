@@ -11,5 +11,5 @@ import java.util.Map;
 public interface ClientAbstractions {
     ClientAbstractions INSTANCE = ServiceProviderHelper.load(ClientAbstractions.class);
 
-    BakedModel createWrappedBakedModel(BakedModel baseModel, Map<Direction, List<BakedQuad>> quadMap);
+    BakedModel createWrappedBakedModel(BakedModel bakedModel, Map<Direction, List<BakedQuad>> quadMap);
 }

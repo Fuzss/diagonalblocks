@@ -23,8 +23,8 @@ public class DiagonalBlocksNeoForgeClient {
 
     private static void registerLoadingHandlers(IEventBus eventBus) {
         eventBus.addListener(EventPriority.LOW, (final RegisterClientExtensionsEvent evt) -> {
-            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                for (Block block : type.getBlockConversions().values()) {
+            for (DiagonalBlockType diagonalBlockType : DiagonalBlockType.TYPES) {
+                for (Block block : diagonalBlockType.getBlockConversions().values()) {
                     if (!evt.isBlockRegistered(block)) {
                         evt.registerBlock(new DiagonalClientBlockExtensions(), block);
                     }

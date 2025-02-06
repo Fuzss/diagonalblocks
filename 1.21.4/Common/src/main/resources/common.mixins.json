@@ -8,7 +8,6 @@
     "accessor.VoxelShapeAccessor"
   ],
   "client": [
-    "client.ModelManagerMixin",
     "client.accessor.AndConditionAccessor",
     "client.accessor.KeyValueConditionAccessor",
     "client.accessor.OrConditionAccessor",
