@@ -1,123 +1,148 @@
 package fuzs.diagonalblocks.client.resources.model;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.core.Direction;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
-public class QuadUtils {
-    private static final float ROTATION_ANGLE = -45F * 0.017453292F;
-    //Scale factor at a 45 degree rotation
-    private static final float SCALE_ROTATION_45 = 1.0F / (float) Math.cos(Math.PI / 4D) - 1.0F;
-    private static final Vector3f ROTATION_ORIGIN = new Vector3f(.5F, .5F, .5F);
-    private static final Matrix4f ROTATION_MATRIX = new Matrix4f().rotation(new Quaternionf().setAngleAxis(ROTATION_ANGLE, 0.0F, 1.0F, 0.0F));
+import java.util.Arrays;
 
-    /**
-     * Create a deep-copy of the given {@link BakedQuad quad}
-     */
-    public static BakedQuad duplicateQuad(BakedQuad quad) {
+/**
+ * Similar to NeoForge's {@code net.neoforged.neoforge.client.model.pipeline.QuadBakingVertexConsumer} and Fabric's
+ * {@code net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView}.
+ */
+public final class QuadUtils {
+    public static final int VERTEX_STRIDE = DefaultVertexFormat.BLOCK.getVertexSize() / 4;
+    public static final int VERTEX_POSITION = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.POSITION) / 4;
+    public static final int VERTEX_COLOR = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.COLOR) / 4;
+    public static final int VERTEX_UV = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV) / 4;
+    public static final int VERTEX_UV0 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV0) / 4;
+    public static final int VERTEX_UV1 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV1) / 4;
+    public static final int VERTEX_UV2 = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV2) / 4;
+    public static final int VERTEX_NORMAL = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.NORMAL) / 4;
 
-        int[] vertexData = new int[quad.getVertices().length];
-        System.arraycopy(quad.getVertices(), 0, vertexData, 0, vertexData.length);
-
-        return new BakedQuad(vertexData, quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade(),
-                quad.getLightEmission());
+    private QuadUtils() {
+        // NO-OP
     }
 
-    /**
-     * Rotate the given {@link BakedQuad quad} 45 degree clockwise and recalculate its vertex normals
-     *
-     * @param quad The given BakedQuad, must be a deep-copy of the original
-     * @param dir  The {@link Direction dir} in which the fence/wall arm this quad belongs to points
-     */
-    public static void rotateQuad(BakedQuad quad, Direction dir) {
-
-        Vector3f scaleMult = new Vector3f(Math.abs(dir.getStepX()), 1, Math.abs(dir.getStepZ()));
-
-        Vector3f scaleVec = new Vector3f(1.0F, 0.0F, 1.0F);
-        scaleVec.mul(SCALE_ROTATION_45);
-        scaleVec.mul(scaleMult.x(), scaleMult.y(), scaleMult.z());
-        scaleVec.add(1.0F, 1.0F, 1.0F);
-
-        int[] vertexData = quad.getVertices();
-        float[][] pos = unpackQuadPosition(vertexData);
-
-        for (int i = 0; i < 4; i++) {
-
-            Vector4f vector4f = new Vector4f(pos[i][0] - ROTATION_ORIGIN.x(), pos[i][1] - ROTATION_ORIGIN.y(), pos[i][2] - ROTATION_ORIGIN.z(), 1.0F);
-            vector4f.mul(new Vector4f(scaleVec, 1.0F));
-            ROTATION_MATRIX.transform(vector4f);
-
-            pos[i][0] = vector4f.x() + ROTATION_ORIGIN.x();
-            pos[i][1] = vector4f.y() + ROTATION_ORIGIN.y();
-            pos[i][2] = vector4f.z() + ROTATION_ORIGIN.z();
-        }
-
-        packQuadPositions(vertexData, pos);
-        fillNormal(vertexData, pos);
+    public static BakedQuad copy(BakedQuad bakedQuad) {
+        // TODO this is missing ambient occlusion which is added by NeoForge, convert this to a service provider method
+        int[] vertices = bakedQuad.getVertices();
+        return new BakedQuad(Arrays.copyOf(vertices, vertices.length),
+                bakedQuad.getTintIndex(),
+                bakedQuad.getDirection(),
+                bakedQuad.getSprite(),
+                bakedQuad.isShade(),
+                bakedQuad.getLightEmission());
     }
 
-    /**
-     * Unpack the vertex positions from the given vertex data
-     */
-    public static float[][] unpackQuadPosition(int[] vertexData) {
-
-        float[][] pos = new float[4][3];
-
-        int step = vertexData.length / 4; //This is needed to support the extended vertex formats used by shaders in OptiFine
-        for (int i = 0; i < 4; i++) {
-
-            int offset = i * step;
-            pos[i][0] = Float.intBitsToFloat(vertexData[offset]);
-            pos[i][1] = Float.intBitsToFloat(vertexData[offset + 1]);
-            pos[i][2] = Float.intBitsToFloat(vertexData[offset + 2]);
-        }
-
-        return pos;
+    public static Vector3f getPosition(BakedQuad bakedQuad, int vertexIndex) {
+        return new Vector3f(getX(bakedQuad, vertexIndex), getY(bakedQuad, vertexIndex), getZ(bakedQuad, vertexIndex));
     }
 
-    /**
-     * Update the given vertex data with the given vertex positions
-     */
-    public static void packQuadPositions(int[] vertexData, float[][] pos) {
-
-        int step = vertexData.length / 4; //This is needed to support the extended vertex formats used by shaders in OptiFine
-        for (int i = 0; i < 4; i++) {
-
-            int offset = i * step;
-            vertexData[offset] = Float.floatToIntBits(pos[i][0]);
-            vertexData[offset + 1] = Float.floatToIntBits(pos[i][1]);
-            vertexData[offset + 2] = Float.floatToIntBits(pos[i][2]);
-        }
+    public static float getX(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_POSITION;
+        return Float.intBitsToFloat(bakedQuad.getVertices()[offset]);
     }
 
-    /**
-     * Calculate face normals from vertex positions and write them to the given vertex data
-     * Adapted from net.minecraftforge.client.ForgeHooksClient#fillNormal(int[], Direction)
-     */
-    public static void fillNormal(int[] vertexData, float[][] pos) {
+    public static float getY(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_POSITION;
+        return Float.intBitsToFloat(bakedQuad.getVertices()[offset + 1]);
+    }
 
-        Vector3f v1 = new Vector3f(pos[3][0], pos[3][1], pos[3][2]);
-        Vector3f t1 = new Vector3f(pos[1][0], pos[1][1], pos[1][2]);
-        Vector3f v2 = new Vector3f(pos[2][0], pos[2][1], pos[2][2]);
-        Vector3f t2 = new Vector3f(pos[0][0], pos[0][1], pos[0][2]);
+    public static float getZ(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_POSITION;
+        return Float.intBitsToFloat(bakedQuad.getVertices()[offset + 2]);
+    }
 
-        v1.sub(t1);
-        v2.sub(t2);
-        v2.cross(v1);
+    public static Vector3f getNormal(BakedQuad bakedQuad, int vertexIndex) {
+        return new Vector3f(getNormalX(bakedQuad, vertexIndex),
+                getNormalY(bakedQuad, vertexIndex),
+                getNormalZ(bakedQuad, vertexIndex));
+    }
+
+    public static float getNormalX(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
+        int normal = bakedQuad.getVertices()[offset];
+        return ((byte) (normal & 0xFF)) / 127.0F;
+    }
+
+    public static float getNormalY(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
+        int normal = bakedQuad.getVertices()[offset];
+        return ((byte) ((normal >> 8) & 0xFF)) / 127.0F;
+    }
+
+    public static float getNormalZ(BakedQuad bakedQuad, int vertexIndex) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
+        int normal = bakedQuad.getVertices()[offset];
+        return ((byte) ((normal >> 16) & 0xFF)) / 127.0F;
+    }
+
+    public static int getColor(BakedQuad bakedQuad, int vertexIndex) {
+        return bakedQuad.getVertices()[vertexIndex * VERTEX_STRIDE + VERTEX_COLOR];
+    }
+
+    public static Vector2f getUv(BakedQuad bakedQuad, int vertexIndex) {
+        return new Vector2f(getU(bakedQuad, vertexIndex), getV(bakedQuad, vertexIndex));
+    }
+
+    public static float getU(BakedQuad bakedQuad, int vertexIndex) {
+        return Float.intBitsToFloat(bakedQuad.getVertices()[vertexIndex * VERTEX_STRIDE + VERTEX_UV]);
+    }
+
+    public static float getV(BakedQuad bakedQuad, int vertexIndex) {
+        return Float.intBitsToFloat(bakedQuad.getVertices()[vertexIndex * VERTEX_STRIDE + VERTEX_UV + 1]);
+    }
+
+    public static void setPosition(BakedQuad bakedQuad, int vertexIndex, Vector3f position) {
+        setPosition(bakedQuad, vertexIndex, position.x, position.y, position.z);
+    }
+
+    public static void setPosition(BakedQuad bakedQuad, int vertexIndex, float x, float y, float z) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_POSITION;
+        bakedQuad.getVertices()[offset] = Float.floatToRawIntBits(x);
+        bakedQuad.getVertices()[offset + 1] = Float.floatToRawIntBits(y);
+        bakedQuad.getVertices()[offset + 2] = Float.floatToRawIntBits(z);
+    }
+
+    public static void setNormal(BakedQuad bakedQuad, int vertexIndex, Vector3f normal) {
+        setNormal(bakedQuad, vertexIndex, normal.x, normal.y, normal.z);
+    }
+
+    public static void setNormal(BakedQuad bakedQuad, int vertexIndex, float x, float y, float z) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL;
+        bakedQuad.getVertices()[offset] =
+                ((int) (x * 127.0f) & 0xFF) | (((int) (y * 127.0f) & 0xFF) << 8) | (((int) (z * 127.0f) & 0xFF) << 16);
+    }
+
+    public static void setColor(BakedQuad bakedQuad, int vertexIndex, int r, int g, int b, int a) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_COLOR;
+        bakedQuad.getVertices()[offset] = ((a & 0xFF) << 24) | ((b & 0xFF) << 16) | ((g & 0xFF) << 8) | (r & 0xFF);
+    }
+
+    public static void setUv(BakedQuad bakedQuad, int vertexIndex, Vector2f uv) {
+        setUv(bakedQuad, vertexIndex, uv.x, uv.y);
+    }
+
+    public static void setUv(BakedQuad bakedQuad, int vertexIndex, float u, float v) {
+        int offset = vertexIndex * VERTEX_STRIDE + VERTEX_UV;
+        bakedQuad.getVertices()[offset] = Float.floatToRawIntBits(u);
+        bakedQuad.getVertices()[offset + 1] = Float.floatToRawIntBits(v);
+    }
+
+    public static void fillNormal(BakedQuad bakedQuad) {
+        Vector3f v0 = getPosition(bakedQuad, 0);
+        Vector3f v1 = getPosition(bakedQuad, 1);
+        Vector3f v2 = getPosition(bakedQuad, 2);
+        Vector3f v3 = getPosition(bakedQuad, 3);
+        v3.sub(v1);
+        v2.sub(v0);
+        v2.cross(v3);
         v2.normalize();
-
-        int x = ((byte) Math.round(v2.x() * 127)) & 0xFF;
-        int y = ((byte) Math.round(v2.y() * 127)) & 0xFF;
-        int z = ((byte) Math.round(v2.z() * 127)) & 0xFF;
-
-        int normal = x | (y << 0x08) | (z << 0x10);
-
-        int step = vertexData.length / 4; //This is needed to support the extended vertex formats used by shaders in OptiFine
-        for (int vert = 0; vert < 4; vert++) {
-            vertexData[vert * step + 7] = normal;
+        for (int i = 0; i < 4; i++) {
+            setNormal(bakedQuad, i, v2);
         }
     }
 }

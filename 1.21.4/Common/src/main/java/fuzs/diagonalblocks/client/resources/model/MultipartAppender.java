@@ -19,6 +19,10 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -26,6 +30,17 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 public class MultipartAppender {
+    private static final float ROTATION_ANGLE = -45F * 0.017453292F;
+    /**
+     * Scale factor at a 45 degree rotation
+     */
+    private static final float SCALE_ROTATION_45 = 1.0F / (float) Math.cos(Math.PI / 4.0) - 1.0F;
+    private static final Vector3f ROTATION_ORIGIN = new Vector3f(0.5F, 0.5F, 0.5F);
+    private static final Matrix4f ROTATION_MATRIX = new Matrix4f().rotation(new Quaternionf().setAngleAxis(
+            ROTATION_ANGLE,
+            0.0F,
+            1.0F,
+            0.0F));
 
     /**
      * Append the multipart variant selectors needed for the diagonal arms of the fence, wall, etc.
@@ -221,13 +236,47 @@ public class MultipartAppender {
         List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RandomSource.create());
         List<BakedQuad> newQuads = new ArrayList<>();
 
-        for (BakedQuad quad : quads) {
-            BakedQuad copy = QuadUtils.duplicateQuad(quad);
-            QuadUtils.rotateQuad(copy, segmentDir);
+        for (BakedQuad bakedQuad : quads) {
+            BakedQuad copy = QuadUtils.copy(bakedQuad);
+            rotateQuad(copy, segmentDir);
             newQuads.add(copy);
         }
 
         quadMap.put(cullFace, newQuads);
+    }
+
+    /**
+     * Rotate the given {@link BakedQuad quad} 45 degree clockwise and recalculate its vertex normals
+     *
+     * @param bakedQuad The given BakedQuad, must be a deep-copy of the original
+     * @param direction The {@link Direction dir} in which the fence/wall arm this quad belongs to points
+     */
+    private static void rotateQuad(BakedQuad bakedQuad, Direction direction) {
+
+        Vector3f scaleMult = new Vector3f(Math.abs(direction.getStepX()), 1, Math.abs(direction.getStepZ()));
+
+        Vector3f scaleVec = new Vector3f(1.0F, 0.0F, 1.0F);
+        scaleVec.mul(SCALE_ROTATION_45);
+        scaleVec.mul(scaleMult.x(), scaleMult.y(), scaleMult.z());
+        scaleVec.add(1.0F, 1.0F, 1.0F);
+
+        for (int i = 0; i < 4; i++) {
+
+            Vector4f vector4f = new Vector4f(QuadUtils.getX(bakedQuad, i) - ROTATION_ORIGIN.x(),
+                    QuadUtils.getY(bakedQuad, i) - ROTATION_ORIGIN.y(),
+                    QuadUtils.getZ(bakedQuad, i) - ROTATION_ORIGIN.z(),
+                    1.0F);
+            vector4f.mul(new Vector4f(scaleVec, 1.0F));
+            ROTATION_MATRIX.transform(vector4f);
+
+            QuadUtils.setPosition(bakedQuad,
+                    i,
+                    vector4f.x() + ROTATION_ORIGIN.x(),
+                    vector4f.y() + ROTATION_ORIGIN.y(),
+                    vector4f.z() + ROTATION_ORIGIN.z());
+        }
+
+        QuadUtils.fillNormal(bakedQuad);
     }
 
     private record ConditionFactoryPair(KeyValueCondition condition, UnaryOperator<Condition> factory) {
