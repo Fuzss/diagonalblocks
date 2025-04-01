@@ -1,19 +1,17 @@
 package fuzs.diagonalblocks.client.resources.translator;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
 import fuzs.diagonalblocks.api.v2.client.MultiPartTranslator;
-import fuzs.diagonalblocks.client.resources.model.MultipartAppender;
+import fuzs.diagonalblocks.client.resources.model.ConditionHelper;
 import net.minecraft.client.renderer.block.model.BlockModelDefinition;
-import net.minecraft.client.renderer.block.model.multipart.KeyValueCondition;
+import net.minecraft.client.renderer.block.model.multipart.Condition;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.WallSide;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 public final class WallMultiPartTranslator extends MultiPartTranslator {
 
@@ -32,39 +30,30 @@ public final class WallMultiPartTranslator extends MultiPartTranslator {
 
     @Override
     protected BlockModelDefinition.MultiPartDefinition getModelFromBase(BlockModelDefinition.MultiPartDefinition multiPart) {
-        List<Selector> selectors = new ArrayList<>(multiPart.selectors());
-        ListIterator<Selector> iterator = selectors.listIterator();
-        while (iterator.hasNext()) {
-            Selector selector = iterator.next();
-            if (selector.condition().orElse(null) instanceof KeyValueCondition keyValueCondition) {
-                String value = keyValueCondition.tests()
-                        .entrySet()
-                        .iterator()
-                        .next()
-                        .getValue()
-                        .entries()
-                        .getFirst()
-                        .value();
-                if (value.equals(WallSide.LOW.toString())) {
-                    value = Boolean.TRUE.toString();
-                } else if (value.equals(WallSide.NONE.toString())) {
-                    value = Boolean.FALSE.toString();
-                } else if (value.equals(WallSide.TALL.toString())) {
-                    value = null;
-                } else {
-                    continue;
-                }
-                if (value != null) {
-                    String key = keyValueCondition.tests().entrySet().iterator().next().getKey();
-                    iterator.set(new Selector(Optional.of(MultipartAppender.createKeyValueCondition(key, value)),
-                            selector.variant()));
-                } else {
-                    iterator.remove();
+        ImmutableList.Builder<Selector> builder = ImmutableList.builder();
+        for (Selector selector : multiPart.selectors()) {
+            if (selector.condition().isEmpty()) {
+                builder.add(selector);
+            } else {
+                Condition condition = ConditionHelper.deepCopy(selector.condition().get(),
+                        UnaryOperator.identity(),
+                        (String key, String value) -> {
+                            if (value.equals(WallSide.LOW.toString())) {
+                                return Boolean.TRUE.toString();
+                            } else if (value.equals(WallSide.NONE.toString())) {
+                                return Boolean.FALSE.toString();
+                            } else if (value.equals(WallSide.TALL.toString())) {
+                                return null;
+                            } else {
+                                return value;
+                            }
+                        });
+                if (condition != null) {
+                    builder.add(new Selector(Optional.of(condition), selector.variant()));
                 }
             }
         }
-
-        return new BlockModelDefinition.MultiPartDefinition(selectors);
+        return new BlockModelDefinition.MultiPartDefinition(builder.build());
     }
 
     @Override

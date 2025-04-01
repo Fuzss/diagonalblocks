@@ -3,7 +3,7 @@ package fuzs.diagonalblocks.api.v2.client;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
-import fuzs.diagonalblocks.client.resources.model.MultipartAppender;
+import fuzs.diagonalblocks.client.resources.model.MultiPartAppender;
 import net.minecraft.client.renderer.block.model.BlockModelDefinition;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.world.level.block.state.BlockState;
@@ -55,7 +55,7 @@ public class MultiPartTranslator {
     }
 
     protected BlockModelDefinition.MultiPartDefinition applyAdditionalSelectors(BlockModelDefinition.MultiPartDefinition multiPart) {
-        return MultipartAppender.appendDiagonalSelectors(multiPart, false);
+        return MultiPartAppender.appendDiagonalSelectors(multiPart, false);
     }
 
     public boolean allowBaseModelAsFallback() {

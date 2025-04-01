@@ -33,6 +33,11 @@ public enum EightWayDirection implements StringRepresentable {
         this.directionVec = directionVec;
     }
 
+    @Override
+    public String toString() {
+        return this.getSerializedName();
+    }
+
     public static EightWayDirection toEightWayDirection(Direction direction) {
         return getCardinalDirections()[direction.get2DDataValue()];
     }
