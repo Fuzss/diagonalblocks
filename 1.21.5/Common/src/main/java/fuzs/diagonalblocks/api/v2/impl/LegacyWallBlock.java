@@ -1,6 +1,8 @@
 package fuzs.diagonalblocks.api.v2.impl;
 
 import com.mojang.serialization.MapCodec;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
@@ -25,6 +27,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.function.Function;
+
 /**
  * The wall block implementation from Minecraft 1.15.2 before walls received additional block states by splitting the
  * directional boolean properties into enum properties with three possible values (see
@@ -43,11 +47,12 @@ public class LegacyWallBlock extends CrossCollisionBlock {
     public static final MapCodec<LegacyWallBlock> CODEC = simpleCodec(LegacyWallBlock::new);
     private static final VoxelShape POST_TEST = Block.box(7.0, 0.0, 7.0, 9.0, 16.0, 9.0);
     public static final BooleanProperty UP = BlockStateProperties.UP;
-    private final VoxelShape[] shapeWithPostByIndex;
-    private final VoxelShape[] collisionShapeWithPostByIndex;
+    private final Function<BlockState, VoxelShape> shapeWithPostByIndex;
+    private final Function<BlockState, VoxelShape> collisionShapeWithPostByIndex;
+    private final Object2IntMap<BlockState> stateToIndex = new Object2IntOpenHashMap<>();
 
     public LegacyWallBlock(Block.Properties properties) {
-        super(0.0F, 3.0F, 0.0F, 14.0F, 24.0F, properties);
+        super(0.0F * 2.0F, 0.0F, 3.0F * 2.0F, 14.0F, 24.0F, properties);
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(UP, Boolean.TRUE)
                 .setValue(NORTH, Boolean.FALSE)
@@ -55,8 +60,8 @@ public class LegacyWallBlock extends CrossCollisionBlock {
                 .setValue(SOUTH, Boolean.FALSE)
                 .setValue(WEST, Boolean.FALSE)
                 .setValue(WATERLOGGED, Boolean.FALSE));
-        this.shapeWithPostByIndex = this.makeShapes(4.0F, 3.0F, 16.0F, 0.0F, 14.0F);
-        this.collisionShapeWithPostByIndex = this.makeShapes(4.0F, 3.0F, 24.0F, 0.0F, 24.0F);
+        this.shapeWithPostByIndex = this.makeShapes(4.0F * 2.0F, 16.0F, 3.0F * 2.0F, 0.0F, 14.0F);
+        this.collisionShapeWithPostByIndex = this.makeShapes(4.0F * 2.0F, 24.0F, 3.0F * 2.0F, 0.0F, 24.0F);
     }
 
     @Override
@@ -66,13 +71,13 @@ public class LegacyWallBlock extends CrossCollisionBlock {
 
     @Override
     public VoxelShape getShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(UP) ? this.shapeWithPostByIndex[this.getAABBIndex(blockState)] : super.getShape(
-                blockState, blockGetter, blockPos, collisionContext);
+        return blockState.getValue(UP) ? this.shapeWithPostByIndex.apply(blockState) :
+                super.getShape(blockState, blockGetter, blockPos, collisionContext);
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, CollisionContext collisionContext) {
-        return blockState.getValue(UP) ? this.collisionShapeWithPostByIndex[this.getAABBIndex(blockState)] :
+        return blockState.getValue(UP) ? this.collisionShapeWithPostByIndex.apply(blockState) :
                 super.getCollisionShape(blockState, blockGetter, blockPos, collisionContext);
     }
 
@@ -102,23 +107,26 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         BlockState blockStateSouth = levelReader.getBlockState(blockPosSouth);
         BlockState blockStateWest = levelReader.getBlockState(blockPosWest);
         boolean connectsToNorth = this.connectsTo(blockStateNorth,
-                blockStateNorth.isFaceSturdy(levelReader, blockPosNorth, Direction.SOUTH), Direction.SOUTH
-        );
+                blockStateNorth.isFaceSturdy(levelReader, blockPosNorth, Direction.SOUTH),
+                Direction.SOUTH);
         boolean connectsToEast = this.connectsTo(blockStateEast,
-                blockStateEast.isFaceSturdy(levelReader, blockPosEast, Direction.WEST), Direction.WEST
-        );
+                blockStateEast.isFaceSturdy(levelReader, blockPosEast, Direction.WEST),
+                Direction.WEST);
         boolean connectsToSouth = this.connectsTo(blockStateSouth,
-                blockStateSouth.isFaceSturdy(levelReader, blockPosSouth, Direction.NORTH), Direction.NORTH
-        );
+                blockStateSouth.isFaceSturdy(levelReader, blockPosSouth, Direction.NORTH),
+                Direction.NORTH);
         boolean connectsToWest = this.connectsTo(blockStateWest,
-                blockStateWest.isFaceSturdy(levelReader, blockPosWest, Direction.EAST), Direction.EAST
-        );
+                blockStateWest.isFaceSturdy(levelReader, blockPosWest, Direction.EAST),
+                Direction.EAST);
         boolean bl5 = (!connectsToNorth || connectsToEast || !connectsToSouth || connectsToWest) &&
                 (connectsToNorth || !connectsToEast || connectsToSouth || !connectsToWest);
-        return this.defaultBlockState().setValue(UP, bl5 || this.shouldRaisePost(levelReader, clickedPos)).setValue(
-                NORTH, connectsToNorth).setValue(EAST, connectsToEast).setValue(SOUTH, connectsToSouth).setValue(WEST,
-                connectsToWest
-        ).setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
+        return this.defaultBlockState()
+                .setValue(UP, bl5 || this.shouldRaisePost(levelReader, clickedPos))
+                .setValue(NORTH, connectsToNorth)
+                .setValue(EAST, connectsToEast)
+                .setValue(SOUTH, connectsToSouth)
+                .setValue(WEST, connectsToWest)
+                .setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
     }
 
     @Override
@@ -127,23 +135,28 @@ public class LegacyWallBlock extends CrossCollisionBlock {
             scheduledTickAccess.scheduleTick(blockPos, Fluids.WATER, Fluids.WATER.getTickDelay(levelReader));
         }
         if (direction == Direction.DOWN) {
-            return super.updateShape(blockState, levelReader, scheduledTickAccess, blockPos, direction,
-                    neighboringBlockPos, neighboringBlockState, randomSource
-            );
+            return super.updateShape(blockState,
+                    levelReader,
+                    scheduledTickAccess,
+                    blockPos,
+                    direction,
+                    neighboringBlockPos,
+                    neighboringBlockState,
+                    randomSource);
         } else {
             Direction direction2 = direction.getOpposite();
             boolean bl = direction == Direction.NORTH ? this.connectsTo(neighboringBlockState,
-                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2), direction2
-            ) : blockState.getValue(NORTH);
+                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2),
+                    direction2) : blockState.getValue(NORTH);
             boolean bl2 = direction == Direction.EAST ? this.connectsTo(neighboringBlockState,
-                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2), direction2
-            ) : blockState.getValue(EAST);
+                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2),
+                    direction2) : blockState.getValue(EAST);
             boolean bl3 = direction == Direction.SOUTH ? this.connectsTo(neighboringBlockState,
-                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2), direction2
-            ) : blockState.getValue(SOUTH);
+                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2),
+                    direction2) : blockState.getValue(SOUTH);
             boolean bl4 = direction == Direction.WEST ? this.connectsTo(neighboringBlockState,
-                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2), direction2
-            ) : blockState.getValue(WEST);
+                    neighboringBlockState.isFaceSturdy(levelReader, neighboringBlockPos, direction2),
+                    direction2) : blockState.getValue(WEST);
             boolean bl5 = (!bl || bl2 || !bl3 || bl4) && (bl || !bl2 || bl3 || !bl4);
             return blockState.setValue(UP, bl5 || this.shouldRaisePost(levelReader, blockPos))
                     .setValue(NORTH, bl)

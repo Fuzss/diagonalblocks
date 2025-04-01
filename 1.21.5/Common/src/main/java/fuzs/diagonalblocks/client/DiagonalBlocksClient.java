@@ -6,21 +6,20 @@ import fuzs.diagonalblocks.api.v2.client.MultiPartTranslator;
 import fuzs.diagonalblocks.client.handler.DiagonalModelHandler;
 import fuzs.diagonalblocks.client.resources.translator.WallMultiPartTranslator;
 import fuzs.diagonalblocks.client.resources.translator.WindowMultiPartTranslator;
-import fuzs.puzzleslib.api.client.core.v1.ClientAbstractions;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
-import fuzs.puzzleslib.api.client.event.v1.ClientStartedCallback;
-import fuzs.puzzleslib.api.client.util.v1.ModelLoadingHelper;
+import fuzs.puzzleslib.api.client.event.v1.ClientLifecycleEvents;
+import fuzs.puzzleslib.api.client.renderer.v1.RenderTypeHelper;
+import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.block.model.UnbakedBlockStateModel;
-import net.minecraft.client.resources.model.BlockStateModelLoader;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.resources.model.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -29,20 +28,20 @@ public class DiagonalBlocksClient implements ClientModConstructor {
 
     @Override
     public void onConstructMod() {
-        registerEventHandlers();
+        registerLoadingHandlers();
         // this cannot happen later during client setup,
         // as model loading will already have begun by then in the background
         MultiPartTranslator.register(DiagonalBlockTypes.WINDOW, new WindowMultiPartTranslator());
         MultiPartTranslator.register(DiagonalBlockTypes.WALL, new WallMultiPartTranslator());
     }
 
-    private static void registerEventHandlers() {
-        ClientStartedCallback.EVENT.register((Minecraft minecraft) -> {
+    private static void registerLoadingHandlers() {
+        ClientLifecycleEvents.STARTED.register((Minecraft minecraft) -> {
             // run a custom implementation here, the appropriate method in client mod constructor runs together with other mods, so we might miss some entries
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
                 for (Map.Entry<Block, Block> entry : type.getBlockConversions().entrySet()) {
-                    RenderType renderType = ClientAbstractions.INSTANCE.getRenderType(entry.getKey());
-                    ClientAbstractions.INSTANCE.registerRenderType(entry.getValue(), renderType);
+                    RenderType renderType = RenderTypeHelper.getRenderType(entry.getKey());
+                    RenderTypeHelper.registerRenderType(entry.getValue(), renderType);
                 }
             }
         });
@@ -54,16 +53,14 @@ public class DiagonalBlocksClient implements ClientModConstructor {
             MultiPartTranslator multiPartTranslator = MultiPartTranslator.get(diagonalBlockType);
             diagonalBlockType.getBlockConversions().forEach((Block oldBlock, Block newBlock) -> {
                 context.registerBlockStateResolver(newBlock,
-                        resourceLoaderContext -> {
+                        (BlockStateResolverContext.ResourceLoaderContext resourceLoaderContext) -> {
                             return ModelLoadingHelper.loadBlockState(resourceLoaderContext.resourceManager(),
                                             BuiltInRegistries.BLOCK.getKey(oldBlock),
                                             resourceLoaderContext.executor())
                                     .thenApply((List<BlockStateModelLoader.LoadedBlockModelDefinition> loadedBlockModelDefinitions) -> {
                                         return DiagonalModelHandler.transformLoadedBlockModelDefinitions(
                                                 loadedBlockModelDefinitions,
-                                                multiPartTranslator,
-                                                resourceLoaderContext::addModel,
-                                                () -> {
+                                                multiPartTranslator, () -> {
                                                     DiagonalModelHandler.reportInvalidBlockModel(BuiltInRegistries.BLOCK.getKey(
                                                             oldBlock), diagonalBlockType);
                                                 });
@@ -75,19 +72,39 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                                                 resourceLoaderContext.executor());
                                     });
                         },
-                        (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, UnbakedBlockStateModel> consumer) -> {
+                        (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, BlockStateModel.UnbakedRoot> blockStateConsumer) -> {
                             for (BlockState blockState : newBlock.getStateDefinition().getPossibleStates()) {
-                                ModelResourceLocation modelResourceLocation = BlockModelShaper.stateToModelLocation(
-                                        blockState);
-                                if (loadedModels.models().containsKey(modelResourceLocation)) {
-                                    consumer.accept(blockState,
-                                            loadedModels.models().get(modelResourceLocation).model());
+                                if (loadedModels.models().containsKey(blockState)) {
+                                    blockStateConsumer.accept(blockState, loadedModels.models().get(blockState));
                                 } else {
-                                    consumer.accept(blockState, ModelLoadingHelper.missingModel());
+                                    blockStateConsumer.accept(blockState, missingModel());
                                 }
                             }
                         });
             });
         }
+    }
+
+    @Deprecated
+    public static BlockStateModel.UnbakedRoot missingModel() {
+        return new BlockStateModel.UnbakedRoot() {
+            @Override
+            public BlockStateModel bake(BlockState blockState, ModelBaker modelBaker) {
+                UnbakedModel unbakedModel = MissingBlockModel.missingModel();
+                // just use this, so we do not have to dealt with the internal resolved model implementation
+                ResolvedModel resolvedModel = new ModelDiscovery(Collections.emptyMap(), unbakedModel).missingModel();
+                return ModelBakery.MissingModels.bake(resolvedModel, modelBaker.sprites()).block();
+            }
+
+            @Override
+            public Object visualEqualityGroup(BlockState state) {
+                return this;
+            }
+
+            @Override
+            public void resolveDependencies(ResolvableModel.Resolver resolver) {
+                // NO-OP
+            }
+        };
     }
 }

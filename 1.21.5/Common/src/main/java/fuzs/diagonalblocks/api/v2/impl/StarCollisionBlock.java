@@ -124,7 +124,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
     }
 
     @Override
-    default VoxelShape[] _makeShapes(float nodeWidth, float extensionWidth, float nodeTop, float extensionBottom, float extensionTop) {
+    default VoxelShape[] _makeLegacyShapes(float nodeWidth, float extensionWidth, float nodeTop, float extensionBottom, float extensionTop) {
         if (extensionBottom == 0.0F && extensionTop <= 16.0F && !CORNER_SHAPES_BLOCK_CACHE.containsKey(this)) {
             Map<EightWayDirection, VoxelShape> cornerShapes = CORNER_SHAPES_CACHE.computeIfAbsent(Arrays.hashCode(new float[]{
                     extensionWidth,
@@ -144,7 +144,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
             });
             CORNER_SHAPES_BLOCK_CACHE.put(this, cornerShapes);
         }
-        return StarShapeProvider.super._makeShapes(nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop);
+        return StarShapeProvider.super._makeLegacyShapes(nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop);
     }
 
     private VoxelShape getCornerShape(EightWayDirection eightWayDirection, float extensionWidth, float extensionBottom, float extensionTop) {

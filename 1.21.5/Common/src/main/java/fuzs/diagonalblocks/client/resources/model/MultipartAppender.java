@@ -2,21 +2,24 @@ package fuzs.diagonalblocks.client.resources.model;
 
 import com.google.common.collect.Lists;
 import fuzs.diagonalblocks.api.v2.EightWayDirection;
-import fuzs.diagonalblocks.mixin.client.accessor.AndConditionAccessor;
-import fuzs.diagonalblocks.mixin.client.accessor.KeyValueConditionAccessor;
-import fuzs.diagonalblocks.mixin.client.accessor.OrConditionAccessor;
-import fuzs.diagonalblocks.mixin.client.accessor.SelectorAccessor;
-import fuzs.diagonalblocks.services.ClientAbstractions;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.MultiVariant;
-import net.minecraft.client.renderer.block.model.Variant;
-import net.minecraft.client.renderer.block.model.multipart.*;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.UnbakedModel;
+import fuzs.diagonalblocks.api.v2.impl.StarCollisionBlock;
+import fuzs.puzzleslib.api.client.renderer.v1.model.QuadUtils;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.Util;
+import net.minecraft.client.data.models.blockstates.ConditionBuilder;
+import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.client.renderer.block.model.multipart.CombinedCondition;
+import net.minecraft.client.renderer.block.model.multipart.Condition;
+import net.minecraft.client.renderer.block.model.multipart.KeyValueCondition;
+import net.minecraft.client.renderer.block.model.multipart.Selector;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.QuadCollection;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateHolder;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -25,7 +28,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -47,7 +51,7 @@ public class MultipartAppender {
      *
      * @param multiPart the original multipart unbaked variant
      */
-    public static MultiPart.Definition appendDiagonalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart.Definition multiPart, boolean rotateCenter) {
+    public static BlockModelDefinition.MultiPartDefinition appendDiagonalSelectors(BlockModelDefinition.MultiPartDefinition multiPart, boolean rotateCenter) {
 
         List<Selector> selectors = new ArrayList<>(multiPart.selectors());
         List<Selector> newSelectors = new ArrayList<>();
@@ -55,28 +59,24 @@ public class MultipartAppender {
         for (ListIterator<Selector> iterator = selectors.listIterator(); iterator.hasNext(); ) {
             Selector selector = iterator.next();
 
-            Condition condition = ((SelectorAccessor) selector).diagonalfences$getCondition();
-            ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(condition,
-                    keyValueCondition ->
-                            EightWayDirection.byName(((KeyValueConditionAccessor) keyValueCondition).diagonalfences$getKey()) !=
-                                    null);
-            if (conditionFactoryPair != null) {
+            Condition condition = selector.condition().orElse(null);
+            ConditionWithFactory conditionWithFactory = findKeyValueCondition(condition,
+                    keyValueCondition -> EightWayDirection.byName(keyValueCondition.key()) != null);
+            if (conditionWithFactory != null) {
 
-                EightWayDirection direction = EightWayDirection.byName(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getKey());
+                EightWayDirection direction = EightWayDirection.byName(conditionWithFactory.key());
                 if (direction != null) {
 
                     // intercardinal selectors are already present, either a resource pack has dedicated support for diagonal fences or the model baking event has run multiple times
                     // either way stop any processing of selectors, no new selectors have been added as that's done at the end of the method
                     if (direction.isIntercardinal()) return multiPart;
 
-                    if (Objects.equals(((KeyValueConditionAccessor) conditionFactoryPair.condition()).diagonalfences$getValue(),
-                            "true")) {
+                    if (Objects.equals(conditionWithFactory.value(), "true")) {
 
                         // rotates vanilla cardinal direction model parts and adds them as new selectors, all that's necessary for fences
-                        KeyValueCondition newCondition = new KeyValueCondition(direction.rotateClockWise()
-                                .getSerializedName(), "true");
-                        appendNewSelector(modelAdder,
-                                conditionFactoryPair.factory().apply(newCondition),
+                        Condition newCondition = new ConditionBuilder().term(StarCollisionBlock.PROPERTY_BY_DIRECTION.get(
+                                direction.rotateClockWise()), Boolean.TRUE).build();
+                        appendNewSelector(conditionWithFactory.factory().apply(newCondition),
                                 selector,
                                 direction,
                                 newSelectors);
@@ -84,22 +84,22 @@ public class MultipartAppender {
 
                         // this deals with the model part that shows on the side of the center post of glass panes when the model part corresponding to that direction is NOT being rendered
                         // we adjust the condition so it no longer renders when only two opposite intercardinal directions are present, since we handle that with our own model parts
-                        Condition newCondition = negateCondition(new OrCondition(rotateCenterConditions().values()));
-                        Selector newSelector = new Selector(new AndCondition(Lists.newArrayList(condition,
-                                newCondition)), selector.getVariant());
+                        Condition newCondition = negateCondition(new CombinedCondition(CombinedCondition.Operation.OR,
+                                List.copyOf(rotateCenterConditions().values())));
+                        Selector newSelector = new Selector(Optional.of(new CombinedCondition(CombinedCondition.Operation.AND,
+                                Lists.newArrayList(condition, newCondition))), selector.variant());
                         iterator.set(newSelector);
 
                         // the model parts used when only two opposite intercardinal directions are present
                         Condition otherNewCondition = getAndCondition(direction.rotateCounterClockWise(),
                                 direction.rotateCounterClockWise().getOpposite());
-                        appendNewSelector(modelAdder,
-                                otherNewCondition,
+                        appendNewSelector(otherNewCondition,
                                 selector,
                                 direction.rotateClockWise().rotateClockWise(),
                                 newSelectors);
                     }
                 }
-            } else if (rotateCenter && condition == Condition.TRUE) {
+            } else if (rotateCenter && condition == null) {
 
                 // this is the center post, we only use this for glass panes
                 // it is rotated and used as a separate model part when only two opposite intercardinal directions are present
@@ -107,49 +107,83 @@ public class MultipartAppender {
                 Map<EightWayDirection, Condition> conditions = rotateCenterConditions();
                 for (Map.Entry<EightWayDirection, Condition> entry : conditions.entrySet()) {
 
-                    appendNewSelector(modelAdder, entry.getValue(), selector, entry.getKey(), newSelectors);
+                    appendNewSelector(entry.getValue(), selector, entry.getKey(), newSelectors);
                 }
 
-                Selector newSelector = new Selector(negateCondition(new OrCondition(conditions.values())),
-                        selector.getVariant());
+                Selector newSelector = new Selector(Optional.of(negateCondition(new CombinedCondition(CombinedCondition.Operation.OR,
+                        List.copyOf(conditions.values())))), selector.variant());
                 iterator.set(newSelector);
             }
         }
 
         selectors.addAll(newSelectors);
-        return new MultiPart.Definition(selectors);
+        return new BlockModelDefinition.MultiPartDefinition(selectors);
     }
 
     @Nullable
-    private static MultipartAppender.ConditionFactoryPair findKeyValueCondition(Condition condition, Predicate<KeyValueCondition> filter) {
+    private static MultipartAppender.ConditionWithFactory findKeyValueCondition(@Nullable Condition condition, Predicate<ConditionWithFactory> filter) {
         if (condition instanceof KeyValueCondition keyValueCondition) {
-            return filter.test(keyValueCondition) ?
-                    new ConditionFactoryPair(keyValueCondition, UnaryOperator.identity()) : null;
-        } else if (condition instanceof AndCondition) {
-            List<Condition> conditions = Lists.newArrayList(((AndConditionAccessor) condition).diagonalfences$getConditions());
+            if (keyValueCondition.tests().isEmpty()) {
+                return null;
+            } else if (keyValueCondition.tests().size() == 1 &&
+                    keyValueCondition.tests().entrySet().iterator().next().getValue().entries().size() == 1) {
+                Map.Entry<String, KeyValueCondition.Terms> entry = keyValueCondition.tests()
+                        .entrySet()
+                        .iterator()
+                        .next();
+                ConditionWithFactory conditionWithFactory = new ConditionWithFactory(entry.getKey(),
+                        entry.getValue().entries().getFirst().value(),
+                        UnaryOperator.identity());
+                if (filter.test(conditionWithFactory)) {
+                    return conditionWithFactory;
+                } else {
+                    return null;
+                }
+            } else {
+                List<Condition> conditions = new ArrayList<>();
+                for (Map.Entry<String, KeyValueCondition.Terms> entry : keyValueCondition.tests().entrySet()) {
+                    for (KeyValueCondition.Term term : entry.getValue().entries()) {
+                        conditions.add(new KeyValueCondition(Collections.singletonMap(entry.getKey(),
+                                new KeyValueCondition.Terms(Collections.singletonList(term)))));
+                    }
+                }
+                return findKeyValueCondition(new CombinedCondition(CombinedCondition.Operation.AND, conditions),
+                        filter);
+            }
+        } else if (
+                condition instanceof CombinedCondition(CombinedCondition.Operation operation, List<Condition> terms) &&
+                        operation == CombinedCondition.Operation.AND) {
+            List<Condition> conditions = new ArrayList<>(terms);
             for (int i = 0; i < conditions.size(); i++) {
-                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i), filter);
-                if (conditionFactoryPair != null) {
-                    conditions.remove(conditionFactoryPair.condition());
-                    return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
-                        conditions.add(conditionFactoryPair.factory().apply(condition1));
-                        return new AndCondition(conditions);
-                    });
+                ConditionWithFactory conditionWithFactory = findKeyValueCondition(conditions.get(i), filter);
+                if (conditionWithFactory != null) {
+                    conditions.remove(i);
+                    return new ConditionWithFactory(conditionWithFactory.key(),
+                            conditionWithFactory.value(),
+                            condition1 -> {
+                                conditions.add(conditionWithFactory.factory().apply(condition1));
+                                return new CombinedCondition(CombinedCondition.Operation.AND, conditions);
+                            });
                 }
             }
-        } else if (condition instanceof OrCondition) {
-            List<Condition> conditions = Lists.newArrayList(((OrConditionAccessor) condition).diagonalfences$getConditions());
+        } else if (
+                condition instanceof CombinedCondition(CombinedCondition.Operation operation, List<Condition> terms) &&
+                        operation == CombinedCondition.Operation.OR) {
+            List<Condition> conditions = new ArrayList<>(terms);
             for (int i = 0; i < conditions.size(); i++) {
-                ConditionFactoryPair conditionFactoryPair = findKeyValueCondition(conditions.get(i), filter);
-                if (conditionFactoryPair != null) {
-                    conditions.remove(conditionFactoryPair.condition());
-                    return new ConditionFactoryPair(conditionFactoryPair.condition(), condition1 -> {
-                        conditions.add(conditionFactoryPair.factory().apply(condition1));
-                        return new OrCondition(conditions);
-                    });
+                ConditionWithFactory conditionWithFactory = findKeyValueCondition(conditions.get(i), filter);
+                if (conditionWithFactory != null) {
+                    conditions.remove(i);
+                    return new ConditionWithFactory(conditionWithFactory.key(),
+                            conditionWithFactory.value(),
+                            condition1 -> {
+                                conditions.add(conditionWithFactory.factory().apply(condition1));
+                                return new CombinedCondition(CombinedCondition.Operation.OR, conditions);
+                            });
                 }
             }
         }
+
         return null;
     }
 
@@ -171,59 +205,89 @@ public class MultipartAppender {
     }
 
     private static Condition negateCondition(Condition condition) {
-
-        return stateDefinition -> condition.getPredicate(stateDefinition).negate();
+        return new Condition() {
+            @Override
+            public <O, S extends StateHolder<O, S>> Predicate<S> instantiate(StateDefinition<O, S> stateDefinition) {
+                return condition.instantiate(stateDefinition).negate();
+            }
+        };
     }
 
     private static Condition getAndCondition(EightWayDirection... directions) {
-
-        List<Condition> conditions = new ArrayList<>();
+        ConditionBuilder conditionBuilder = new ConditionBuilder();
         for (EightWayDirection direction : EightWayDirection.values()) {
-
-            String value = ArrayUtils.contains(directions, direction) ? "true" : "false";
-            conditions.add(new KeyValueCondition(direction.getSerializedName(), value));
+            BooleanProperty property = StarCollisionBlock.PROPERTY_BY_DIRECTION.get(direction);
+            Boolean value = ArrayUtils.contains(directions, direction) ? Boolean.TRUE : Boolean.FALSE;
+            conditionBuilder.term(property, value);
         }
-
-        return new AndCondition(conditions);
+        return conditionBuilder.build();
     }
 
-    private static void appendNewSelector(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, Condition newCondition, Selector selector, EightWayDirection direction, List<Selector> newSelectors) {
+    public static KeyValueCondition createKeyValueCondition(String key, String value) {
+        return new KeyValueCondition(Collections.singletonMap(key,
+                new KeyValueCondition.Terms(Collections.singletonList(new KeyValueCondition.Term(value, false)))));
+    }
 
-        EightWayDirection interDirection = direction.rotateClockWise();
-        List<Variant> variants = selector.getVariant().variants();
-        List<Variant> newVariants = new ArrayList<>();
-        for (Variant variant : variants) {
+    private static void appendNewSelector(Condition condition, Selector selector, EightWayDirection direction, List<Selector> newSelectors) {
+        appendNewSelector(condition, selector.variant(), direction.toDirection(), newSelectors::add);
+    }
 
-            // Fabric Api's Model Api does not work as we need it to when using ModelResourceLocation, so stick to normal ResourceLocation
-            ResourceLocation resourceLocation = variant.modelLocation()
-                    .withPath((String path) -> path + "_" + interDirection.getSerializedName());
-            // this is the rotated model part, just make sure it is cached somewhere to avoid recreation multiple times since it's very expensive
-            // we could also use our own cache, but unbaked models cache works fine
-            modelAdder.accept(resourceLocation, new RotatedVariant(variant, direction.toDirection()));
-            // copy old variant which is now backed by the rotated model part, besides that only the weight value should really matter
-            newVariants.add(new Variant(resourceLocation,
-                    variant.getRotation(),
-                    variant.isUvLocked(),
-                    variant.weight()));
-        }
+    private static void appendNewSelector(Condition condition, BlockStateModel.Unbaked variant, Direction direction, Consumer<Selector> newSelectors) {
+        newSelectors.accept(new Selector(Optional.of(condition), new BlockStateModel.Unbaked() {
+            @Override
+            public void resolveDependencies(Resolver resolver) {
+                variant.resolveDependencies(resolver);
+            }
 
-        newSelectors.add(new Selector(newCondition, new MultiVariant(newVariants)));
+            @Override
+            public BlockStateModel bake(ModelBaker modelBaker) {
+                BlockStateModel blockStateModel = variant.bake(modelBaker);
+                Function<BlockModelPart, BlockModelPart> blockModelPartRotator = Util.memoize((BlockModelPart blockModelPart) -> {
+                    return MultipartAppender.rotateMultipartSegment(blockModelPart, direction);
+                });
+                return new BlockStateModel() {
+                    @Override
+                    public void collectParts(RandomSource randomSource, List<BlockModelPart> list) {
+                        List<BlockModelPart> tmpList = new ObjectArrayList<>();
+                        blockStateModel.collectParts(randomSource, tmpList);
+                        for (BlockModelPart blockModelPart : tmpList) {
+                            list.add(blockModelPartRotator.apply(blockModelPart));
+                        }
+                    }
+
+                    @Override
+                    public TextureAtlasSprite particleIcon() {
+                        return blockStateModel.particleIcon();
+                    }
+                };
+            }
+        }));
     }
 
     /**
      * Duplicate and rotate all {@link BakedQuad quads} from the given {@link BakedModel segmentModel} to produce a new
      * variant for a diagonal segment
      */
-    public static BakedModel rotateMultipartSegment(@Nullable BlockState state, BakedModel segmentModel, Direction armDir) {
+    public static BlockModelPart rotateMultipartSegment(BlockModelPart segmentModel, Direction armDir) {
 
         Map<Direction, List<BakedQuad>> quadMap = new HashMap<>();
-        rotateQuads(quadMap, state, segmentModel, null, armDir);
+        rotateQuads(quadMap, segmentModel, null, armDir);
 
         for (Direction cullFace : Direction.values()) {
-            rotateQuads(quadMap, state, segmentModel, cullFace, armDir);
+            rotateQuads(quadMap, segmentModel, cullFace, armDir);
         }
 
-        return ClientAbstractions.INSTANCE.createWrappedBakedModel(segmentModel, quadMap);
+        QuadCollection.Builder builder = new QuadCollection.Builder();
+        for (BakedQuad bakedQuad : quadMap.getOrDefault(null, Collections.emptyList())) {
+            builder.addUnculledFace(bakedQuad);
+        }
+        quadMap.forEach((direction, bakedQuads) -> {
+            for (BakedQuad bakedQuad : bakedQuads) {
+                builder.addCulledFace(direction, bakedQuad);
+            }
+        });
+
+        return new SimpleModelWrapper(builder.build(), segmentModel.useAmbientOcclusion(), segmentModel.particleIcon());
     }
 
     /**
@@ -231,9 +295,9 @@ public class MultipartAppender {
      * {@link BakedModel segmentModel} 45 degrees clockwise. The quads are duplicated, rotated and have their vertex
      * normals recalculated.
      */
-    private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, @Nullable BlockState state, BakedModel segmentModel, Direction cullFace, Direction segmentDir) {
+    private static void rotateQuads(Map<Direction, List<BakedQuad>> quadMap, BlockModelPart blockModelPart, Direction cullFace, Direction segmentDir) {
 
-        List<BakedQuad> quads = segmentModel.getQuads(state, cullFace, RandomSource.create());
+        List<BakedQuad> quads = blockModelPart.getQuads(cullFace);
         List<BakedQuad> newQuads = new ArrayList<>();
 
         for (BakedQuad bakedQuad : quads) {
@@ -279,7 +343,7 @@ public class MultipartAppender {
         QuadUtils.fillNormal(bakedQuad);
     }
 
-    private record ConditionFactoryPair(KeyValueCondition condition, UnaryOperator<Condition> factory) {
+    private record ConditionWithFactory(String key, String value, UnaryOperator<Condition> factory) {
 
     }
 }

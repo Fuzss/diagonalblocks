@@ -4,17 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.diagonalblocks.client.resources.model.MultipartAppender;
-import net.minecraft.client.renderer.block.model.multipart.MultiPart;
+import net.minecraft.client.renderer.block.model.BlockModelDefinition;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
-import net.minecraft.client.resources.model.UnbakedModel;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class MultiPartTranslator {
@@ -48,17 +45,17 @@ public class MultiPartTranslator {
         return oldValue;
     }
 
-    public MultiPart.Definition apply(MultiPart.Definition baseBlockModel, BiConsumer<ResourceLocation, UnbakedModel> modelAdder) {
-        return this.applyAdditionalSelectors(modelAdder, this.getModelFromBase(baseBlockModel));
+    public BlockModelDefinition.MultiPartDefinition apply(BlockModelDefinition.MultiPartDefinition baseBlockModel) {
+        return this.applyAdditionalSelectors(this.getModelFromBase(baseBlockModel));
     }
 
-    protected MultiPart.Definition getModelFromBase(MultiPart.Definition multiPart) {
+    protected BlockModelDefinition.MultiPartDefinition getModelFromBase(BlockModelDefinition.MultiPartDefinition multiPart) {
         List<Selector> selectors = Lists.newArrayList(multiPart.selectors());
-        return new MultiPart.Definition(selectors);
+        return new BlockModelDefinition.MultiPartDefinition(selectors);
     }
 
-    protected MultiPart.Definition applyAdditionalSelectors(BiConsumer<ResourceLocation, UnbakedModel> modelAdder, MultiPart.Definition multiPart) {
-        return MultipartAppender.appendDiagonalSelectors(modelAdder, multiPart, false);
+    protected BlockModelDefinition.MultiPartDefinition applyAdditionalSelectors(BlockModelDefinition.MultiPartDefinition multiPart) {
+        return MultipartAppender.appendDiagonalSelectors(multiPart, false);
     }
 
     public boolean allowBaseModelAsFallback() {

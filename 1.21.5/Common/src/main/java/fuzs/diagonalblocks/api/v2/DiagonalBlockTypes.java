@@ -30,10 +30,10 @@ public final class DiagonalBlockTypes {
             WallBlock.class,
             (Block block) -> DiagonalWallBlock::new,
             WallBlock.UP,
-            WallBlock.NORTH_WALL,
-            WallBlock.EAST_WALL,
-            WallBlock.WEST_WALL,
-            WallBlock.SOUTH_WALL,
+            WallBlock.NORTH,
+            WallBlock.EAST,
+            WallBlock.WEST,
+            WallBlock.SOUTH,
             WallBlock.WATERLOGGED);
 
     static {

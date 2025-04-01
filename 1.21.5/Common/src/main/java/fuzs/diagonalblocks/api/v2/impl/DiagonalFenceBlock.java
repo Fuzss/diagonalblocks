@@ -18,6 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.function.Function;
+
 public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock {
 
     public DiagonalFenceBlock(BlockBehaviour.Properties properties) {
@@ -26,13 +28,8 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
     }
 
     @Override
-    protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-        return this._makeShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
-    }
-
-    @Override
-    protected int getAABBIndex(BlockState blockState) {
-        return this._getAABBIndex(blockState);
+    protected Function<BlockState, VoxelShape> makeShapes(float nodeWidth, float nodeHeight, float extensionWidth, float extensionBottom, float extensionHeight) {
+        return this._makeShapes(nodeWidth, nodeHeight, extensionWidth, extensionBottom, extensionHeight);
     }
 
     @Override
@@ -53,12 +50,20 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
 
     @Override
     public BlockState updateShape(BlockState blockState, LevelReader levelReader, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighboringBlockPos, BlockState neighboringBlockState, RandomSource randomSource) {
-        blockState = super.updateShape(blockState, levelReader, scheduledTickAccess, blockPos, direction,
-                neighboringBlockPos, neighboringBlockState, randomSource
-        );
-        return this._updateShape(blockState, direction, neighboringBlockState, levelReader, blockPos,
-                neighboringBlockPos
-        );
+        blockState = super.updateShape(blockState,
+                levelReader,
+                scheduledTickAccess,
+                blockPos,
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
+        return this._updateShape(blockState,
+                direction,
+                neighboringBlockState,
+                levelReader,
+                blockPos,
+                neighboringBlockPos);
     }
 
     @Override
@@ -73,8 +78,8 @@ public class DiagonalFenceBlock extends FenceBlock implements StarCollisionBlock
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) && blockState.is(
-                BlockTags.FENCES) && blockState.is(BlockTags.WOODEN_FENCES) == this.defaultBlockState().is(
-                BlockTags.WOODEN_FENCES);
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) &&
+                blockState.is(BlockTags.FENCES) &&
+                blockState.is(BlockTags.WOODEN_FENCES) == this.defaultBlockState().is(BlockTags.WOODEN_FENCES);
     }
 }

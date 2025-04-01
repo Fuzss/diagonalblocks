@@ -19,6 +19,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.Map;
 import java.util.Stack;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlock {
@@ -29,13 +30,8 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     }
 
     @Override
-    protected VoxelShape[] makeShapes(float nodeWidth, float extensionWidth, float nodeHeight, float extensionBottom, float extensionHeight) {
-        return this._makeShapes(nodeWidth, extensionWidth, nodeHeight, extensionBottom, extensionHeight);
-    }
-
-    @Override
-    protected int getAABBIndex(BlockState blockState) {
-        return this._getAABBIndex(blockState);
+    protected Function<BlockState, VoxelShape> makeShapes(float nodeWidth, float nodeHeight, float extensionWidth, float extensionBottom, float extensionHeight) {
+        return this._makeShapes(nodeWidth, nodeHeight, extensionWidth, extensionBottom, extensionHeight);
     }
 
     @Override
@@ -52,18 +48,26 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState blockState = this._getStateForPlacement(context, super.getStateForPlacement(context));
-        return this.shouldNotRaisePost(context.getLevel(), context.getClickedPos(), blockState) ? blockState.setValue(
-                LegacyWallBlock.UP, false) : blockState;
+        return this.shouldNotRaisePost(context.getLevel(), context.getClickedPos(), blockState) ?
+                blockState.setValue(LegacyWallBlock.UP, false) : blockState;
     }
 
     @Override
     public BlockState updateShape(BlockState blockState, LevelReader levelReader, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighboringBlockPos, BlockState neighboringBlockState, RandomSource randomSource) {
-        blockState = super.updateShape(blockState, levelReader, scheduledTickAccess, blockPos, direction,
-                neighboringBlockPos, neighboringBlockState, randomSource
-        );
-        blockState = this._updateShape(blockState, direction, neighboringBlockState, levelReader, blockPos,
-                neighboringBlockPos
-        );
+        blockState = super.updateShape(blockState,
+                levelReader,
+                scheduledTickAccess,
+                blockPos,
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
+        blockState = this._updateShape(blockState,
+                direction,
+                neighboringBlockState,
+                levelReader,
+                blockPos,
+                neighboringBlockPos);
         return direction != Direction.DOWN && this.shouldNotRaisePost(levelReader, blockPos, blockState) ?
                 blockState.setValue(LegacyWallBlock.UP, false) : blockState;
     }
@@ -104,8 +108,9 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     @Override
     public BlockState updateIndirectNeighborDiagonalProperty(BlockState neighborBlockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection eightWayDirection) {
         BlockState blockState = StarCollisionBlock.super.updateIndirectNeighborDiagonalProperty(neighborBlockState,
-                levelAccessor, blockPos, eightWayDirection
-        );
+                levelAccessor,
+                blockPos,
+                eightWayDirection);
         return blockState.setValue(LegacyWallBlock.UP, this.shouldRaisePost(levelAccessor, blockPos, blockState));
     }
 
@@ -113,9 +118,11 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
         // does a complete check for raising the post depending on all eight direction properties,
         // as this method is designed for updates from indirect neighbors which do not result in the post having previously been updated
         // based on cardinal directions as is the case otherwise for WallBlock::getStateForPlacement and WallBlock::updateShape
-        Stack<EightWayDirection> stack = StarCollisionBlock.PROPERTY_BY_DIRECTION.entrySet().stream().filter(
-                entry -> blockState.getValue(entry.getValue())).map(Map.Entry::getKey).collect(
-                Collectors.toCollection(Stack::new));
+        Stack<EightWayDirection> stack = StarCollisionBlock.PROPERTY_BY_DIRECTION.entrySet()
+                .stream()
+                .filter(entry -> blockState.getValue(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toCollection(Stack::new));
         if (!stack.isEmpty()) {
             while (stack.size() >= 2) {
                 if (stack.pop().getOpposite() != stack.pop()) {

@@ -5,11 +5,9 @@ import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
 import fuzs.puzzleslib.api.block.v1.BlockConversionHelper;
 import fuzs.puzzleslib.api.event.v1.RegistryEntryAddedCallback;
 import fuzs.puzzleslib.api.event.v1.core.EventResultHolder;
-import fuzs.puzzleslib.api.init.v3.registry.RegistryHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -110,7 +108,7 @@ public class DiagonalBlockHandler {
                     continue;
                 }
             }
-            if (RegistryHelper.is(type.getBlacklistTagKey(), baseBlock)) {
+            if (baseBlock.builtInRegistryHolder().is(type.getBlacklistTagKey())) {
                 BlockConversionHelper.setBlockForItem(blockItem, baseBlock);
             } else {
                 BlockConversionHelper.setBlockForItem(blockItem, diagonalBlock);

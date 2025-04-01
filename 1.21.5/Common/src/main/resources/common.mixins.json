@@ -8,10 +8,6 @@
     "accessor.VoxelShapeAccessor"
   ],
   "client": [
-    "client.accessor.AndConditionAccessor",
-    "client.accessor.KeyValueConditionAccessor",
-    "client.accessor.OrConditionAccessor",
-    "client.accessor.SelectorAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
