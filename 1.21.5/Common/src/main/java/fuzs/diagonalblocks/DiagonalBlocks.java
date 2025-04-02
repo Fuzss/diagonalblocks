@@ -21,12 +21,16 @@ public class DiagonalBlocks implements ModConstructor {
 
     @Override
     public void onConstructMod() {
+        ModRegistry.bootstrap();
         if (ModLoaderEnvironment.INSTANCE.isDevelopmentEnvironment(MOD_ID)) {
             DiagonalBlockType.register(DiagonalBlockTypes.FENCE);
             DiagonalBlockType.register(DiagonalBlockTypes.WINDOW);
             DiagonalBlockType.register(DiagonalBlockTypes.WALL);
         }
-        ModRegistry.bootstrap();
+    }
+
+    @Override
+    public void onCommonSetup() {
         registerEventHandlers();
     }
 

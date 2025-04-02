@@ -23,8 +23,8 @@ public final class ConditionHelper {
     }
 
     /**
-     * Will return {@code null} when any of the transformers return {@code null}, instead of returning an empty
-     * condition.
+     * Will return {@code null} when any of the transformers return {@code null} for the string, instead of returning an
+     * empty condition.
      */
     @Nullable
     public static Condition deepCopy(Condition condition, UnaryOperator<String> keyTransformer, BinaryOperator<String> valueTransformer) {

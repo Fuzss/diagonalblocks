@@ -14,14 +14,15 @@ import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
-import net.minecraft.client.resources.model.*;
+import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 
 public class DiagonalBlocksClient implements ClientModConstructor {
@@ -53,14 +54,15 @@ public class DiagonalBlocksClient implements ClientModConstructor {
             MultiPartTranslator multiPartTranslator = MultiPartTranslator.get(diagonalBlockType);
             diagonalBlockType.getBlockConversions().forEach((Block oldBlock, Block newBlock) -> {
                 context.registerBlockStateResolver(newBlock,
-                        (BlockStateResolverContext.ResourceLoaderContext resourceLoaderContext) -> {
-                            return ModelLoadingHelper.loadBlockState(resourceLoaderContext.resourceManager(),
+                        (ResourceManager resourceManager, Executor executor) -> {
+                            return ModelLoadingHelper.loadBlockState(resourceManager,
                                             BuiltInRegistries.BLOCK.getKey(oldBlock),
-                                            resourceLoaderContext.executor())
+                                            executor)
                                     .thenApply((List<BlockStateModelLoader.LoadedBlockModelDefinition> loadedBlockModelDefinitions) -> {
                                         return DiagonalModelHandler.transformLoadedBlockModelDefinitions(
                                                 loadedBlockModelDefinitions,
-                                                multiPartTranslator, () -> {
+                                                multiPartTranslator,
+                                                () -> {
                                                     DiagonalModelHandler.reportInvalidBlockModel(BuiltInRegistries.BLOCK.getKey(
                                                             oldBlock), diagonalBlockType);
                                                 });
@@ -69,7 +71,7 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                                         return ModelLoadingHelper.loadBlockState(loadedBlockModelDefinitions,
                                                 BuiltInRegistries.BLOCK.getKey(newBlock),
                                                 newBlock.getStateDefinition(),
-                                                resourceLoaderContext.executor());
+                                                executor);
                                     });
                         },
                         (BlockStateModelLoader.LoadedModels loadedModels, BiConsumer<BlockState, BlockStateModel.UnbakedRoot> blockStateConsumer) -> {
@@ -77,34 +79,11 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                                 if (loadedModels.models().containsKey(blockState)) {
                                     blockStateConsumer.accept(blockState, loadedModels.models().get(blockState));
                                 } else {
-                                    blockStateConsumer.accept(blockState, missingModel());
+                                    blockStateConsumer.accept(blockState, ModelLoadingHelper.missingModel());
                                 }
                             }
                         });
             });
         }
-    }
-
-    @Deprecated
-    public static BlockStateModel.UnbakedRoot missingModel() {
-        return new BlockStateModel.UnbakedRoot() {
-            @Override
-            public BlockStateModel bake(BlockState blockState, ModelBaker modelBaker) {
-                UnbakedModel unbakedModel = MissingBlockModel.missingModel();
-                // just use this, so we do not have to dealt with the internal resolved model implementation
-                ResolvedModel resolvedModel = new ModelDiscovery(Collections.emptyMap(), unbakedModel).missingModel();
-                return ModelBakery.MissingModels.bake(resolvedModel, modelBaker.sprites()).block();
-            }
-
-            @Override
-            public Object visualEqualityGroup(BlockState state) {
-                return this;
-            }
-
-            @Override
-            public void resolveDependencies(ResolvableModel.Resolver resolver) {
-                // NO-OP
-            }
-        };
     }
 }
