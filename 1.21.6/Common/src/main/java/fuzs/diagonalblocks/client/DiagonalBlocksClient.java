@@ -8,11 +8,8 @@ import fuzs.diagonalblocks.client.resources.translator.WallMultiPartTranslator;
 import fuzs.diagonalblocks.client.resources.translator.WindowMultiPartTranslator;
 import fuzs.puzzleslib.api.client.core.v1.ClientModConstructor;
 import fuzs.puzzleslib.api.client.core.v1.context.BlockStateResolverContext;
-import fuzs.puzzleslib.api.client.event.v1.ClientLifecycleEvents;
-import fuzs.puzzleslib.api.client.renderer.v1.RenderTypeHelper;
+import fuzs.puzzleslib.api.client.core.v1.context.RenderTypesContext;
 import fuzs.puzzleslib.api.client.renderer.v1.model.ModelLoadingHelper;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,23 +26,10 @@ public class DiagonalBlocksClient implements ClientModConstructor {
 
     @Override
     public void onConstructMod() {
-        registerLoadingHandlers();
         // this cannot happen later during client setup,
         // as model loading will already have begun by then in the background
         MultiPartTranslator.register(DiagonalBlockTypes.WINDOW, new WindowMultiPartTranslator());
         MultiPartTranslator.register(DiagonalBlockTypes.WALL, new WallMultiPartTranslator());
-    }
-
-    private static void registerLoadingHandlers() {
-        ClientLifecycleEvents.STARTED.register((Minecraft minecraft) -> {
-            // run a custom implementation here, the appropriate method in client mod constructor runs together with other mods, so we might miss some entries
-            for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                for (Map.Entry<Block, Block> entry : type.getBlockConversions().entrySet()) {
-                    RenderType renderType = RenderTypeHelper.getRenderType(entry.getKey());
-                    RenderTypeHelper.registerRenderType(entry.getValue(), renderType);
-                }
-            }
-        });
     }
 
     @Override
@@ -84,6 +68,16 @@ public class DiagonalBlocksClient implements ClientModConstructor {
                             }
                         });
             });
+        }
+    }
+
+    @Override
+    public void onRegisterBlockRenderTypes(RenderTypesContext<Block> context) {
+        // this runs deferred by default, so we should have all entries from other mods available to us
+        for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
+            for (Map.Entry<Block, Block> entry : type.getBlockConversions().entrySet()) {
+                context.registerChunkRenderType(entry.getValue(), context.getChunkRenderType(entry.getKey()));
+            }
         }
     }
 }
