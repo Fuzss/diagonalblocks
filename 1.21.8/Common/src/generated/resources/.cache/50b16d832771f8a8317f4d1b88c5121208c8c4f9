@@ -1,4 +1,4 @@
-// 1.21.7	2025-07-01T15:19:22.330955	Tags for minecraft:block mod id vanilla
+// 1.21.8	2025-07-18T13:14:02.690257	Tags for minecraft:block mod id vanilla
 c52fb02fcfb2a371fa75473ed6337a80e6a38ca0 data/diagonalblocks/tags/block/never_blocks_diagonal_connections.json
 9d3d7015404aac2a17a4e4786c357b4535184d21 data/diagonalfences/tags/block/non_diagonal_fences.json
 35133e95f1c8fdd7a1c21afcc231fc0bffefb9a8 data/diagonalwalls/tags/block/non_diagonal_walls.json
