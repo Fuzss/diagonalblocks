@@ -1,7 +1,6 @@
 package fuzs.diagonalblocks.world.phys.shapes;
 
 import com.google.common.collect.Lists;
-import fuzs.diagonalblocks.mixin.accessor.VoxelShapeAccessor;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +30,7 @@ public class NoneVoxelShape extends ExtensibleVoxelShape {
 
     @Override
     public DoubleList getCoords(Direction.Axis axis) {
-        return ((VoxelShapeAccessor) this.collisionShape).diagonalfences$callGetCoords(axis);
+        return this.collisionShape.getCoords(axis);
     }
 
     @Override

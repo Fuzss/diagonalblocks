@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.WallSide;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -21,8 +22,8 @@ public final class WallMultiPartTranslator extends MultiPartTranslator {
 
     @Override
     protected Comparable<?> getNewPropertyValue(Property<?> oldProperty, Property<?> newProperty, Comparable<?> oldValue) {
-        if (newProperty.getValueClass() == WallSide.class && oldValue instanceof Boolean) {
-            return (Boolean) oldValue ? WallSide.LOW : WallSide.NONE;
+        if (newProperty.getValueClass() == WallSide.class) {
+            return Objects.equals(oldValue, Boolean.TRUE) ? WallSide.LOW : WallSide.NONE;
         } else {
             return super.getNewPropertyValue(oldProperty, newProperty, oldValue);
         }
@@ -58,7 +59,8 @@ public final class WallMultiPartTranslator extends MultiPartTranslator {
 
     @Override
     public boolean allowBaseModelAsFallback() {
-        // since we change the block states on our wall block implementation from vanilla it is not safe to use the model of the vanilla wall base block
+        // since we change the block states on our wall block implementation from vanilla,
+        // it is not safe to use the model of the vanilla wall base block
         return false;
     }
 }

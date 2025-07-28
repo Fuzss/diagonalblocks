@@ -45,8 +45,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
             EightWayDirection.SOUTH_WEST,
             DiagonalBlock.SOUTH_WEST,
             EightWayDirection.NORTH_WEST,
-            DiagonalBlock.NORTH_WEST
-    ));
+            DiagonalBlock.NORTH_WEST));
     Int2ObjectMap<Map<EightWayDirection, VoxelShape>> CORNER_SHAPES_CACHE = new Int2ObjectOpenHashMap<>();
     Object2ObjectMap<DiagonalBlock, Map<EightWayDirection, VoxelShape>> CORNER_SHAPES_BLOCK_CACHE = new Object2ObjectOpenHashMap<>();
 
@@ -57,33 +56,33 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
             }
             BlockPos neighborBlockPos = blockPos.offset(eightWayDirection.getX(),
                     eightWayDirection.getY(),
-                    eightWayDirection.getZ()
-            );
-            BlockState neighborBlockState = levelReader.getBlockState(neighborBlockPos);
-            boolean value = allowsDiagonalProperty(diagonalBlock,
+                    eightWayDirection.getZ());
+            BlockState originalNeighborBlockState = levelReader.getBlockState(neighborBlockPos);
+            BlockState neighborBlockState = DiagonalBlockTypeImpl.NON_DIAGONAL_TO_DIAGONAL_BLOCK_STATES.getOrDefault(
+                    originalNeighborBlockState,
+                    originalNeighborBlockState);
+            boolean allowsDiagonalProperty = allowsDiagonalProperty(diagonalBlock,
                     levelReader,
                     blockPos,
                     neighborBlockState,
-                    eightWayDirection
-            );
-            if (value) {
+                    eightWayDirection);
+            if (allowsDiagonalProperty) {
                 DiagonalBlock neighborDiagonalBlock = (DiagonalBlock) neighborBlockState.getBlock();
-                value = allowsDiagonalProperty(neighborDiagonalBlock,
+                allowsDiagonalProperty = allowsDiagonalProperty(neighborDiagonalBlock,
                         levelReader,
                         neighborBlockPos,
                         blockState,
-                        eightWayDirection.getOpposite()
-                );
+                        eightWayDirection.getOpposite());
             }
-            blockState = blockState.setValue(PROPERTY_BY_DIRECTION.get(eightWayDirection), value);
+            blockState = blockState.setValue(PROPERTY_BY_DIRECTION.get(eightWayDirection), allowsDiagonalProperty);
         }
         return blockState;
     }
 
     static boolean allowsDiagonalProperty(DiagonalBlock diagonalBlock, LevelReader levelReader, BlockPos blockPos, BlockState neighborBlockState, EightWayDirection eightWayDirection) {
-        return diagonalBlock.attachesDiagonallyTo(neighborBlockState, eightWayDirection.getOpposite()) &&
-                isFreeForDiagonalProperty(diagonalBlock, levelReader, blockPos, eightWayDirection) &&
-                isNotCollidingWithNeighbors(diagonalBlock, levelReader, blockPos, eightWayDirection);
+        return diagonalBlock.attachesDiagonallyTo(neighborBlockState, eightWayDirection.getOpposite())
+                && isFreeForDiagonalProperty(diagonalBlock, levelReader, blockPos, eightWayDirection)
+                && isNotCollidingWithNeighbors(diagonalBlock, levelReader, blockPos, eightWayDirection);
     }
 
     static boolean isFreeForDiagonalProperty(DiagonalBlock diagonalBlock, LevelReader levelReader, BlockPos blockPos, EightWayDirection eightWayDirection) {
@@ -93,8 +92,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
             BlockState neighborBlockState = levelReader.getBlockState(neighborBlockPos);
             boolean isSideSolid = neighborBlockState.isFaceSturdy(levelReader,
                     neighborBlockPos,
-                    direction.getOpposite()
-            );
+                    direction.getOpposite());
             // do not use block state values, they might not have been updated yet on the other block
             if (diagonalBlock.attachesDirectlyTo(neighborBlockState, isSideSolid, direction.getOpposite())) {
                 return false;
@@ -127,24 +125,24 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
     default VoxelShape[] _makeLegacyShapes(float nodeWidth, float extensionWidth, float nodeTop, float extensionBottom, float extensionTop) {
         if (extensionBottom == 0.0F && extensionTop <= 16.0F && !CORNER_SHAPES_BLOCK_CACHE.containsKey(this)) {
             Map<EightWayDirection, VoxelShape> cornerShapes = CORNER_SHAPES_CACHE.computeIfAbsent(Arrays.hashCode(new float[]{
-                    extensionWidth,
-                    extensionBottom,
-                    extensionTop
-            }), $ -> {
-                return Stream.of(EightWayDirection.getIntercardinalDirections())
+                    extensionWidth, extensionBottom, extensionTop
+            }), (int hashCode) -> {
+                return (Map<EightWayDirection, VoxelShape>) Stream.of(EightWayDirection.getIntercardinalDirections())
                         .collect(Maps.<EightWayDirection, EightWayDirection, VoxelShape>toImmutableEnumMap(Function.identity(),
-                                eightWayDirection -> {
+                                (EightWayDirection eightWayDirection) -> {
                                     return this.getCornerShape(eightWayDirection,
                                             extensionWidth,
                                             extensionBottom,
-                                            extensionTop
-                                    );
-                                }
-                        ));
+                                            extensionTop);
+                                }));
             });
             CORNER_SHAPES_BLOCK_CACHE.put(this, cornerShapes);
         }
-        return StarShapeProvider.super._makeLegacyShapes(nodeWidth, extensionWidth, nodeTop, extensionBottom, extensionTop);
+        return StarShapeProvider.super._makeLegacyShapes(nodeWidth,
+                extensionWidth,
+                nodeTop,
+                extensionBottom,
+                extensionTop);
     }
 
     private VoxelShape getCornerShape(EightWayDirection eightWayDirection, float extensionWidth, float extensionBottom, float extensionTop) {
@@ -155,20 +153,20 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
                 posZ - extensionWidth,
                 posX + extensionWidth,
                 extensionTop,
-                posZ + extensionWidth
-        );
+                posZ + extensionWidth);
     }
 
     @Override
     default boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
-        return blockState.getBlock() instanceof DiagonalBlock diagonalBlock &&
-                diagonalBlock.getType() == this.getType();
+        return blockState.getBlock() instanceof DiagonalBlock diagonalBlock
+                && diagonalBlock.getType() == this.getType();
     }
 
     default BlockState addDefaultStates(BlockState defaultState) {
-        return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE).setValue(DiagonalBlock.SOUTH_EAST,
-                Boolean.FALSE
-        ).setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE).setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
+        return defaultState.setValue(DiagonalBlock.NORTH_EAST, Boolean.FALSE)
+                .setValue(DiagonalBlock.SOUTH_EAST, Boolean.FALSE)
+                .setValue(DiagonalBlock.SOUTH_WEST, Boolean.FALSE)
+                .setValue(DiagonalBlock.NORTH_WEST, Boolean.FALSE);
     }
 
     /**
@@ -178,8 +176,7 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
         builder.add(DiagonalBlock.NORTH_EAST,
                 DiagonalBlock.SOUTH_EAST,
                 DiagonalBlock.SOUTH_WEST,
-                DiagonalBlock.NORTH_WEST
-        );
+                DiagonalBlock.NORTH_WEST);
     }
 
     /**
@@ -189,7 +186,12 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
         Level level = context.getLevel();
         BlockPos clickedPos = context.getClickedPos();
         EightWayDirection[] eightWayDirections = EightWayDirection.getIntercardinalDirections();
-        return updateDiagonalProperties(this, blockState, level, clickedPos, eightWayDirections);
+        BlockState newBlockState = updateDiagonalProperties(this, blockState, level, clickedPos, eightWayDirections);
+        return this.getNonDiagonalStateForPlacement(context, newBlockState);
+    }
+
+    default BlockState getNonDiagonalStateForPlacement(BlockPlaceContext context, BlockState blockState) {
+        return this.getNonDiagonalBlockIfPossible(blockState);
     }
 
     /**
@@ -197,13 +199,28 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
      * {@link Block#updateShape(BlockState, LevelReader, ScheduledTickAccess, BlockPos, Direction, BlockPos, BlockState,
      * RandomSource)}.
      */
-    default BlockState _updateShape(BlockState blockState, Direction direction, BlockState neighboringBlockState, LevelReader levelReader, BlockPos blockPos, BlockPos neighboringBlockPos) {
+    default BlockState _updateShape(BlockState blockState, LevelReader levelReader, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighboringBlockPos, BlockState neighboringBlockState, RandomSource randomSource) {
+        BlockState newBlockState;
         if (direction.getAxis().getPlane() == Direction.Plane.HORIZONTAL) {
             EightWayDirection[] eightWayDirections = EightWayDirection.toEightWayDirection(direction)
                     .getIntercardinalNeighbors();
-            return updateDiagonalProperties(this, blockState, levelReader, blockPos, eightWayDirections);
+            newBlockState = updateDiagonalProperties(this, blockState, levelReader, blockPos, eightWayDirections);
+        } else {
+            newBlockState = blockState;
         }
-        return blockState;
+
+        return this.updateNonDiagonalShape(newBlockState,
+                levelReader,
+                scheduledTickAccess,
+                blockPos,
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
+    }
+
+    default BlockState updateNonDiagonalShape(BlockState blockState, LevelReader levelReader, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighboringBlockPos, BlockState neighboringBlockState, RandomSource randomSource) {
+        return this.getNonDiagonalBlockIfPossible(blockState);
     }
 
     /**
@@ -214,37 +231,48 @@ public interface StarCollisionBlock extends DiagonalBlock, StarShapeProvider {
             if (blockState.getValue(PROPERTY_BY_DIRECTION.get(eightWayDirection))) {
                 BlockPos neighborBlockPos = blockPos.offset(eightWayDirection.getX(),
                         eightWayDirection.getY(),
-                        eightWayDirection.getZ()
-                );
-                BlockState neighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
+                        eightWayDirection.getZ());
+                BlockState originalNeighborBlockState = levelAccessor.getBlockState(neighborBlockPos);
+                BlockState neighborBlockState = DiagonalBlockTypeImpl.NON_DIAGONAL_TO_DIAGONAL_BLOCK_STATES.getOrDefault(
+                        originalNeighborBlockState,
+                        originalNeighborBlockState);
                 BlockState newNeighborBlockState;
                 if (neighborBlockState.getBlock() instanceof StarCollisionBlock starCollisionBlock) {
                     newNeighborBlockState = starCollisionBlock.updateIndirectNeighborDiagonalProperty(neighborBlockState,
                             levelAccessor,
                             neighborBlockPos,
-                            eightWayDirection.getOpposite()
-                    );
+                            eightWayDirection.getOpposite());
                 } else if (neighborBlockState.getBlock() instanceof DiagonalBlock diagonalBlock) {
                     newNeighborBlockState = updateDiagonalProperties(diagonalBlock,
                             neighborBlockState,
                             levelAccessor,
                             neighborBlockPos,
-                            eightWayDirection.getOpposite()
-                    );
+                            eightWayDirection.getOpposite());
                 } else {
                     newNeighborBlockState = null;
                 }
                 if (newNeighborBlockState != null) {
-                    Block.updateOrDestroy(neighborBlockState,
-                            newNeighborBlockState,
+                    Block.updateOrDestroy(originalNeighborBlockState,
+                            this.updateNonDiagonalIndirectNeighbourShapes(newNeighborBlockState,
+                                    levelAccessor,
+                                    blockPos,
+                                    flags,
+                                    recursionLeft),
                             levelAccessor,
                             neighborBlockPos,
                             flags,
-                            recursionLeft
-                    );
+                            recursionLeft);
                 }
             }
         }
+    }
+
+    default BlockState updateNonDiagonalIndirectNeighbourShapes(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, int flags, int recursionLeft) {
+        return this.getNonDiagonalBlockIfPossible(blockState);
+    }
+
+    private BlockState getNonDiagonalBlockIfPossible(BlockState blockState) {
+        return DiagonalBlockTypeImpl.DIAGONAL_TO_NON_DIAGONAL_BLOCK_STATES.getOrDefault(blockState, blockState);
     }
 
     default BlockState updateIndirectNeighborDiagonalProperty(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, EightWayDirection eightWayDirection) {

@@ -1,7 +1,6 @@
 package fuzs.diagonalblocks.world.phys.shapes;
 
 import com.google.common.collect.Lists;
-import fuzs.diagonalblocks.mixin.accessor.VoxelShapeAccessor;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.shapes.BooleanOp;
@@ -29,12 +28,12 @@ public class VoxelCollection extends ExtensibleVoxelShape {
 
     @Override
     public DoubleList getCoords(Direction.Axis axis) {
-        return ((VoxelShapeAccessor) this.collisionShape).diagonalfences$callGetCoords(axis);
+        return this.collisionShape.getCoords(axis);
     }
 
     private void setCollisionShape(VoxelShape voxelShape) {
         this.collisionShape = voxelShape;
-        ((VoxelShapeAccessor) this).diagonalfences$setShape(((VoxelShapeAccessor) this.collisionShape).diagonalfences$getShape());
+        this.shape = this.collisionShape.shape;
     }
 
     public void addVoxelShape(VoxelShape voxelShape, VoxelShape particleShape) {

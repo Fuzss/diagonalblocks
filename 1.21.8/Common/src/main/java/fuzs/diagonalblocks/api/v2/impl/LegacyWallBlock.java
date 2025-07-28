@@ -1,5 +1,6 @@
 package fuzs.diagonalblocks.api.v2.impl;
 
+import com.google.common.collect.ImmutableMap;
 import com.mojang.serialization.MapCodec;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -11,14 +12,12 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CrossCollisionBlock;
-import net.minecraft.world.level.block.FenceGateBlock;
-import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
@@ -27,6 +26,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -34,16 +34,24 @@ import java.util.function.Function;
  * directional boolean properties into enum properties with three possible values (see
  * {@link net.minecraft.world.level.block.state.properties.WallSide}).
  *
- * <p>Since this mod already adds a good chunk of new properties, combined with the amount of properties
- * present in vanilla since Minecraft 1.16 there would simply be too many block states for the game to sufficiently
+ * <p>Since this mod already adds a good chunk of new properties, combined with the number of properties
+ * present in vanilla since Minecraft 1.16, there would simply be too many block states for the game to sufficiently
  * handle (3^4*2^2=324 possible states in vanilla, 3^8*2^2=26,244 possible states with diagonal block state
  * properties).
  *
- * <p>By simplifying the four directional states to boolean properties once again the addition of diagonal connections
+ * <p>By simplifying the four directional states to boolean properties once again, the addition of diagonal connections
  * becomes manageable once more (2^4*2^2=64 possible states in vanilla, 2^8*2^2=1,024 possible states with diagonal
  * block state properties).
  */
 public class LegacyWallBlock extends CrossCollisionBlock {
+    public static final Map<Property<?>, Property<?>> WALL_SIDE_PROPERTIES = ImmutableMap.of(WallBlock.EAST,
+            CrossCollisionBlock.EAST,
+            WallBlock.NORTH,
+            CrossCollisionBlock.NORTH,
+            WallBlock.SOUTH,
+            CrossCollisionBlock.SOUTH,
+            WallBlock.WEST,
+            CrossCollisionBlock.WEST);
     public static final MapCodec<LegacyWallBlock> CODEC = simpleCodec(LegacyWallBlock::new);
     private static final VoxelShape POST_TEST = Block.box(7.0, 0.0, 7.0, 9.0, 16.0, 9.0);
     public static final BooleanProperty UP = BlockStateProperties.UP;
@@ -89,8 +97,8 @@ public class LegacyWallBlock extends CrossCollisionBlock {
     public boolean connectsTo(BlockState state, boolean sideSolid, Direction direction) {
         Block block = state.getBlock();
         boolean bl = block instanceof FenceGateBlock && FenceGateBlock.connectsToDirection(state, direction);
-        return state.is(BlockTags.WALLS) || !isExceptionForConnection(state) && sideSolid ||
-                block instanceof IronBarsBlock || bl;
+        return state.is(BlockTags.WALLS) || !isExceptionForConnection(state) && sideSolid
+                || block instanceof IronBarsBlock || bl;
     }
 
     @Override
@@ -118,8 +126,8 @@ public class LegacyWallBlock extends CrossCollisionBlock {
         boolean connectsToWest = this.connectsTo(blockStateWest,
                 blockStateWest.isFaceSturdy(levelReader, blockPosWest, Direction.EAST),
                 Direction.EAST);
-        boolean bl5 = (!connectsToNorth || connectsToEast || !connectsToSouth || connectsToWest) &&
-                (connectsToNorth || !connectsToEast || connectsToSouth || !connectsToWest);
+        boolean bl5 = (!connectsToNorth || connectsToEast || !connectsToSouth || connectsToWest) && (connectsToNorth
+                || !connectsToEast || connectsToSouth || !connectsToWest);
         return this.defaultBlockState()
                 .setValue(UP, bl5 || this.shouldRaisePost(levelReader, clickedPos))
                 .setValue(NORTH, connectsToNorth)

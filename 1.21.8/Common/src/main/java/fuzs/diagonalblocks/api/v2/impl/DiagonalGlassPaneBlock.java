@@ -61,11 +61,13 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
                 neighboringBlockState,
                 randomSource);
         return this._updateShape(blockState,
-                direction,
-                neighboringBlockState,
                 levelReader,
+                scheduledTickAccess,
                 blockPos,
-                neighboringBlockPos);
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
     }
 
     @Override
@@ -80,9 +82,9 @@ public class DiagonalGlassPaneBlock extends IronBarsBlock implements StarCollisi
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) ||
-                blockState.getBlock() instanceof DiagonalBlock diagonalBlock &&
-                        diagonalBlock.getType() == DiagonalBlockTypes.WALL;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection)
+                || blockState.getBlock() instanceof DiagonalBlock diagonalBlock
+                && diagonalBlock.getType() == DiagonalBlockTypes.WALL;
     }
 
     @Override

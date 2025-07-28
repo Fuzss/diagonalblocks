@@ -23,6 +23,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionBlock {
+    protected static final Direction[] UPDATE_SHAPE_ORDER = new Direction[]{
+            Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH
+    };
 
     public DiagonalWallBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -40,6 +43,32 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     }
 
     @Override
+    public BlockState updateNonDiagonalIndirectNeighbourShapes(BlockState blockState, LevelAccessor levelAccessor, BlockPos blockPos, int flags, int recursionLeft) {
+        blockState = StarCollisionBlock.super.updateNonDiagonalIndirectNeighbourShapes(blockState,
+                levelAccessor,
+                blockPos,
+                flags,
+                recursionLeft);
+        if (!(blockState.getBlock() instanceof DiagonalWallBlock)) {
+            for (Direction direction : UPDATE_SHAPE_ORDER) {
+                BlockPos neighboringBlockPos = blockPos.relative(direction);
+                blockState = blockState.getBlock()
+                        .updateShape(blockState,
+                                levelAccessor,
+                                levelAccessor,
+                                blockPos,
+                                direction,
+                                neighboringBlockPos,
+                                levelAccessor.getBlockState(neighboringBlockPos),
+                                levelAccessor.getRandom());
+            }
+            return blockState;
+        } else {
+            return blockState;
+        }
+    }
+
+    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
         this._createBlockStateDefinition(builder);
@@ -48,8 +77,23 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockState blockState = this._getStateForPlacement(context, super.getStateForPlacement(context));
-        return this.shouldNotRaisePost(context.getLevel(), context.getClickedPos(), blockState) ?
-                blockState.setValue(LegacyWallBlock.UP, false) : blockState;
+        blockState = this.shouldNotRaisePost(context.getLevel(), context.getClickedPos(), blockState) ?
+                blockState.trySetValue(LegacyWallBlock.UP, Boolean.FALSE) : blockState;
+        if (!(blockState.getBlock() instanceof DiagonalWallBlock)) {
+            return blockState.getBlock().getStateForPlacement(context);
+        } else {
+            return blockState;
+        }
+    }
+
+    @Override
+    public BlockState getNonDiagonalStateForPlacement(BlockPlaceContext context, BlockState blockState) {
+        blockState = StarCollisionBlock.super.getNonDiagonalStateForPlacement(context, blockState);
+        if (!(blockState.getBlock() instanceof DiagonalWallBlock)) {
+            return blockState.getBlock().getStateForPlacement(context);
+        } else {
+            return blockState;
+        }
     }
 
     @Override
@@ -63,26 +107,67 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
                 neighboringBlockState,
                 randomSource);
         blockState = this._updateShape(blockState,
-                direction,
-                neighboringBlockState,
                 levelReader,
+                scheduledTickAccess,
                 blockPos,
-                neighboringBlockPos);
-        return direction != Direction.DOWN && this.shouldNotRaisePost(levelReader, blockPos, blockState) ?
-                blockState.setValue(LegacyWallBlock.UP, false) : blockState;
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
+        blockState = direction != Direction.DOWN && this.shouldNotRaisePost(levelReader, blockPos, blockState) ?
+                blockState.trySetValue(LegacyWallBlock.UP, Boolean.FALSE) : blockState;
+        if (!(blockState.getBlock() instanceof DiagonalWallBlock)) {
+            return blockState.getBlock()
+                    .updateShape(blockState,
+                            levelReader,
+                            scheduledTickAccess,
+                            blockPos,
+                            direction,
+                            neighboringBlockPos,
+                            neighboringBlockState,
+                            randomSource);
+        } else {
+            return blockState;
+        }
+    }
+
+    @Override
+    public BlockState updateNonDiagonalShape(BlockState blockState, LevelReader levelReader, ScheduledTickAccess scheduledTickAccess, BlockPos blockPos, Direction direction, BlockPos neighboringBlockPos, BlockState neighboringBlockState, RandomSource randomSource) {
+        blockState = StarCollisionBlock.super.updateNonDiagonalShape(blockState,
+                levelReader,
+                scheduledTickAccess,
+                blockPos,
+                direction,
+                neighboringBlockPos,
+                neighboringBlockState,
+                randomSource);
+        if (!(blockState.getBlock() instanceof DiagonalWallBlock)) {
+            return blockState.getBlock()
+                    .updateShape(blockState,
+                            levelReader,
+                            scheduledTickAccess,
+                            blockPos,
+                            direction,
+                            neighboringBlockPos,
+                            neighboringBlockState,
+                            randomSource);
+        } else {
+            return blockState;
+        }
     }
 
     private boolean shouldNotRaisePost(LevelReader level, BlockPos blockPos, BlockState blockState) {
-        // this method is designed for WallBlock::getStateForPlacement and WallBlock::updateShape to run after all other block state properties have been set
+        // this method is designed for WallBlock::getStateForPlacement and WallBlock::updateShape
+        // to run after all the other block state properties have been set
         // only diagonal properties must be checked as the calling method has already resolved cardinal directions
-        if (blockState.getValue(LegacyWallBlock.UP)) {
+        if (blockState.getValueOrElse(LegacyWallBlock.UP, Boolean.FALSE)) {
             if (!this.shouldRaisePost(level, blockPos)) {
-                boolean northEast = blockState.getValue(NORTH_EAST);
-                boolean southEast = blockState.getValue(SOUTH_EAST);
-                boolean southWest = blockState.getValue(SOUTH_WEST);
-                boolean northWest = blockState.getValue(NORTH_WEST);
-                return northEast && southWest && !southEast && !northWest ||
-                        !northEast && !southWest && southEast && northWest;
+                boolean northEast = blockState.getValueOrElse(NORTH_EAST, Boolean.FALSE);
+                boolean southEast = blockState.getValueOrElse(SOUTH_EAST, Boolean.FALSE);
+                boolean southWest = blockState.getValueOrElse(SOUTH_WEST, Boolean.FALSE);
+                boolean northWest = blockState.getValueOrElse(NORTH_WEST, Boolean.FALSE);
+                return northEast && southWest && !southEast && !northWest
+                        || !northEast && !southWest && southEast && northWest;
             }
         }
         return false;
@@ -100,9 +185,9 @@ public class DiagonalWallBlock extends LegacyWallBlock implements StarCollisionB
 
     @Override
     public boolean attachesDiagonallyTo(BlockState blockState, EightWayDirection eightWayDirection) {
-        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection) ||
-                blockState.getBlock() instanceof DiagonalBlock diagonalBlock &&
-                        diagonalBlock.getType() == DiagonalBlockTypes.WINDOW;
+        return StarCollisionBlock.super.attachesDiagonallyTo(blockState, eightWayDirection)
+                || blockState.getBlock() instanceof DiagonalBlock diagonalBlock
+                && diagonalBlock.getType() == DiagonalBlockTypes.WINDOW;
     }
 
     @Override

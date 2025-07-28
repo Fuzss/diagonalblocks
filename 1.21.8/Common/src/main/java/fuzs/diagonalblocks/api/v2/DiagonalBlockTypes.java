@@ -5,8 +5,11 @@ import fuzs.diagonalblocks.data.ModBlockTagsProvider;
 import fuzs.puzzleslib.api.core.v1.utility.ResourceLocationHelper;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.block.state.properties.WallSide;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public final class DiagonalBlockTypes {
@@ -34,7 +37,31 @@ public final class DiagonalBlockTypes {
             WallBlock.EAST,
             WallBlock.WEST,
             WallBlock.SOUTH,
-            WallBlock.WATERLOGGED);
+            WallBlock.WATERLOGGED) {
+        @Override
+        public boolean supportsOriginalBlockState() {
+            // disabled for now, switching between tall and low wall sides does not work correctly when converting to vanilla states
+            return false;
+        }
+
+        @Override
+        protected Property<?> sanitizeProperty(Property<?> property) {
+            if (LegacyWallBlock.WALL_SIDE_PROPERTIES.containsKey(property)) {
+                return LegacyWallBlock.WALL_SIDE_PROPERTIES.get(property);
+            } else {
+                return super.sanitizeProperty(property);
+            }
+        }
+
+        @Override
+        protected Comparable<?> sanitizePropertyValue(Property<?> property, Comparable<?> value) {
+            if (property.getValueClass() == WallSide.class) {
+                return Objects.equals(value, WallSide.NONE) ? Boolean.FALSE : Boolean.TRUE;
+            } else {
+                return super.sanitizePropertyValue(property, value);
+            }
+        }
+    };
 
     static {
         ModBlockTagsProvider.BUILT_IN_BLACKLISTED_TYPES.forEach((DiagonalBlockType diagonalBlockType, List<String> strings) -> {

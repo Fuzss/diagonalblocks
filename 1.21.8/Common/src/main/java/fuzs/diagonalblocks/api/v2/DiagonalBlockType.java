@@ -31,8 +31,8 @@ public interface DiagonalBlockType {
         // single line haha
         if (!TYPES.contains(type) && TYPES.add(type)) {
             // due to how this event is implemented on Fabric it's registration must be triggered by the mod registering the new diagonal block type
-            RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK).register(
-                    DiagonalBlockHandler.onBlockAdded(type));
+            RegistryEntryAddedCallback.registryEntryAdded(Registries.BLOCK)
+                    .register(DiagonalBlockHandler.onBlockAdded(type));
         }
     }
 
@@ -48,8 +48,8 @@ public interface DiagonalBlockType {
      * A block blacklist for preventing the diagonal block from being set to the corresponding
      * {@link net.minecraft.world.item.BlockItem}.
      * <p>Note that the diagonal block will still exist (although unused). It is registered to the block registry and
-     * has a block model generated for it.
-     * Preventing block registration is possible using {@link #disableBlockFactory(ResourceLocation)}.
+     * has a block model generated for it. Preventing block registration is possible using
+     * {@link #disableBlockFactory(ResourceLocation)}.
      *
      * @return the blacklist block tag key
      */
@@ -67,8 +67,8 @@ public interface DiagonalBlockType {
     /**
      * Creates a new diagonal block implementation from the non-diagonal base block.
      * <p>The result of this method in the default implementation can be further customized via
-     * {@link #registerBlockFactory(ResourceLocation, Function)},
-     * {@link #registerDefaultBlockFactory(ResourceLocation)} and {@link #disableBlockFactory(ResourceLocation)}.
+     * {@link #registerBlockFactory(ResourceLocation, Function)}, {@link #registerDefaultBlockFactory(ResourceLocation)}
+     * and {@link #disableBlockFactory(ResourceLocation)}.
      *
      * @param resourceLocation the identifier for the non-diagonal base block
      * @param block            the non-diagonal base block
@@ -77,7 +77,14 @@ public interface DiagonalBlockType {
     Block makeDiagonalBlock(ResourceLocation resourceLocation, Block block);
 
     /**
-     * A map containing pairs of the original non-diagonal block as keys and the diagonal block equivalents as
+     * @return can this type convert to the original if no diagonal block properties are in use
+     */
+    default boolean supportsOriginalBlockState() {
+        return true;
+    }
+
+    /**
+     * A map containing pairs of the original non-diagonal blocks as keys and the diagonal block equivalents as
      * corresponding values.
      *
      * @return non-diagonal to diagonal blocks identity map
@@ -94,8 +101,7 @@ public interface DiagonalBlockType {
      *                         non-diagonal base block, not for the diagonal block)
      * @param factory          the factory override
      */
-    void registerBlockFactory(ResourceLocation resourceLocation,
-                              Function<Block, Function<BlockBehaviour.Properties, Block>> factory);
+    void registerBlockFactory(ResourceLocation resourceLocation, Function<Block, Function<BlockBehaviour.Properties, Block>> factory);
 
     /**
      * Allows for forcing a block to be turned into a diagonal block, even though it would otherwise not be targeted
@@ -111,9 +117,8 @@ public interface DiagonalBlockType {
     /**
      * Prevents a block from generating a diagonal variant. Provides an alternative to the blacklist tag from
      * {@link #getBlacklistTagKey()}.
-     * <p>While the blacklist tag only prevents placing new diagonal blocks, but still allows the diagonal block to be
-     * registered and exist,
-     * disabling a block on this level prevents it from being created at all.
+     * <p>While the blacklist tag only prevents placing new diagonal blocks but still allows the diagonal block to be
+     * registered and exist, disabling a block on this level prevents it from being created at all.
      *
      * @param resourceLocation the identifier for the block to override the factory for (this is the identifier for the
      *                         non-diagonal base block, not for the diagonal block)
