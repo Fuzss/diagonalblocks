@@ -46,25 +46,23 @@ public class DiagonalBlockHandler {
             BlockPos blockPos = hitResult.getBlockPos();
             BlockState blockState = level.getBlockState(blockPos);
             for (DiagonalBlockType type : DiagonalBlockType.TYPES) {
-                if (!type.supportsOriginalBlockState()) {
-                    Block newBlock;
-                    Block block = blockState.getBlock();
-                    if (type.getBlockConversions().containsKey(block)) {
-                        newBlock = type.getBlockConversions().get(block);
-                    } else if (type.getBlockConversions().containsValue(block)) {
-                        newBlock = type.getBlockConversions().inverse().get(block);
-                    } else {
-                        newBlock = null;
-                    }
-                    if (newBlock != null) {
-                        BlockState newBlockState = newBlock.withPropertiesOf(blockState);
-                        newBlockState = Block.updateFromNeighbourShapes(newBlockState, level, blockPos);
-                        level.setBlock(blockPos, newBlockState, 3);
-                        level.neighborChanged(blockPos, newBlock, null);
-                        level.gameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Context.of(player, newBlockState));
-                        level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, blockPos, 0);
-                        return EventResultHolder.interrupt(InteractionResult.SUCCESS);
-                    }
+                Block newBlock;
+                Block block = blockState.getBlock();
+                if (type.getBlockConversions().containsKey(block)) {
+                    newBlock = type.getBlockConversions().get(block);
+                } else if (type.getBlockConversions().containsValue(block)) {
+                    newBlock = type.getBlockConversions().inverse().get(block);
+                } else {
+                    newBlock = null;
+                }
+                if (newBlock != null) {
+                    BlockState newBlockState = newBlock.withPropertiesOf(blockState);
+                    newBlockState = Block.updateFromNeighbourShapes(newBlockState, level, blockPos);
+                    level.setBlock(blockPos, newBlockState, 3);
+                    level.neighborChanged(blockPos, newBlock, null);
+                    level.gameEvent(GameEvent.BLOCK_CHANGE, blockPos, GameEvent.Context.of(player, newBlockState));
+                    level.levelEvent(player, LevelEvent.PARTICLES_AND_SOUND_WAX_ON, blockPos, 0);
+                    return EventResultHolder.interrupt(InteractionResult.SUCCESS);
                 }
             }
         }
