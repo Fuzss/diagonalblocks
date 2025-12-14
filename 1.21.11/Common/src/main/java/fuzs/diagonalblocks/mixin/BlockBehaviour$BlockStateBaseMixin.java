@@ -2,7 +2,7 @@ package fuzs.diagonalblocks.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import com.mojang.serialization.MapCodec;
-import fuzs.diagonalblocks.api.v2.impl.DiagonalBlockTypeImpl;
+import fuzs.diagonalblocks.api.v2.block.type.DiagonalBlockTypeImpl;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

@@ -2,8 +2,8 @@ package fuzs.diagonalblocks.api.v2.client;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import fuzs.diagonalblocks.api.v2.DiagonalBlockType;
-import fuzs.diagonalblocks.client.resources.model.MultiPartAppender;
+import fuzs.diagonalblocks.api.v2.block.type.DiagonalBlockType;
+import fuzs.diagonalblocks.impl.client.resources.model.MultiPartAppender;
 import net.minecraft.client.renderer.block.model.BlockModelDefinition;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.world.level.block.state.properties.Property;

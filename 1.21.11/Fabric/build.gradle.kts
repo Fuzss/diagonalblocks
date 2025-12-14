@@ -8,6 +8,11 @@ dependencies {
 }
 
 multiloader {
+    modFile {
+        packagePrefix.set("impl")
+        library.set(true)
+    }
+
     mixins {
         clientMixin("ClientLevelFabricMixin")
     }

@@ -1,7 +1,7 @@
 package fuzs.diagonalblocks.fabric.mixin.client;
 
-import fuzs.diagonalblocks.api.v2.impl.StarShapeProvider;
-import fuzs.diagonalblocks.client.util.DestroyEffectsHelper;
+import fuzs.diagonalblocks.api.v2.block.StarShapeProvider;
+import fuzs.diagonalblocks.impl.client.util.DestroyEffectsHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;

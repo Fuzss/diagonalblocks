@@ -1,14 +1,14 @@
 package fuzs.diagonalblocks.mixin;
 
-import fuzs.diagonalblocks.api.v2.EightWayDirection;
-import fuzs.diagonalblocks.api.v2.impl.StarCollisionBlock;
+import fuzs.diagonalblocks.api.v2.util.EightWayDirection;
+import fuzs.diagonalblocks.api.v2.block.StarCollisionBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;

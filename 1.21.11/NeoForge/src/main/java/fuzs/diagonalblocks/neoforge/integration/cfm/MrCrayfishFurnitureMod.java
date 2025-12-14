@@ -1,8 +1,7 @@
 package fuzs.diagonalblocks.neoforge.integration.cfm;
 
-import fuzs.diagonalblocks.api.v2.DiagonalBlockTypes;
-import fuzs.puzzleslib.api.core.v1.utility.ResourceLocationHelper;
-import net.minecraft.resources.ResourceLocation;
+import fuzs.diagonalblocks.api.v2.block.type.DiagonalBlockTypes;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 
 public class MrCrayfishFurnitureMod {
@@ -18,7 +17,7 @@ public class MrCrayfishFurnitureMod {
         }
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocationHelper.fromNamespaceAndPath("cfm", path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath("cfm", path);
     }
 }
